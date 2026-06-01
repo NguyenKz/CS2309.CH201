@@ -1,0 +1,101 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+.eggs/
+*.manifest
+*.spec
+pip-log.txt
+pip-delete-this-directory.txt
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# --- Virtual env / Conda ---
+.venv/
+venv/
+env/
+ENV/
+.conda/
+
+# --- Jupyter / Colab ---
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# --- SwiftEdit & model weights (rất nặng — tải riêng) ---
+SwiftEdit/swiftedit_weights/
+swiftedit_weights/
+*.tar.gz
+*.tar.gz.part-*
+
+# Hugging Face / diffusers cache
+.cache/
+huggingface/
+.huggingface/
+
+# --- Kết quả thực nghiệm (giữ cấu trúc folder, bỏ file nặng) ---
+results/**/*
+!results/**/.gitkeep
+!results/piebench/metrics.csv
+
+# Ảnh / video output (uncomment dòng dưới nếu muốn commit vài ảnh demo)
+results/**/*.png
+results/**/*.jpg
+results/**/*.jpeg
+results/**/*.webp
+results/**/*.gif
+results/**/*.mp4
+
+# --- Báo cáo / slide (tùy chọn commit) ---
+report/**/*.pptx
+report/**/*.key
+report/**/*.pdf
+
+# --- OS / IDE ---
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+Thumbs.db
+Desktop.ini
+
+.idea/
+*.swp
+*.swo
+*~
+.vscode/
+!.vscode/settings.json
+!.vscode/extensions.json
+
+
+# --- Log / temp ---
+*.log
+logs/
+tmp/
+temp/
+*.tmp
+*.bak
+
+# --- Secrets ---
+.env
+.env.*
+!.env.example
+*.pem
+credentials.json
+secrets/
+
+# --- Google Drive sync rác (nếu sync folder project) ---
+.gdrive/
+*.gdoc
+*.gsheet

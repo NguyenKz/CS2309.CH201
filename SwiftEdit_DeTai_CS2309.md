@@ -1,12 +1,12 @@
 # Đề tài: SwiftEdit — Chỉnh sửa ảnh theo văn bản một bước (One-step Text-guided Image Editing)
 
-**Môn học:** CS2309.CH201 — Chuyên đề nghiên cứu và ứng dụng về Thị giác máy tính  
-**Chủ đề:** Chỉnh sửa và thay đổi phong cách ảnh  
-**Đề tài:** SwiftEdit  
-**Tác giả gốc:** Trong-Tung Nguyen, Quang Nguyen, Khoi Nguyen, Anh Tran, Cuong Pham (Qualcomm AI Research)  
-**Paper:** [SwiftEdit: Lightning Fast Text-Guided Image Editing via One-Step Diffusion (CVPR 2025)](https://openaccess.thecvf.com/content/CVPR2025/papers/Nguyen_SwiftEdit_Lightning_Fast_Text-Guided_Image_Editing_via_One-Step_Diffusion_CVPR_2025_paper.pdf)  
-**Mã nguồn:** [https://github.com/Qualcomm-AI-research/SwiftEdit](https://github.com/Qualcomm-AI-research/SwiftEdit)  
-**Trang dự án:** [https://swift-edit.github.io/](https://swift-edit.github.io/)
+**Môn học:** CS2309.CH201 — Chuyên đề nghiên cứu và ứng dụng về Thị giác máy tính\
+**Chủ đề:** Chỉnh sửa và thay đổi phong cách ảnh\
+**Đề tài:** SwiftEdit\
+**Tác giả gốc:** Trong-Tung Nguyen, Quang Nguyen, Khoi Nguyen, Anh Tran, Cuong Pham (Qualcomm AI Research)\
+**Paper:** [SwiftEdit: Lightning Fast Text-Guided Image Editing via One-Step Diffusion (CVPR 2025)](https://openaccess.thecvf.com/content/CVPR2025/papers/Nguyen_SwiftEdit_Lightning_Fast_Text-Guided_Image_Editing_via_One-Step_Diffusion_CVPR_2025_paper.pdf)\
+**Mã nguồn:** <https://github.com/Qualcomm-AI-research/SwiftEdit>\
+**Trang dự án:** <https://swift-edit.github.io/>
 
 **Môi trường thực nghiệm:** **MacBook Air M4, 24GB** (local) + **Google Colab** (GPU CUDA — T4 / A100)
 
@@ -22,8 +22,8 @@
 
 SwiftEdit xây dựng trên mô hình sinh ảnh một bước **SwiftBrushv2 (SBv2)** và gồm hai thành phần chính:
 
-1. **One-step Inversion Framework:** Mạng inversion \(F_\theta\) ánh xạ ảnh nguồn về latent noise có thể chỉnh sửa trong một bước, được huấn luyện theo chiến lược **hai giai đoạn** (synthetic data → real data).
-2. **Attention Rescaling for Mask-aware Editing (ARaM):** Cơ chế điều chỉnh cross-attention theo vùng mask để chỉnh sửa cục bộ, bảo toàn background, đồng thời cho phép điều khiển cường độ chỉnh sửa qua các hệ số \(s_y\), \(s_{edit}\), \(s_{non\text{-}edit}\).
+1. **One-step Inversion Framework:** Mạng inversion (F\_\theta) ánh xạ ảnh nguồn về latent noise có thể chỉnh sửa trong một bước, được huấn luyện theo chiến lược **hai giai đoạn** (synthetic data → real data).
+2. **Attention Rescaling for Mask-aware Editing (ARaM):** Cơ chế điều chỉnh cross-attention theo vùng mask để chỉnh sửa cục bộ, bảo toàn background, đồng thời cho phép điều khiển cường độ chỉnh sửa qua các hệ số (s\_y), (s\_{edit}), (s\_{non\text{-}edit}).
 
 Một đặc điểm quan trọng là SwiftEdit có thể **tự động trích xuất editing mask** từ sự khác biệt giữa inverted noise của source prompt và edit prompt, không bắt buộc người dùng vẽ mask thủ công.
 
@@ -53,13 +53,13 @@ Một đặc điểm quan trọng là SwiftEdit có thể **tự động trích 
 
 **Các module chính trong repository:**
 
-| Thành phần | Vai trò |
-|---|---|
-| `models.py` | Mô hình sinh ảnh (SBv2) và mạng inversion |
-| `infer.py` | Pipeline suy luận chính |
-| `src/mask_attention_processor.py` | Cross-attention có mask |
-| `src/mask_ip_controller.py` | Điều khiển attention rescaling |
-| `swiftedit_weights/` | Checkpoint đã huấn luyện sẵn |
+| Thành phần                        | Vai trò                                   |
+| --------------------------------- | ----------------------------------------- |
+| `models.py`                       | Mô hình sinh ảnh (SBv2) và mạng inversion |
+| `infer.py`                        | Pipeline suy luận chính                   |
+| `src/mask_attention_processor.py` | Cross-attention có mask                   |
+| `src/mask_ip_controller.py`       | Điều khiển attention rescaling            |
+| `swiftedit_weights/`              | Checkpoint đã huấn luyện sẵn              |
 
 ### 1.3. Bối cảnh và động lực
 
@@ -94,33 +94,33 @@ Rồi UNet trả lời: *"Lần này nên bớt nhiễu / làm rõ theo hướng
 
 Bạn **đã có ảnh thật** (ví dụ mèo cam), muốn sửa thành mèo đen. Diffusion thường đi **từ nhiễu → ảnh**; inversion làm **ngược lại**: từ ảnh thật, tìm **nhiễu ban đầu** sao cho nếu "lau sương" lại thì ra đúng ảnh gốc.
 
-Mỗi step inversion: thêm / điều chỉnh nhiễu **một lớp nhỏ** để quay về trạng thái "mờ hơn" trước đó. Lặp ~20–50 lần → được **noise khởi đầu** (điểm xuất phát cho chỉnh sửa). Null-text Inversion còn **optimize thêm** embedding cho từng ảnh → chậm hơn nữa.
+Mỗi step inversion: thêm / điều chỉnh nhiễu **một lớp nhỏ** để quay về trạng thái "mờ hơn" trước đó. Lặp \~20–50 lần → được **noise khởi đầu** (điểm xuất phát cho chỉnh sửa). Null-text Inversion còn **optimize thêm** embedding cho từng ảnh → chậm hơn nữa.
 
 **Giai đoạn 2 — Editing (lau sương lại, đổi nội dung):**
 
-Từ noise vừa tìm được, máy **lau sương lại** ~20–50 step với **edit prompt** mới. Các method như P2P, MasaCtrl, Plug-and-Play **can thiệp attention** mỗi step: *"ở vùng cần sửa thì nghe prompt mới; vùng nền thì giữ như cũ"* — ví dụ đổi mèo cam → mèo đen mà giữ hàng rào, bầu trời.
+Từ noise vừa tìm được, máy **lau sương lại** \~20–50 step với **edit prompt** mới. Các method như P2P, MasaCtrl, Plug-and-Play **can thiệp attention** mỗi step: *"ở vùng cần sửa thì nghe prompt mới; vùng nền thì giữ như cũ"* — ví dụ đổi mèo cam → mèo đen mà giữ hàng rào, bầu trời.
 
 #### 1.3.2. Tóm tắt: sinh ảnh mới vs chỉnh sửa ảnh cũ
 
-| | Sinh ảnh mới | Chỉnh sửa ảnh cũ (P2P, Null-text, …) |
-|---|---|---|
-| **Bắt đầu từ** | Nhiễu ngẫu nhiên | Ảnh thật → inversion → noise |
-| **Mỗi step** | Lau bớt sương | Giai đoạn 1: thêm sương ngược / Giai đoạn 2: lau sương + đổi prompt |
-| **Kết thúc** | Ảnh mới khớp prompt | Ảnh đã sửa, background giữ ổn định |
-| **Tổng step (ước lượng)** | ~50 | ~50 + ~50 ≈ **~100** |
+| <br />                    | Sinh ảnh mới        | Chỉnh sửa ảnh cũ (P2P, Null-text, …)                                |
+| ------------------------- | ------------------- | ------------------------------------------------------------------- |
+| **Bắt đầu từ**            | Nhiễu ngẫu nhiên    | Ảnh thật → inversion → noise                                        |
+| **Mỗi step**              | Lau bớt sương       | Giai đoạn 1: thêm sương ngược / Giai đoạn 2: lau sương + đổi prompt |
+| **Kết thúc**              | Ảnh mới khớp prompt | Ảnh đã sửa, background giữ ổn định                                  |
+| **Tổng step (ước lượng)** | \~50                | \~50 + \~50 ≈ **\~100**                                             |
 
-| Nhóm phương pháp | Steps (inversion + edit) | Thời gian ~ |
-|---|---|---|
-| Multi-step (DDIM + P2P) | 50 + 50 | ~26s |
-| Multi-step + optimize (Null-text + P2P) | 50 + optimize | ~134s |
-| Few-step (TurboEdit) | 4 + 4 | ~1.3s |
-| **One-step (SwiftEdit)** | **1 + 1** | **~0.23s** |
+| Nhóm phương pháp                        | Steps (inversion + edit) | Thời gian \~ |
+| --------------------------------------- | ------------------------ | ------------ |
+| Multi-step (DDIM + P2P)                 | 50 + 50                  | \~26s        |
+| Multi-step + optimize (Null-text + P2P) | 50 + optimize            | \~134s       |
+| Few-step (TurboEdit)                    | 4 + 4                    | \~1.3s       |
+| **One-step (SwiftEdit)**                | **1 + 1**                | **\~0.23s**  |
 
-**SwiftEdit** hướng tới **chỉnh sửa tức thì**: thay ~100 lần chạy UNet bằng **one-step inversion** (`F_theta`) + **one-step editing** trên backbone SBv2 — chất lượng cạnh tranh so với multi-step và few-step methods.
+**SwiftEdit** hướng tới **chỉnh sửa tức thì**: thay \~100 lần chạy UNet bằng **one-step inversion** (`F_theta`) + **one-step editing** trên backbone SBv2 — chất lượng cạnh tranh so với multi-step và few-step methods.
 
 #### 1.3.3. Ảnh minh họa pipeline **cũ** (multi-step — tham khảo)
 
-> **Không phải SwiftEdit.** Các ảnh dưới đây minh họa pipeline kinh điển (DDIM / Null-text → P2P / …, 20–50+ step mỗi giai đoạn) — bối cảnh §1.3 để so sánh với SwiftEdit (1 step + 1 step, xem §1.2).  
+> **Không phải SwiftEdit.** Các ảnh dưới đây minh họa pipeline kinh điển (DDIM / Null-text → P2P / …, 20–50+ step mỗi giai đoạn) — bối cảnh §1.3 để so sánh với SwiftEdit (1 step + 1 step, xem §1.2).\
 > Nguồn ảnh công khai từ paper / project page gốc. Khi trích trong báo cáo, ghi rõ tác giả và venue.
 
 **Toàn bộ luồng — Ảnh gốc → Inversion → noise → Sampling + edit → Ảnh sửa**
@@ -129,11 +129,11 @@ SAGE (Gomez-Trenado et al., 2025) — Figure 3: DDIM inversion với source prom
 
 ![Pipeline inversion + sampling (SAGE Fig. 3)](./assets/pipeline/sage-fig3-pipeline.png)
 
-| | |
-|---|---|
-| **File local** | [`assets/pipeline/sage-fig3-pipeline.png`](./assets/pipeline/sage-fig3-pipeline.png) |
-| **Nguồn gốc** | https://arxiv.org/html/2505.09571v1/x2.png |
-| **Paper** | [Don’t Forget your Inverse DDIM for Image Editing](https://arxiv.org/html/2505.09571v1) |
+| <br />         | <br />                                                                                  |
+| -------------- | --------------------------------------------------------------------------------------- |
+| **File local** | [`assets/pipeline/sage-fig3-pipeline.png`](./assets/pipeline/sage-fig3-pipeline.png)    |
+| **Nguồn gốc**  | <https://arxiv.org/html/2505.09571v1/x2.png>                                            |
+| **Paper**      | [Don’t Forget your Inverse DDIM for Image Editing](https://arxiv.org/html/2505.09571v1) |
 
 **So sánh các hướng (Null-text, P2P, …)**
 
@@ -141,10 +141,10 @@ SAGE — Figure 2: các cách kết hợp inversion, null-text / CFG và edit pr
 
 ![So sánh pipeline chỉnh sửa diffusion (SAGE Fig. 2)](./assets/pipeline/sage-fig2-compare-methods.png)
 
-| | |
-|---|---|
+| <br />         | <br />                                                                                             |
+| -------------- | -------------------------------------------------------------------------------------------------- |
 | **File local** | [`assets/pipeline/sage-fig2-compare-methods.png`](./assets/pipeline/sage-fig2-compare-methods.png) |
-| **Nguồn gốc** | https://arxiv.org/html/2505.09571v1/x1.png |
+| **Nguồn gốc**  | <https://arxiv.org/html/2505.09571v1/x1.png>                                                       |
 
 **Giai đoạn 1 — Inversion (20–50+ steps)**
 
@@ -152,11 +152,11 @@ Null-text Inversion (Mokady et al., CVPR 2023): trajectory DDIM inversion + null
 
 ![Sơ đồ Null-text inversion](./assets/pipeline/nulltext-diagram.png)
 
-| | |
-|---|---|
-| **File local** | [`assets/pipeline/nulltext-diagram.png`](./assets/pipeline/nulltext-diagram.png) |
-| **Nguồn gốc** | https://null-text-inversion.github.io/files/diagram-01.png |
-| **Trang dự án** | https://null-text-inversion.github.io/ |
+| <br />          | <br />                                                                           |
+| --------------- | -------------------------------------------------------------------------------- |
+| **File local**  | [`assets/pipeline/nulltext-diagram.png`](./assets/pipeline/nulltext-diagram.png) |
+| **Nguồn gốc**   | <https://null-text-inversion.github.io/files/diagram-01.png>                     |
+| **Trang dự án** | <https://null-text-inversion.github.io/>                                         |
 
 **“Mỗi step” — ảnh dần rõ qua từng bước denoise**
 
@@ -164,10 +164,10 @@ SAGE — Figure 4: ước lượng latent qua các timestep khi sampling (minh h
 
 ![Denoise từng timestep (SAGE Fig. 4)](./assets/pipeline/sage-fig4-denoise-steps.png)
 
-| | |
-|---|---|
-| **File local** | [`assets/pipeline/sage-fig4-denoise-steps.png`](./assets/pipeline/sage-fig4-denoise-steps.png) |
-| **Nguồn gốc** | https://arxiv.org/html/2505.09571v1/x3.png |
+| <br />                 | <br />                                                                                                        |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------- |
+| **File local**         | [`assets/pipeline/sage-fig4-denoise-steps.png`](./assets/pipeline/sage-fig4-denoise-steps.png)                |
+| **Nguồn gốc**          | <https://arxiv.org/html/2505.09571v1/x3.png>                                                                  |
 | **Tutorial tương tác** | [Hugging Face — DDIM Inversion](https://huggingface.co/learn/diffusion-course/en/unit4/2) (ví dụ puppy → cat) |
 
 **Giai đoạn 2 — Sampling + attention edit**
@@ -176,18 +176,18 @@ Prompt-to-Prompt (Hertz et al., 2022): inject cross-attention map từ source pr
 
 ![Cross-attention control (P2P)](./assets/pipeline/p2p-cross-attention.png)
 
-| | |
-|---|---|
-| **File local** | [`assets/pipeline/p2p-cross-attention.png`](./assets/pipeline/p2p-cross-attention.png) |
-| **Nguồn gốc** | https://prompt-to-prompt.github.io/ptp_files/03_ca_diagram.png |
-| **Trang dự án** | https://prompt-to-prompt.github.io/ |
+| <br />          | <br />                                                                                 |
+| --------------- | -------------------------------------------------------------------------------------- |
+| **File local**  | [`assets/pipeline/p2p-cross-attention.png`](./assets/pipeline/p2p-cross-attention.png) |
+| **Nguồn gốc**   | <https://prompt-to-prompt.github.io/ptp_files/03_ca_diagram.png>                       |
+| **Trang dự án** | <https://prompt-to-prompt.github.io/>                                                  |
 
 **Kết quả cuối pipeline (ảnh thật → edit)**
 
-| Minh họa | Mô tả | File local |
-|---|---|---|
-| P2P word swap | Đổi từ trong prompt, giữ bố cục | [`p2p-teaser.png`](./assets/pipeline/p2p-teaser.png) |
-| Null-text + P2P | Inversion ảnh thật rồi edit | [`nulltext-editing-results.png`](./assets/pipeline/nulltext-editing-results.png) |
+| Minh họa        | Mô tả                           | File local                                                                       |
+| --------------- | ------------------------------- | -------------------------------------------------------------------------------- |
+| P2P word swap   | Đổi từ trong prompt, giữ bố cục | [`p2p-teaser.png`](./assets/pipeline/p2p-teaser.png)                             |
+| Null-text + P2P | Inversion ảnh thật rồi edit     | [`nulltext-editing-results.png`](./assets/pipeline/nulltext-editing-results.png) |
 
 ![Ví dụ edit Prompt-to-Prompt](./assets/pipeline/p2p-teaser.png)
 
@@ -195,28 +195,28 @@ Prompt-to-Prompt (Hertz et al., 2022): inject cross-attention map từ source pr
 
 **Bảng tra nhanh — ảnh ↔ vị trí trong pipeline**
 
-| Vị trí | File local |
-|---|---|
-| Toàn pipeline | [`sage-fig3-pipeline.png`](./assets/pipeline/sage-fig3-pipeline.png) |
-| So sánh method | [`sage-fig2-compare-methods.png`](./assets/pipeline/sage-fig2-compare-methods.png) |
-| Giai đoạn 1 — Inversion | [`nulltext-diagram.png`](./assets/pipeline/nulltext-diagram.png) |
-| Mỗi step denoise | [`sage-fig4-denoise-steps.png`](./assets/pipeline/sage-fig4-denoise-steps.png) |
-| Giai đoạn 2 — Attention edit | [`p2p-cross-attention.png`](./assets/pipeline/p2p-cross-attention.png) |
-| Kết quả edit | [`p2p-teaser.png`](./assets/pipeline/p2p-teaser.png), [`nulltext-editing-results.png`](./assets/pipeline/nulltext-editing-results.png) |
+| Vị trí                       | File local                                                                                                                             |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| Toàn pipeline                | [`sage-fig3-pipeline.png`](./assets/pipeline/sage-fig3-pipeline.png)                                                                   |
+| So sánh method               | [`sage-fig2-compare-methods.png`](./assets/pipeline/sage-fig2-compare-methods.png)                                                     |
+| Giai đoạn 1 — Inversion      | [`nulltext-diagram.png`](./assets/pipeline/nulltext-diagram.png)                                                                       |
+| Mỗi step denoise             | [`sage-fig4-denoise-steps.png`](./assets/pipeline/sage-fig4-denoise-steps.png)                                                         |
+| Giai đoạn 2 — Attention edit | [`p2p-cross-attention.png`](./assets/pipeline/p2p-cross-attention.png)                                                                 |
+| Kết quả edit                 | [`p2p-teaser.png`](./assets/pipeline/p2p-teaser.png), [`nulltext-editing-results.png`](./assets/pipeline/nulltext-editing-results.png) |
 
 ---
 
 ## 2. Lý do chọn đề tài
 
-| Tiêu chí | Lý do |
-|---|---|
-| **Tính thời sự** | Chỉnh sửa ảnh bằng ngôn ngữ tự nhiên là hướng nghiên cứu nóng trong CV và generative AI (2024–2025). |
-| **Liên quan trực tiếp môn học** | Bài toán kết hợp nhiều khái niệm thị giác máy tính: diffusion model, inversion, attention mechanism, segmentation mask, đánh giá chất lượng ảnh. |
-| **Có mã nguồn và checkpoint công khai** | Repository chính thức cung cấp inference code và pretrained weights, phù hợp điều kiện **không training nặng**. |
-| **Đóng góp khoa học rõ ràng** | Paper CVPR 2025 có benchmark (PieBench), ablation study và so sánh với nhiều baseline, tạo nền tảng để tái hiện và mở rộng thự nghiệm. |
-| **Phù hợp Mac Air M4 + Colab** | Mac cho dev/demo; Colab Free (T4) cho CUDA benchmark — **không cần máy GPU riêng**. |
-| **Ứng dụng thực tế** | Demo chỉnh sửa ảnh nhanh trên Mac cho người sáng tạo nội dung, thiết kế. |
-| **Phù hợp nguồn lực sinh viên** | Tập trung **inference, đánh giá, ablation** — không train lại toàn bộ mô hình. |
+| Tiêu chí                                | Lý do                                                                                                                                            |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Tính thời sự**                        | Chỉnh sửa ảnh bằng ngôn ngữ tự nhiên là hướng nghiên cứu nóng trong CV và generative AI (2024–2025).                                             |
+| **Liên quan trực tiếp môn học**         | Bài toán kết hợp nhiều khái niệm thị giác máy tính: diffusion model, inversion, attention mechanism, segmentation mask, đánh giá chất lượng ảnh. |
+| **Có mã nguồn và checkpoint công khai** | Repository chính thức cung cấp inference code và pretrained weights, phù hợp điều kiện **không training nặng**.                                  |
+| **Đóng góp khoa học rõ ràng**           | Paper CVPR 2025 có benchmark (PieBench), ablation study và so sánh với nhiều baseline, tạo nền tảng để tái hiện và mở rộng thự nghiệm.           |
+| **Phù hợp Mac Air M4 + Colab**          | Mac cho dev/demo; Colab Free (T4) cho CUDA benchmark — **không cần máy GPU riêng**.                                                              |
+| **Ứng dụng thực tế**                    | Demo chỉnh sửa ảnh nhanh trên Mac cho người sáng tạo nội dung, thiết kế.                                                                         |
+| **Phù hợp nguồn lực sinh viên**         | Tập trung **inference, đánh giá, ablation** — không train lại toàn bộ mô hình.                                                                   |
 
 ---
 
@@ -224,20 +224,20 @@ Prompt-to-Prompt (Hertz et al., 2022): inject cross-attention map từ source pr
 
 ### 3.1. Input
 
-| Input | Mô tả | Bắt buộc |
-|---|---|---|
-| **Source image** \(x_{source}\) | Ảnh gốc cần chỉnh sửa (RGB) | Có |
-| **Edit prompt** \(y_{edit}\) | Mô tả văn bản về nội dung mong muốn sau khi chỉnh sửa | Có |
-| **Source prompt** \(y_{source}\) | Mô tả ảnh gốc; giúp reconstruction và trích xuất mask | Khuyến nghị |
-| **Editing mask** \(M\) | Vùng cần chỉnh sửa (binary/soft mask) | Không (có thể tự sinh) |
-| **Hyperparameters** | \(s_y\), \(s_{edit}\), \(s_{non\text{-}edit}\) — điều khiển cường độ chỉnh sửa | Tùy chọn |
+| Input                           | Mô tả                                                                       | Bắt buộc               |
+| ------------------------------- | --------------------------------------------------------------------------- | ---------------------- |
+| **Source image** (x\_{source})  | Ảnh gốc cần chỉnh sửa (RGB)                                                 | Có                     |
+| **Edit prompt** (y\_{edit})     | Mô tả văn bản về nội dung mong muốn sau khi chỉnh sửa                       | Có                     |
+| **Source prompt** (y\_{source}) | Mô tả ảnh gốc; giúp reconstruction và trích xuất mask                       | Khuyến nghị            |
+| **Editing mask** (M)            | Vùng cần chỉnh sửa (binary/soft mask)                                       | Không (có thể tự sinh) |
+| **Hyperparameters**             | (s\_y), (s\_{edit}), (s\_{non\text{-}edit}) — điều khiển cường độ chỉnh sửa | Tùy chọn               |
 
 ### 3.2. Output
 
-| Output | Mô tả |
-|---|---|
-| **Edited image** \(x_{edit}\) | Ảnh đã chỉnh sửa theo edit prompt |
-| **Editing mask** (tùy chọn) | Mask tự sinh hoặc mask người dùng cung cấp |
+| Output                          | Mô tả                                                               |
+| ------------------------------- | ------------------------------------------------------------------- |
+| **Edited image** (x\_{edit})    | Ảnh đã chỉnh sửa theo edit prompt                                   |
+| **Editing mask** (tùy chọn)     | Mask tự sinh hoặc mask người dùng cung cấp                          |
 | **Metrics** (trong thực nghiệm) | PSNR, MSE (background), CLIP-Whole, CLIP-Edited, thời gian suy luận |
 
 ### 3.3. Ví dụ minh họa
@@ -253,6 +253,8 @@ Output:
   - Thời gian: ~0.23s (A100) / **~3–15s (Mac Air M4, MPS)** — vẫn nhanh hơn nhiều so với multi-step
 ```
 
+> **Source prompt — có phải tự viết?** Không bắt buộc (code gốc: *"could leave it empty"*), nhưng **nên có** để inversion và mask tự sinh ổn định hơn. Không cần câu dài như ví dụ PieBench trên — demo repo thường dùng prompt ngắn (`"woman"`, `"dog"`). **Edit prompt** mới là phần bạn cần viết rõ thay đổi mong muốn. Có thể dùng model caption (BLIP, …) gợi ý source prompt rồi chỉnh tay; SwiftEdit không tự sinh giúp.
+
 ---
 
 ## 4. Môi trường thực nghiệm: Mac M4 + Google Colab
@@ -261,23 +263,23 @@ Output:
 
 ### 4.1. MacBook Air M4 (24GB) — Môi trường local
 
-| Thành phần | MacBook Air M4 (24GB) |
-|---|---|
-| CPU | Apple M4 (10-core) |
-| GPU | GPU tích hợp (Metal / MPS) |
-| Bộ nhớ | 24GB **unified memory** (CPU + GPU dùng chung) |
+| Thành phần      | MacBook Air M4 (24GB)                                  |
+| --------------- | ------------------------------------------------------ |
+| CPU             | Apple M4 (10-core)                                     |
+| GPU             | GPU tích hợp (Metal / MPS)                             |
+| Bộ nhớ          | 24GB **unified memory** (CPU + GPU dùng chung)         |
 | Backend PyTorch | **MPS** (Metal Performance Shaders), **không có CUDA** |
-| Hệ điều hành | macOS |
+| Hệ điều hành    | macOS                                                  |
 
 ### Khả năng chạy SwiftEdit trên Mac M4
 
-| Khía cạnh | Đánh giá | Ghi chú |
-|---|---|---|
-| **Inference (demo, ablation)** | ✅ Khả thi | 24GB unified memory đủ cho inference 512×512 |
-| **Tốc độ** | ⚠️ Chậm hơn paper | ~3–15 giây/ảnh (MPS) vs 0.23s (A100) |
-| **PieBench batch lớn** | ⚠️ Chậm | 15–25 mẫu OK; batch 50–100 → **chuyển Colab** |
-| **Fine-tune** | ❌ Không | Chuyển sang Colab |
-| **Viết báo cáo, demo Gradio** | ✅ Tốt | Làm việc hàng ngày trên Mac |
+| Khía cạnh                      | Đánh giá          | Ghi chú                                       |
+| ------------------------------ | ----------------- | --------------------------------------------- |
+| **Inference (demo, ablation)** | ✅ Khả thi         | 24GB unified memory đủ cho inference 512×512  |
+| **Tốc độ**                     | ⚠️ Chậm hơn paper | \~3–15 giây/ảnh (MPS) vs 0.23s (A100)         |
+| **PieBench batch lớn**         | ⚠️ Chậm           | 15–25 mẫu OK; batch 50–100 → **chuyển Colab** |
+| **Fine-tune**                  | ❌ Không           | Chuyển sang Colab                             |
+| **Viết báo cáo, demo Gradio**  | ✅ Tốt             | Làm việc hàng ngày trên Mac                   |
 
 ### Cài đặt trên macOS
 
@@ -315,7 +317,7 @@ else:
 
 **Mẹo giảm RAM trên Mac:**
 
-- Dùng `torch.float16` / `model.half()` nếu code hỗ trợ (giảm ~40% memory).
+- Dùng `torch.float16` / `model.half()` nếu code hỗ trợ (giảm \~40% memory).
 - Giữ độ phân giải **512×512** như paper; tránh 1024×1024 trên 24GB.
 - Đóng Chrome, IDE nặng khi chạy inference.
 - Nếu gặp lỗi MPS: thử `PYTORCH_ENABLE_MPS_FALLBACK=1` hoặc fallback `device="cpu"` (chỉ debug).
@@ -324,24 +326,24 @@ else:
 
 ### 4.2. Google Colab — Môi trường GPU CUDA
 
-| Thành phần | Google Colab (Free / Pro) |
-|---|---|
-| GPU | **T4** (Free, ~15GB) hoặc **A100** (Pro, nếu có) |
-| Backend | **CUDA** — tương thích `requirements.txt` gốc |
-| Bộ nhớ | ~12–15GB VRAM (T4) — đủ inference SwiftEdit |
-| Thời gian session | Free ~12h/session, có thể disconnect |
-| Lưu trữ | Google Drive mount — lưu weights, kết quả |
+| Thành phần        | Google Colab (Free / Pro)                         |
+| ----------------- | ------------------------------------------------- |
+| GPU               | **T4** (Free, \~15GB) hoặc **A100** (Pro, nếu có) |
+| Backend           | **CUDA** — tương thích `requirements.txt` gốc     |
+| Bộ nhớ            | \~12–15GB VRAM (T4) — đủ inference SwiftEdit      |
+| Thời gian session | Free \~12h/session, có thể disconnect             |
+| Lưu trữ           | Google Drive mount — lưu weights, kết quả         |
 
 ### Khả năng trên Colab
 
-| Khía cạnh | Đánh giá | Ghi chú |
-|---|---|---|
-| **Cài đặt repo gốc (CUDA)** | ✅ Trực tiếp | `pip install -r requirements.txt` như README |
-| **PieBench 50–100 mẫu** | ✅ Khuyến nghị | ~5–20 phút trên T4; gần môi trường paper |
-| **So sánh TurboEdit / baseline** | ✅ Khuyến nghị | Multi-step methods cần CUDA |
-| **Tái hiện runtime ~0.23s** | ⚠️ Chỉ A100 | T4 chậm hơn A100 nhưng vẫn nhanh hơn Mac MPS |
-| **Fine-tune nhẹ** | ⚠️ Tùy chọn | T4 có thể OOM; batch size = 1 |
-| **Lưu kết quả lâu dài** | ✅ Drive | Mount Drive, sync về Mac |
+| Khía cạnh                        | Đánh giá      | Ghi chú                                      |
+| -------------------------------- | ------------- | -------------------------------------------- |
+| **Cài đặt repo gốc (CUDA)**      | ✅ Trực tiếp   | `pip install -r requirements.txt` như README |
+| **PieBench 50–100 mẫu**          | ✅ Khuyến nghị | \~5–20 phút trên T4; gần môi trường paper    |
+| **So sánh TurboEdit / baseline** | ✅ Khuyến nghị | Multi-step methods cần CUDA                  |
+| **Tái hiện runtime \~0.23s**     | ⚠️ Chỉ A100   | T4 chậm hơn A100 nhưng vẫn nhanh hơn Mac MPS |
+| **Fine-tune nhẹ**                | ⚠️ Tùy chọn   | T4 có thể OOM; batch size = 1                |
+| **Lưu kết quả lâu dài**          | ✅ Drive       | Mount Drive, sync về Mac                     |
 
 ### Cài đặt trên Google Colab
 
@@ -421,19 +423,19 @@ device = "cuda"  # Colab luôn dùng cuda
 
 ### 4.3. Phân công công việc Mac ↔ Colab
 
-| Công việc | Mac M4 | Google Colab | Ghi chú |
-|---|---|---|---|
-| Đọc paper, viết báo cáo | ✅ Chính | — | |
-| Clone repo, hiểu code | ✅ | ✅ | Mac tiện hơn khi dev |
-| Chạy demo lần đầu | ✅ | ✅ | Mac xác nhận pipeline; Colab xác nhận CUDA |
-| Ablation hyperparameter (5–10 ảnh) | ✅ Chính | Tùy chọn | Mac đủ, lưu grid ảnh |
-| PieBench metrics (50–100 mẫu) | 15–25 mẫu | ✅ **Chính** | Colab nhanh + CUDA |
-| So sánh TurboEdit / baseline | — | ✅ **Chính** | Cần CUDA |
-| Self-guided mask vs GT mask | ✅ | ✅ | Colab cho batch; Mac cho visualize |
-| Bộ ảnh tự thu thập (VN) | ✅ Chính | Tùy chọn | Thu ảnh trên Mac, batch eval trên Colab |
-| Demo Gradio / Streamlit | ✅ Chính | — | Chạy local trên Mac |
-| Fine-tune nhẹ (tùy chọn) | ❌ | ✅ | Chỉ Colab |
-| Đo runtime so sánh paper | M4 (MPS) | ✅ T4/A100 (CUDA) | Báo cáo **cả hai** + paper |
+| Công việc                          | Mac M4    | Google Colab     | Ghi chú                                    |
+| ---------------------------------- | --------- | ---------------- | ------------------------------------------ |
+| Đọc paper, viết báo cáo            | ✅ Chính   | —                | <br />                                     |
+| Clone repo, hiểu code              | ✅         | ✅                | Mac tiện hơn khi dev                       |
+| Chạy demo lần đầu                  | ✅         | ✅                | Mac xác nhận pipeline; Colab xác nhận CUDA |
+| Ablation hyperparameter (5–10 ảnh) | ✅ Chính   | Tùy chọn         | Mac đủ, lưu grid ảnh                       |
+| PieBench metrics (50–100 mẫu)      | 15–25 mẫu | ✅ **Chính**      | Colab nhanh + CUDA                         |
+| So sánh TurboEdit / baseline       | —         | ✅ **Chính**      | Cần CUDA                                   |
+| Self-guided mask vs GT mask        | ✅         | ✅                | Colab cho batch; Mac cho visualize         |
+| Bộ ảnh tự thu thập (VN)            | ✅ Chính   | Tùy chọn         | Thu ảnh trên Mac, batch eval trên Colab    |
+| Demo Gradio / Streamlit            | ✅ Chính   | —                | Chạy local trên Mac                        |
+| Fine-tune nhẹ (tùy chọn)           | ❌         | ✅                | Chỉ Colab                                  |
+| Đo runtime so sánh paper           | M4 (MPS)  | ✅ T4/A100 (CUDA) | Báo cáo **cả hai** + paper                 |
 
 ### 4.4. Luồng làm việc Mac + Colab (workflow)
 
@@ -467,6 +469,7 @@ device = "cuda"  # Colab luôn dùng cuda
 ```
 
 > **Ghi chú cho báo cáo:** Ghi rõ nguồn từng số liệu:
+>
 > - *Mac M4 (MPS)* — demo, ablation, runtime local
 > - *Colab T4/A100 (CUDA)* — PieBench batch, baseline comparison
 > - *Paper (A100)* — reference từ Table 1, không tự đo
@@ -481,12 +484,10 @@ device = "cuda"  # Colab luôn dùng cuda
 
 1. **Làm sao invert ảnh thực về editable noise trong một bước?**
    - Inversion đa bước (DDIM, Null-text) không phù hợp mô hình one-step.
-   - SwiftEdit học mạng encoder-based \(F_\theta\), huấn luyện 2 stage với synthetic + real data.
-
+   - SwiftEdit học mạng encoder-based (F\_\theta), huấn luyện 2 stage với synthetic + real data.
 2. **Làm sao chỉnh sửa cục bộ mà không phá background?**
    - Dùng self-guided mask từ sự khác biệt inverted noise.
    - ARaM tách riêng attention cho vùng edit và non-edit.
-
 3. **Cân bằng giữa tốc độ, chất lượng chỉnh sửa và bảo toàn background?**
    - So sánh PSNR/MSE vs CLIP score vs runtime trên PieBench.
 
@@ -494,27 +495,20 @@ device = "cuda"  # Colab luôn dùng cuda
 
 4. **SwiftEdit hoạt động thế nào trên dữ liệu Việt Nam / ảnh tự thu thập?**
    - PieBench dùng prompt tiếng Anh; cần kiểm tra độ ổn định trên ảnh thực tế (chân dung, phong cảnh, sản phẩm, …).
-
 5. **Ảnh hưởng của hyperparameter ARaM đến chất lượng chỉnh sửa?**
-   - \(s_y\): cường độ alignment với edit prompt trong vùng mask.
-   - \(s_{edit}\), \(s_{non\text{-}edit}\): trade-off giữa sửa vùng mục tiêu và giữ vùng nền.
-
+   - (s\_y): cường độ alignment với edit prompt trong vùng mask.
+   - (s\_{edit}), (s\_{non\text{-}edit}): trade-off giữa sửa vùng mục tiêu và giữ vùng nền.
 6. **Self-guided mask vs ground-truth mask — mức chênh lệch bao nhiêu?**
    - Paper báo cáo kết quả gần tương đương GT mask; cần xác minh trên subset PieBench hoặc bộ ảnh riêng.
-
 7. **SwiftEdit so với baseline multi-step / few-step trên cùng phần cứng?**
    - So sánh trực quan và định lượng với TurboEdit, ReNoise, hoặc phương pháp multi-step đơn giản hơn (nếu tài nguyên cho phép).
-
 8. **Giới hạn khi áp dụng cho "thay đổi phong cách ảnh" (style transfer)?**
    - SwiftEdit tập trung semantic editing (đổi đối tượng, thuộc tính); cần khảo sát khả năng chuyển phong cách (ví dụ: "oil painting style", "anime style") qua prompt.
-
-10. **Phân công Mac vs Colab có hiệu quả không?**
-    - Task nào nên chạy local, task nào cần CUDA? Runtime Colab T4 so với Mac MPS?
-
-11. **SwiftEdit chạy thế nào trên Mac Apple Silicon (M4, unified memory)?**
+9. **Phân công Mac vs Colab có hiệu quả không?**
+   - Task nào nên chạy local, task nào cần CUDA? Runtime Colab T4 so với Mac MPS?
+10. **SwiftEdit chạy thế nào trên Mac Apple Silicon (M4, unified memory)?**
     - Repo gốc target CUDA; cần port sang MPS cho local dev.
-
-12. **Yêu cầu tài nguyên và khả năng triển khai on-device?**
+11. **Yêu cầu tài nguyên và khả năng triển khai on-device?**
     - Mac M4 là case study gần on-device; Colab T4 mô phỏng server-side GPU.
 
 ### 5.3. Câu hỏi nghiên cứu đề xuất (Research Questions)
@@ -535,25 +529,25 @@ device = "cuda"  # Colab luôn dùng cuda
 
 ### 6.1. Đóng góp bắt buộc / cốt lõi
 
-| # | Đóng góp | Mức độ | Training |
-|---|---|---|---|
-| C1 | **Cài đặt và chạy SwiftEdit** từ repository chính thức, tải checkpoint, chạy demo trên `assets/imgs_demo` | Bắt buộc | Không |
-| C2 | **Phân tích pipeline** inversion → mask extraction → ARaM editing; mô tả luồng xử lý và vai trò từng module | Bắt buộc | Không |
-| C3 | **Thực nghiệm ablation hyperparameter** trên tập ảnh mẫu: thay đổi \(s_y\), \(s_{edit}\), \(s_{non\text{-}edit}\), so sánh trực quan | Bắt buộc | Không |
-| C4 | **Đánh giá định lượng PieBench** | **Colab:** 50–100 mẫu (PSNR, CLIP, runtime CUDA). **Mac:** 10–15 mẫu xác nhận chéo | Không |
+| #  | Đóng góp                                                                                                                          | Mức độ                                                                             | Training |
+| -- | --------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- | -------- |
+| C1 | **Cài đặt và chạy SwiftEdit** từ repository chính thức, tải checkpoint, chạy demo trên `assets/imgs_demo`                         | Bắt buộc                                                                           | Không    |
+| C2 | **Phân tích pipeline** inversion → mask extraction → ARaM editing; mô tả luồng xử lý và vai trò từng module                       | Bắt buộc                                                                           | Không    |
+| C3 | **Thực nghiệm ablation hyperparameter** trên tập ảnh mẫu: thay đổi (s\_y), (s\_{edit}), (s\_{non\text{-}edit}), so sánh trực quan | Bắt buộc                                                                           | Không    |
+| C4 | **Đánh giá định lượng PieBench**                                                                                                  | **Colab:** 50–100 mẫu (PSNR, CLIP, runtime CUDA). **Mac:** 10–15 mẫu xác nhận chéo | Không    |
 
 ### 6.2. Đóng góp mở rộng (chọn 1–2)
 
-| # | Đóng góp | Mô tả | Training |
-|---|---|---|---|
-| C5 | **So sánh với baseline trên Colab** | TurboEdit hoặc DDIM+P2P trên 20 mẫu chung; bảng metrics + ảnh | Colab |
-| C6 | **Bộ ảnh tự xây dựng** | Thu thập trên Mac; chạy inference Mac + Colab | Không |
-| C7 | **Phân tích self-guided mask** | IoU/Dice trên PieBench — **Colab batch**, visualize trên Mac | Colab |
-| C8 | **Thử nghiệm style editing** | Khảo sát prompt chuyển phong cách | Không |
-| C9 | **Demo ứng dụng** | Gradio trên Mac local | Không |
-| C10 | **Benchmark đa nền tảng** | Runtime: Mac MPS vs Colab T4 vs Paper A100 | Không |
-| C11 | **Colab notebook tái sử dụng** | Notebook setup + eval script lưu trên Drive, dùng lại nhiều session | Không |
-| C12 | **Fine-tune nhẹ trên Colab (tùy chọn)** | Stage 2 vài nghìn iter; **không train trên Mac** | Colab |
+| #   | Đóng góp                                | Mô tả                                                               | Training |
+| --- | --------------------------------------- | ------------------------------------------------------------------- | -------- |
+| C5  | **So sánh với baseline trên Colab**     | TurboEdit hoặc DDIM+P2P trên 20 mẫu chung; bảng metrics + ảnh       | Colab    |
+| C6  | **Bộ ảnh tự xây dựng**                  | Thu thập trên Mac; chạy inference Mac + Colab                       | Không    |
+| C7  | **Phân tích self-guided mask**          | IoU/Dice trên PieBench — **Colab batch**, visualize trên Mac        | Colab    |
+| C8  | **Thử nghiệm style editing**            | Khảo sát prompt chuyển phong cách                                   | Không    |
+| C9  | **Demo ứng dụng**                       | Gradio trên Mac local                                               | Không    |
+| C10 | **Benchmark đa nền tảng**               | Runtime: Mac MPS vs Colab T4 vs Paper A100                          | Không    |
+| C11 | **Colab notebook tái sử dụng**          | Notebook setup + eval script lưu trên Drive, dùng lại nhiều session | Không    |
+| C12 | **Fine-tune nhẹ trên Colab (tùy chọn)** | Stage 2 vài nghìn iter; **không train trên Mac**                    | Colab    |
 
 ### 6.3. Phạm vi không thực hiện (để giới hạn đề tài)
 
@@ -599,7 +593,7 @@ device = "cuda"  # Colab luôn dùng cuda
 #### 3a. Ablation hyperparameter ARaM — **Mac**
 
 - [ ] Chọn 5–10 ảnh đại diện.
-- [ ] Thay đổi \(s_y\), \(s_{edit}\), \(s_{non\text{-}edit}\) (0.5, 1.0, 1.5).
+- [ ] Thay đổi (s\_y), (s\_{edit}), (s\_{non\text{-}edit}) (0.5, 1.0, 1.5).
 - [ ] Lưu grid ảnh trên Mac, đưa vào báo cáo.
 
 #### 3b. Self-guided mask vs GT mask — **Colab**
@@ -621,13 +615,13 @@ device = "cuda"  # Colab luôn dùng cuda
 
 #### 4a. So sánh với phương pháp khác (chọn ít nhất 1)
 
-| Phương pháp | Loại | Runtime (paper) | Ghi chú |
-|---|---|---|---|
-| DDIM + P2P | Multi-step (50 steps) | ~26s | Baseline kinh điển |
-| NT-Inv + P2P | Multi-step + optimization | ~134s | PSNR cao, rất chậm |
-| TurboEdit | Few-step (4 steps) | ~1.32s | Đối thủ gần nhất về tốc độ |
-| ICD (SD 1.5) | Few-step | ~1.62s | PSNR tốt, CLIP thấp hơn |
-| **SwiftEdit** | **One-step** | **~0.23s** | **Đề tài chính** |
+| Phương pháp   | Loại                      | Runtime (paper) | Ghi chú                    |
+| ------------- | ------------------------- | --------------- | -------------------------- |
+| DDIM + P2P    | Multi-step (50 steps)     | \~26s           | Baseline kinh điển         |
+| NT-Inv + P2P  | Multi-step + optimization | \~134s          | PSNR cao, rất chậm         |
+| TurboEdit     | Few-step (4 steps)        | \~1.32s         | Đối thủ gần nhất về tốc độ |
+| ICD (SD 1.5)  | Few-step                  | \~1.62s         | PSNR tốt, CLIP thấp hơn    |
+| **SwiftEdit** | **One-step**              | **\~0.23s**     | **Đề tài chính**           |
 
 - [ ] **Colab:** Chạy TurboEdit (hoặc 1 multi-step method) trên **20 mẫu chung** với SwiftEdit.
 - [ ] **Mac:** So sánh định tính 5 mẫu đã chạy trên Colab (xem ảnh side-by-side).
@@ -639,7 +633,6 @@ device = "cuda"  # Colab luôn dùng cuda
 - [ ] Xây dựng 20–30 cặp (ảnh, prompt) phù hợp bối cảnh Việt Nam.
 - [ ] Phân loại kết quả: thành công / một phần / thất bại.
 - [ ] Ghi nhận failure cases (prompt mơ hồ, chỉnh sửa toàn cục, domain lạ).
-
 - [ ] Thu 20–30 cặp (ảnh, prompt) trên Mac.
 - [ ] Upload lên Colab Drive folder `custom_vn/`; chạy batch inference.
 - [ ] Download kết quả; phân loại success / partial / fail trên Mac.
@@ -655,7 +648,7 @@ device = "cuda"  # Colab luôn dùng cuda
 
 > **Không thực hiện trên MacBook Air M4** — training diffusion quá chậm và dễ OOM. Chỉ dùng Google Colab (GPU T4/A100) nếu thực sự cần.
 
-- [ ] Chuẩn bị ~200–500 ảnh + caption trên Colab.
+- [ ] Chuẩn bị \~200–500 ảnh + caption trên Colab.
 - [ ] Tiếp tục Stage 2 vài nghìn iterations (không train lại Stage 1).
 - [ ] So sánh reconstruction (PSNR, LPIPS) trước/sau trên domain target.
 
@@ -676,19 +669,19 @@ device = "cuda"  # Colab luôn dùng cuda
 
 ### 8.1. Nhật ký thực nghiệm
 
-| Ngày | Giai đoạn | Công việc | Kết quả / Ghi chú |
-|---|---|---|---|
-| 2026-06-01 | 0. Khởi tạo project | Tạo README, đề tài chi tiết, skill Cursor hỗ trợ nhật ký | Repo CS2309.CH201 sẵn sàng; skill sync README + NHAT_KY + §8.1 (Mac M4) |
+| Ngày       | Giai đoạn           | Công việc                                                | Kết quả / Ghi chú                                                        |
+| ---------- | ------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------ |
+| 2026-06-01 | 0. Khởi tạo project | Tạo README, đề tài chi tiết, skill Cursor hỗ trợ nhật ký | Repo CS2309.CH201 sẵn sàng; skill sync README + NHAT\_KY + §8.1 (Mac M4) |
 
 ### 8.2. Kết quả trung gian
 
 #### 8.2.1. Demo — Mac vs Colab
 
-| Môi trường | Backend | GPU/RAM | Thời gian/ảnh |
-|---|---|---|---|
-| Mac Air M4 | MPS | 24GB unified | … giây |
-| Google Colab | CUDA | T4 / A100 | … giây |
-| Paper (ref) | CUDA | A100 40GB | 0.23s |
+| Môi trường   | Backend | GPU/RAM      | Thời gian/ảnh |
+| ------------ | ------- | ------------ | ------------- |
+| Mac Air M4   | MPS     | 24GB unified | … giây        |
+| Google Colab | CUDA    | T4 / A100    | … giây        |
+| Paper (ref)  | CUDA    | A100 40GB    | 0.23s         |
 
 ```
 (Chèn ảnh cùng input — output giống nhau trên Mac và Colab)
@@ -696,13 +689,13 @@ device = "cuda"  # Colab luôn dùng cuda
 
 #### 8.2.2. Bảng metrics PieBench (Colab)
 
-| Metric | Colab (tái hiện) | Mac (subset) | Paper (A100) |
-|---|---|---|---|
-| PSNR ↑ | | | 23.33 |
-| MSE ×10⁴ ↓ | | | 6.60 |
-| CLIP-Whole ↑ | | | 25.16 |
-| CLIP-Edited ↑ | | | 21.25 |
-| Runtime (s) ↓ | | | 0.23 |
+| Metric        | Colab (tái hiện) | Mac (subset) | Paper (A100) |
+| ------------- | ---------------- | ------------ | ------------ |
+| PSNR ↑        | <br />           | <br />       | 23.33        |
+| MSE ×10⁴ ↓    | <br />           | <br />       | 6.60         |
+| CLIP-Whole ↑  | <br />           | <br />       | 25.16        |
+| CLIP-Edited ↑ | <br />           | <br />       | 21.25        |
+| Runtime (s) ↓ | <br />           | <br />       | 0.23         |
 
 #### 8.2.3. Ablation hyperparameter
 
@@ -718,12 +711,12 @@ device = "cuda"  # Colab luôn dùng cuda
 
 ### 8.3. Khó khăn gặp phải và cách xử lý
 
-| Vấn đề | Cách xử lý |
-|---|---|
+| Vấn đề                      | Cách xử lý                                                                    |
+| --------------------------- | ----------------------------------------------------------------------------- |
 | Colab disconnect giữa chừng | Lưu weights + checkpoint progress trên Drive; chia batch nhỏ (20 mẫu/session) |
-| OOM trên Colab T4 | `float16`, batch=1, giảm resolution |
-| Mac MPS lỗi operator | `PYTORCH_ENABLE_MPS_FALLBACK=1`; chạy mẫu đó trên Colab |
-| Metrics Mac ≠ Colab | Kiểm tra cùng seed, cùng hyperparameter, cùng dtype |
+| OOM trên Colab T4           | `float16`, batch=1, giảm resolution                                           |
+| Mac MPS lỗi operator        | `PYTORCH_ENABLE_MPS_FALLBACK=1`; chạy mẫu đó trên Colab                       |
+| Metrics Mac ≠ Colab         | Kiểm tra cùng seed, cùng hyperparameter, cùng dtype                           |
 
 ---
 
@@ -731,49 +724,49 @@ device = "cuda"  # Colab luôn dùng cuda
 
 ### 9.1. Dataset sử dụng
 
-| Dataset | Mô tả | Mục đích trong đề tài |
-|---|---|---|
-| **PieBench** | 700 mẫu, 10 loại editing, có GT mask và metrics chuẩn | Đánh giá định lượng chính |
-| **assets/imgs_demo** | Ảnh demo trong repo SwiftEdit | Kiểm tra cài đặt, demo nhanh |
-| **Bộ ảnh tự thu thập** | 20–50 ảnh + prompt tự đặt | Đánh giá định tính, bối cảnh VN |
-| **CommonCanvas** (tùy chọn) | 5k ảnh thực + caption (dùng trong Stage 2 training gốc) | Fine-tune nhẹ nếu có |
+| Dataset                     | Mô tả                                                   | Mục đích trong đề tài           |
+| --------------------------- | ------------------------------------------------------- | ------------------------------- |
+| **PieBench**                | 700 mẫu, 10 loại editing, có GT mask và metrics chuẩn   | Đánh giá định lượng chính       |
+| **assets/imgs\_demo**       | Ảnh demo trong repo SwiftEdit                           | Kiểm tra cài đặt, demo nhanh    |
+| **Bộ ảnh tự thu thập**      | 20–50 ảnh + prompt tự đặt                               | Đánh giá định tính, bối cảnh VN |
+| **CommonCanvas** (tùy chọn) | 5k ảnh thực + caption (dùng trong Stage 2 training gốc) | Fine-tune nhẹ nếu có            |
 
 ### 9.2. Phân loại 10 loại editing trong PieBench
 
-1. Random editing  
-2. Change object  
-3. Add object  
-4. Delete object  
-5. Change attribute (color, material, …)  
-6. Change background  
-7. Change texture  
-8. Change style  
-9. Change action/pose  
-10. Change counting  
+1. Random editing
+2. Change object
+3. Add object
+4. Delete object
+5. Change attribute (color, material, …)
+6. Change background
+7. Change texture
+8. Change style
+9. Change action/pose
+10. Change counting
 
 → **Gợi ý phân tích:** Nhóm loại 2, 5, 8 liên quan trực tiếp chủ đề "chỉnh sửa và thay đổi phong cách ảnh".
 
 ### 9.3. Metrics đánh giá
 
-| Metric | Ý nghĩa | Hướng tốt |
-|---|---|---|
-| **PSNR** | Bảo toàn vùng background | Cao ↑ |
-| **MSE** | Sai số pixel vùng background | Thấp ↓ |
-| **CLIP-Whole** | Alignment toàn ảnh với edit prompt | Cao ↑ |
-| **CLIP-Edited** | Alignment vùng edit với edit prompt | Cao ↑ |
-| **Runtime** | Thời gian suy luận | Thấp ↓ |
-| **IoU / Dice** (mask) | Độ trùng mask tự sinh vs GT | Cao ↑ |
-| **LPIPS / SSIM** (tùy chọn) | Chất lượng cảm nhận / cấu trúc | LPIPS thấp, SSIM cao |
+| Metric                      | Ý nghĩa                             | Hướng tốt            |
+| --------------------------- | ----------------------------------- | -------------------- |
+| **PSNR**                    | Bảo toàn vùng background            | Cao ↑                |
+| **MSE**                     | Sai số pixel vùng background        | Thấp ↓               |
+| **CLIP-Whole**              | Alignment toàn ảnh với edit prompt  | Cao ↑                |
+| **CLIP-Edited**             | Alignment vùng edit với edit prompt | Cao ↑                |
+| **Runtime**                 | Thời gian suy luận                  | Thấp ↓               |
+| **IoU / Dice** (mask)       | Độ trùng mask tự sinh vs GT         | Cao ↑                |
+| **LPIPS / SSIM** (tùy chọn) | Chất lượng cảm nhận / cấu trúc      | LPIPS thấp, SSIM cao |
 
 ### 9.4. Bảng so sánh phương pháp (tham khảo từ paper)
 
-| Nhóm | Phương pháp | Steps | Runtime ~ | PSNR | CLIP-Whole | Phù hợp so sánh |
-|---|---|---|---|---|---|---|
-| Multi-step | DDIM + P2P | 50+50 | 26s | 17.87 | 25.01 | Baseline chậm |
-| Multi-step | NT-Inv + P2P | 50+opt | 134s | 27.03 | 24.75 | Chất lượng cao, rất chậm |
-| Few-step | TurboEdit | 4+4 | 1.32s | 22.43 | 25.49 | Đối thủ tốc độ |
-| Few-step | ICD (SD 1.5) | 3–4 | 1.62s | 26.93 | 22.42 | PSNR cao |
-| **One-step** | **SwiftEdit** | **1+1** | **0.23s** | **23.33** | **25.16** | **Đề tài chính** |
+| Nhóm         | Phương pháp   | Steps   | Runtime \~ | PSNR      | CLIP-Whole | Phù hợp so sánh          |
+| ------------ | ------------- | ------- | ---------- | --------- | ---------- | ------------------------ |
+| Multi-step   | DDIM + P2P    | 50+50   | 26s        | 17.87     | 25.01      | Baseline chậm            |
+| Multi-step   | NT-Inv + P2P  | 50+opt  | 134s       | 27.03     | 24.75      | Chất lượng cao, rất chậm |
+| Few-step     | TurboEdit     | 4+4     | 1.32s      | 22.43     | 25.49      | Đối thủ tốc độ           |
+| Few-step     | ICD (SD 1.5)  | 3–4     | 1.62s      | 26.93     | 22.42      | PSNR cao                 |
+| **One-step** | **SwiftEdit** | **1+1** | **0.23s**  | **23.33** | **25.16**  | **Đề tài chính**         |
 
 ---
 
@@ -789,13 +782,13 @@ device = "cuda"  # Colab luôn dùng cuda
 
 ### 10.2. Đánh giá mức độ đáp ứng mục tiêu
 
-| Mục tiêu | Đạt / Chưa | Ghi chú |
-|---|---|---|
-| Hiểu và mô tả pipeline SwiftEdit | | |
-| Chạy inference với checkpoint pretrained | | |
-| Ablation hyperparameter ARaM | | |
-| Đánh giá định lượng trên PieBench | | |
-| So sánh với ít nhất 1 baseline | | |
+| Mục tiêu                                 | Đạt / Chưa | Ghi chú |
+| ---------------------------------------- | ---------- | ------- |
+| Hiểu và mô tả pipeline SwiftEdit         | <br />     | <br />  |
+| Chạy inference với checkpoint pretrained | <br />     | <br />  |
+| Ablation hyperparameter ARaM             | <br />     | <br />  |
+| Đánh giá định lượng trên PieBench        | <br />     | <br />  |
+| So sánh với ít nhất 1 baseline           | <br />     | <br />  |
 
 ### 10.3. Hạn chế
 
@@ -857,17 +850,17 @@ device = "cuda"  # Colab luôn dùng cuda
 
 File: `CS2309_SwiftEdit.ipynb` — lưu trên Google Drive + Colab
 
-| Cell | Nội dung |
-|---|---|
-| 1 | Mount Drive, set `WORK_DIR` |
-| 2 | Clone SwiftEdit (skip nếu đã có trên Drive) |
-| 3 | `pip install -r requirements.txt` |
-| 4 | Symlink / tải weights từ Drive |
-| 5 | Check CUDA + GPU name |
-| 6 | **Demo:** 1 ảnh từ `assets/imgs_demo` |
-| 7 | **Eval loop:** PieBench subset → save `metrics.csv` |
-| 8 | **Baseline:** TurboEdit trên 20 mẫu (tùy chọn) |
-| 9 | Download kết quả: zip `edited_images/` → Drive |
-| 10 | (Tùy chọn) Fine-tune Stage 2 |
+| Cell | Nội dung                                            |
+| ---- | --------------------------------------------------- |
+| 1    | Mount Drive, set `WORK_DIR`                         |
+| 2    | Clone SwiftEdit (skip nếu đã có trên Drive)         |
+| 3    | `pip install -r requirements.txt`                   |
+| 4    | Symlink / tải weights từ Drive                      |
+| 5    | Check CUDA + GPU name                               |
+| 6    | **Demo:** 1 ảnh từ `assets/imgs_demo`               |
+| 7    | **Eval loop:** PieBench subset → save `metrics.csv` |
+| 8    | **Baseline:** TurboEdit trên 20 mẫu (tùy chọn)      |
+| 9    | Download kết quả: zip `edited_images/` → Drive      |
+| 10   | (Tùy chọn) Fine-tune Stage 2                        |
 
 > Mỗi session Colab mới: chỉ cần chạy lại Cell 1, 4, 5 — bỏ qua tải weights.

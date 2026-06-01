@@ -35,7 +35,7 @@ Tài liệu liên quan: [Overview](./SwiftEdit_Overview.md) · [Đề tài](./Sw
 | # | Chủ đề | Số câu hỏi |
 |---|---|---|
 | 1 | [Diffusion & Text-to-Image](#1-diffusion--text-to-image) | 1 |
-| 2 | [SwiftEdit & Pipeline](#2-swiftedit--pipeline) | 2 |
+| 2 | [SwiftEdit & Pipeline](#2-swiftedit--pipeline) | 3 |
 | 3 | [Inversion & Noise](#3-inversion--noise) | 0 |
 | 4 | [Mask & ARaM](#4-mask--aram) | 0 |
 | 5 | [Đánh giá & PieBench](#5-đánh-giá--piebench) | 0 |
@@ -75,6 +75,19 @@ Tài liệu liên quan: [Overview](./SwiftEdit_Overview.md) · [Đề tài](./Sw
 *SwiftEdit là gì, input/output, so sánh P2P / TurboEdit, tại sao one-step nhanh, …*
 
 <!-- qa:insert -->
+### Q: Source prompt có bắt buộc tự viết không?
+
+**Ngày:** 2026-06-01  
+**Chủ đề:** #prompt #swiftedit #pipeline
+
+**Trả lời (tóm tắt):**
+- Không bắt buộc — optional, khuyến nghị có.
+- Code SwiftEdit (infer.py): src_p "could leave it empty".
+- Edit prompt là bắt buộc; source mô tả ảnh gốc, hỗ trợ inversion + self-guided mask (so sánh eps_hat source vs edit).
+- Không cần câu dài như PieBench: demo dùng ngắn ("woman", "dog"); câu đầy đủ ("An orange cat...") thường cho mask/reconstruction tốt hơn khi sửa cục bộ.
+- Có thể caption tự động (BLIP/LLaVA) rồi chỉnh tay — SwiftEdit không tự sinh source prompt.
+
+
 ### Q: Có ảnh minh họa pipeline inversion + editing diffusion không?
 
 **Ngày:** 2026-06-01  

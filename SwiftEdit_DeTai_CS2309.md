@@ -118,8 +118,9 @@ Từ noise vừa tìm được, máy **lau sương lại** ~20–50 step với *
 
 **SwiftEdit** hướng tới **chỉnh sửa tức thì**: thay ~100 lần chạy UNet bằng **one-step inversion** (`F_theta`) + **one-step editing** trên backbone SBv2 — chất lượng cạnh tranh so với multi-step và few-step methods.
 
-#### 1.3.3. Ảnh minh họa pipeline (tham khảo)
+#### 1.3.3. Ảnh minh họa pipeline **cũ** (multi-step — tham khảo)
 
+> **Không phải SwiftEdit.** Các ảnh dưới đây minh họa pipeline kinh điển (DDIM / Null-text → P2P / …, 20–50+ step mỗi giai đoạn) — bối cảnh §1.3 để so sánh với SwiftEdit (1 step + 1 step, xem §1.2).  
 > Nguồn ảnh công khai từ paper / project page gốc. Khi trích trong báo cáo, ghi rõ tác giả và venue.
 
 **Toàn bộ luồng — Ảnh gốc → Inversion → noise → Sampling + edit → Ảnh sửa**

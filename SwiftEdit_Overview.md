@@ -63,7 +63,7 @@ Một số hướng **few-step** (TurboEdit, ICD, ReNoise) rút xuống 3–8 b�
 
 **SwiftEdit** đặt mục tiêu: *instant editing* — inversion **1 bước** + editing **1 bước**.
 
-**Ảnh minh họa pipeline cũ** (chi tiết + nguồn trích dẫn: [Đề tài §1.3](./SwiftEdit_DeTai_CS2309.md#133-ảnh-minh-họa-pipeline-tham-khảo)):
+**Ảnh minh họa pipeline cũ (multi-step)** — chi tiết + nguồn: [Đề tài §1.3.3](./SwiftEdit_DeTai_CS2309.md#133-ảnh-minh-họa-pipeline-cũ-multi-step--tham-khảo). Pipeline SwiftEdit (one-step): [§1.2](./SwiftEdit_DeTai_CS2309.md#12-kiến-trúc-và-pipeline-suy-luận).
 
 ![Pipeline inversion → sampling (SAGE Fig. 3)](./assets/pipeline/sage-fig3-pipeline.png)
 

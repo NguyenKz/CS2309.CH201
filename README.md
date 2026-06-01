@@ -10,7 +10,7 @@
 | **Repo gốc** | [Qualcomm-AI-research/SwiftEdit](https://github.com/Qualcomm-AI-research/SwiftEdit) |
 | **Môi trường** | MacBook Air M4 24GB + Google Colab (T4) |
 
-Tài liệu chi tiết: [`SwiftEdit_DeTai_CS2309.md`](./SwiftEdit_DeTai_CS2309.md)
+Tài liệu: [`SwiftEdit_Overview.md`](./SwiftEdit_Overview.md) · [`SwiftEdit_DeTai_CS2309.md`](./SwiftEdit_DeTai_CS2309.md) · [`QA.md`](./QA.md) · [`NHAT_KY.md`](./NHAT_KY.md)
 
 ---
 
@@ -42,10 +42,14 @@ Tài liệu chi tiết: [`SwiftEdit_DeTai_CS2309.md`](./SwiftEdit_DeTai_CS2309.m
 ```
 CS2309.CH201/
 ├── README.md                  ← File này (hướng dẫn + checklist)
+├── assets/pipeline/           ← Ảnh minh họa pipeline (xem trong MD preview)
 ├── NHAT_KY.md                 ← Nhật ký làm việc (tự cập nhật bởi skill)
+├── QA.md                      ← Câu hỏi & giải đáp khái niệm
 ├── SwiftEdit_DeTai_CS2309.md  ← Báo cáo / kế hoạch chi tiết
 ├── .cursor/skills/
-│   └── update-readme-progress/  ← Skill: cập nhật README + NHAT_KY
+│   ├── update-readme-progress/  ← README + NHAT_KY
+│   ├── update-qa/               ← Tự thêm Q&A khái niệm
+│   └── write-markdown/            ← Viết MD (không LaTeX)
 └── (sau này)
     ├── SwiftEdit/             ← Clone từ GitHub
     ├── notebooks/

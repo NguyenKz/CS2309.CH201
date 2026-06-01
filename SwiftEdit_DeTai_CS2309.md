@@ -63,12 +63,145 @@ Một đặc điểm quan trọng là SwiftEdit có thể **tự động trích 
 
 ### 1.3. Bối cảnh và động lực
 
-Các phương pháp chỉnh sửa ảnh diffusion hiện tại thường yêu cầu:
+Các phương pháp chỉnh sửa ảnh diffusion hiện tại (Prompt-to-Prompt, Null-text Inversion, MasaCtrl, Plug-and-Play, …) thường gồm **hai giai đoạn nặng**:
 
-- **Inversion đa bước** (DDIM, Null-text Inversion) để tìm noise ban đầu tương ứng ảnh nguồn.
-- **Sampling đa bước** kết hợp thao tác attention để áp dụng thay đổi theo prompt.
+```
+Inversion đa bước (20–50+ steps)  →  Sampling + attention edit đa bước
+         ↑                                      ↑
+   DDIM / Null-text …                    P2P, MasaCtrl, PnP …
+```
 
-Quy trình này tốn **12–130+ giây** mỗi lần chỉnh sửa, không phù hợp ứng dụng real-time hoặc on-device. SwiftEdit hướng tới **chỉnh sửa tức thì** với chất lượng cạnh tranh so với multi-step và few-step methods.
+- **Giai đoạn 1 — Inversion đa bước** (DDIM, Null-text Inversion): tìm noise ban đầu tương ứng ảnh nguồn.
+- **Giai đoạn 2 — Sampling đa bước**: denoise lại kết hợp thao tác attention để áp dụng thay đổi theo edit prompt.
+
+Quy trình này tốn **12–130+ giây** mỗi lần chỉnh sửa, không phù hợp ứng dụng real-time hoặc on-device.
+
+#### 1.3.1. Mỗi step làm gì? (giải thích dễ hiểu)
+
+Hình dung diffusion như **lau dần sương mù trên một bức tranh**: ban đầu chỉ thấy nhiễu loạn xạ; sau mỗi lần lau, tranh **rõ hơn một chút**. **Một step = một lần lau như vậy.**
+
+**Ở mỗi step**, máy tính chạy mạng lớn gọi là **UNet**. UNet nhận vào:
+
+1. **Ảnh hiện tại** (còn nhiễu / mờ)
+2. **Prompt** (mô tả bằng chữ, ví dụ *"a black cat"*)
+3. **Đang ở bước thứ mấy** (bước 1/50, 2/50, …)
+
+Rồi UNet trả lời: *"Lần này nên bớt nhiễu / làm rõ theo hướng này"*. Ảnh được cập nhật **một chút** → sang step tiếp theo.
+
+> **Một step = một lần UNet chạy** (tốn GPU). 50 step ≈ 50 lần chạy liên tiếp.
+
+**Giai đoạn 1 — Inversion (tìm điểm xuất phát):**
+
+Bạn **đã có ảnh thật** (ví dụ mèo cam), muốn sửa thành mèo đen. Diffusion thường đi **từ nhiễu → ảnh**; inversion làm **ngược lại**: từ ảnh thật, tìm **nhiễu ban đầu** sao cho nếu "lau sương" lại thì ra đúng ảnh gốc.
+
+Mỗi step inversion: thêm / điều chỉnh nhiễu **một lớp nhỏ** để quay về trạng thái "mờ hơn" trước đó. Lặp ~20–50 lần → được **noise khởi đầu** (điểm xuất phát cho chỉnh sửa). Null-text Inversion còn **optimize thêm** embedding cho từng ảnh → chậm hơn nữa.
+
+**Giai đoạn 2 — Editing (lau sương lại, đổi nội dung):**
+
+Từ noise vừa tìm được, máy **lau sương lại** ~20–50 step với **edit prompt** mới. Các method như P2P, MasaCtrl, Plug-and-Play **can thiệp attention** mỗi step: *"ở vùng cần sửa thì nghe prompt mới; vùng nền thì giữ như cũ"* — ví dụ đổi mèo cam → mèo đen mà giữ hàng rào, bầu trời.
+
+#### 1.3.2. Tóm tắt: sinh ảnh mới vs chỉnh sửa ảnh cũ
+
+| | Sinh ảnh mới | Chỉnh sửa ảnh cũ (P2P, Null-text, …) |
+|---|---|---|
+| **Bắt đầu từ** | Nhiễu ngẫu nhiên | Ảnh thật → inversion → noise |
+| **Mỗi step** | Lau bớt sương | Giai đoạn 1: thêm sương ngược / Giai đoạn 2: lau sương + đổi prompt |
+| **Kết thúc** | Ảnh mới khớp prompt | Ảnh đã sửa, background giữ ổn định |
+| **Tổng step (ước lượng)** | ~50 | ~50 + ~50 ≈ **~100** |
+
+| Nhóm phương pháp | Steps (inversion + edit) | Thời gian ~ |
+|---|---|---|
+| Multi-step (DDIM + P2P) | 50 + 50 | ~26s |
+| Multi-step + optimize (Null-text + P2P) | 50 + optimize | ~134s |
+| Few-step (TurboEdit) | 4 + 4 | ~1.3s |
+| **One-step (SwiftEdit)** | **1 + 1** | **~0.23s** |
+
+**SwiftEdit** hướng tới **chỉnh sửa tức thì**: thay ~100 lần chạy UNet bằng **one-step inversion** (`F_theta`) + **one-step editing** trên backbone SBv2 — chất lượng cạnh tranh so với multi-step và few-step methods.
+
+#### 1.3.3. Ảnh minh họa pipeline (tham khảo)
+
+> Nguồn ảnh công khai từ paper / project page gốc. Khi trích trong báo cáo, ghi rõ tác giả và venue.
+
+**Toàn bộ luồng — Ảnh gốc → Inversion → noise → Sampling + edit → Ảnh sửa**
+
+SAGE (Gomez-Trenado et al., 2025) — Figure 3: DDIM inversion với source prompt, sau đó DDIM sampling với edit prompt.
+
+![Pipeline inversion + sampling (SAGE Fig. 3)](./assets/pipeline/sage-fig3-pipeline.png)
+
+| | |
+|---|---|
+| **File local** | [`assets/pipeline/sage-fig3-pipeline.png`](./assets/pipeline/sage-fig3-pipeline.png) |
+| **Nguồn gốc** | https://arxiv.org/html/2505.09571v1/x2.png |
+| **Paper** | [Don’t Forget your Inverse DDIM for Image Editing](https://arxiv.org/html/2505.09571v1) |
+
+**So sánh các hướng (Null-text, P2P, …)**
+
+SAGE — Figure 2: các cách kết hợp inversion, null-text / CFG và edit prompt.
+
+![So sánh pipeline chỉnh sửa diffusion (SAGE Fig. 2)](./assets/pipeline/sage-fig2-compare-methods.png)
+
+| | |
+|---|---|
+| **File local** | [`assets/pipeline/sage-fig2-compare-methods.png`](./assets/pipeline/sage-fig2-compare-methods.png) |
+| **Nguồn gốc** | https://arxiv.org/html/2505.09571v1/x1.png |
+
+**Giai đoạn 1 — Inversion (20–50+ steps)**
+
+Null-text Inversion (Mokady et al., CVPR 2023): trajectory DDIM inversion + null-text optimization từng timestep.
+
+![Sơ đồ Null-text inversion](./assets/pipeline/nulltext-diagram.png)
+
+| | |
+|---|---|
+| **File local** | [`assets/pipeline/nulltext-diagram.png`](./assets/pipeline/nulltext-diagram.png) |
+| **Nguồn gốc** | https://null-text-inversion.github.io/files/diagram-01.png |
+| **Trang dự án** | https://null-text-inversion.github.io/ |
+
+**“Mỗi step” — ảnh dần rõ qua từng bước denoise**
+
+SAGE — Figure 4: ước lượng latent qua các timestep khi sampling (minh họa trực quan cho “50 step = 50 lần UNet chạy”).
+
+![Denoise từng timestep (SAGE Fig. 4)](./assets/pipeline/sage-fig4-denoise-steps.png)
+
+| | |
+|---|---|
+| **File local** | [`assets/pipeline/sage-fig4-denoise-steps.png`](./assets/pipeline/sage-fig4-denoise-steps.png) |
+| **Nguồn gốc** | https://arxiv.org/html/2505.09571v1/x3.png |
+| **Tutorial tương tác** | [Hugging Face — DDIM Inversion](https://huggingface.co/learn/diffusion-course/en/unit4/2) (ví dụ puppy → cat) |
+
+**Giai đoạn 2 — Sampling + attention edit**
+
+Prompt-to-Prompt (Hertz et al., 2022): inject cross-attention map từ source prompt sang edit prompt **mỗi step** diffusion.
+
+![Cross-attention control (P2P)](./assets/pipeline/p2p-cross-attention.png)
+
+| | |
+|---|---|
+| **File local** | [`assets/pipeline/p2p-cross-attention.png`](./assets/pipeline/p2p-cross-attention.png) |
+| **Nguồn gốc** | https://prompt-to-prompt.github.io/ptp_files/03_ca_diagram.png |
+| **Trang dự án** | https://prompt-to-prompt.github.io/ |
+
+**Kết quả cuối pipeline (ảnh thật → edit)**
+
+| Minh họa | Mô tả | File local |
+|---|---|---|
+| P2P word swap | Đổi từ trong prompt, giữ bố cục | [`p2p-teaser.png`](./assets/pipeline/p2p-teaser.png) |
+| Null-text + P2P | Inversion ảnh thật rồi edit | [`nulltext-editing-results.png`](./assets/pipeline/nulltext-editing-results.png) |
+
+![Ví dụ edit Prompt-to-Prompt](./assets/pipeline/p2p-teaser.png)
+
+![Ví dụ edit Null-text + P2P](./assets/pipeline/nulltext-editing-results.png)
+
+**Bảng tra nhanh — ảnh ↔ vị trí trong pipeline**
+
+| Vị trí | File local |
+|---|---|
+| Toàn pipeline | [`sage-fig3-pipeline.png`](./assets/pipeline/sage-fig3-pipeline.png) |
+| So sánh method | [`sage-fig2-compare-methods.png`](./assets/pipeline/sage-fig2-compare-methods.png) |
+| Giai đoạn 1 — Inversion | [`nulltext-diagram.png`](./assets/pipeline/nulltext-diagram.png) |
+| Mỗi step denoise | [`sage-fig4-denoise-steps.png`](./assets/pipeline/sage-fig4-denoise-steps.png) |
+| Giai đoạn 2 — Attention edit | [`p2p-cross-attention.png`](./assets/pipeline/p2p-cross-attention.png) |
+| Kết quả edit | [`p2p-teaser.png`](./assets/pipeline/p2p-teaser.png), [`nulltext-editing-results.png`](./assets/pipeline/nulltext-editing-results.png) |
 
 ---
 

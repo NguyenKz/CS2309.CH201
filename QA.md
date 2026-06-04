@@ -39,7 +39,7 @@ Tài liệu liên quan: [Overview](./SwiftEdit_Overview.md) · [Đề tài](./Sw
 | 3 | [Inversion & Noise](#3-inversion--noise) | 0 |
 | 4 | [Mask & ARaM](#4-mask--aram) | 0 |
 | 5 | [Đánh giá & PieBench](#5-đánh-giá--piebench) | 0 |
-| 6 | [Triển khai Mac / Colab](#6-triển-khai-mac--colab) | 0 |
+| 6 | [Triển khai Mac / Colab](#6-triển-khai-mac--colab) | 3 |
 | 7 | [Chỉnh sửa & Style](#7-chỉnh-sửa--style) | 0 |
 | 8 | [Chưa phân loại](#8-chưa-phân-loại) | 1 |
 
@@ -156,8 +156,40 @@ Tài liệu liên quan: [Overview](./SwiftEdit_Overview.md) · [Đề tài](./Sw
 *MPS vs CUDA, cài env, weights, OOM, runtime, …*
 
 <!-- qa:insert -->
+### Q: 15 GB có đủ để dùng SwiftEdit không (VRAM vs ổ đĩa)?
 
-*(Chưa có câu hỏi.)*
+**Ngày:** 2026-06-04  
+**Chủ đề:** #colab #storage #drive
+
+**Trả lời (tóm tắt):**
+- VRAM T4 ~15GB: đủ chạy inference 512×512 (batch=1); OOM nếu fine-tune/batch lớn.
+- Ổ đĩa/Drive 15GB trống: chật — weights Qualcomm ~9.6GB + HF ~3–8GB; nên ≥20–25GB hoặc chỉ lưu weights trên Drive + tải HF tối thiểu (download_hf_models.sh).
+- Không snapshot_download full mirror SD2.1 (~30GB+ cache).
+
+
+### Q: SwiftEdit chạy trên Google Colab T4 được không?
+
+**Ngày:** 2026-06-04  
+**Chủ đề:** #colab #t4 #cuda
+
+**Trả lời (tóm tắt):**
+- Được — đúng kế hoạch đề tài: T4 ~15GB VRAM đủ inference 512×512, dùng requirements.txt CUDA (cu118).
+- Clone repo đề tài CS2309 (có patch mirror SD2.1, map_location ip_adapter), lưu swiftedit_weights trên Drive.
+- Nhanh hơn Mac MPS; PieBench/baseline nên chạy Colab.
+
+
+### Q: Tại sao SwiftEdit chạy chậm trên Mac so với paper (~0.23s)?
+
+**Ngày:** 2026-06-04  
+**Chủ đề:** #mac #mps #runtime
+
+**Trả lời (tóm tắt):**
+- Paper đo trên NVIDIA A100 + CUDA; Mac dùng MPS, thường fp32, nhiều model load (sd-turbo, SD2.1, IP-Adapter, weights ~9.6GB).
+- Thời gian ~90s/ảnh trên M4 thường gồm load model + inference 512×512 — không phải multi-step 50+50.
+- Colab T4 nhanh hơn Mac; chỉ A100 mới gần số paper.
+
+
+
 
 ---
 

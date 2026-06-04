@@ -54,7 +54,9 @@ CS2309.CH201/
 │   └── swiftedit_weights/     ← Checkpoint Qualcomm (~9.6 GB)
 ├── assets/pipeline/
 ├── NHAT_KY.md · QA.md · SwiftEdit_DeTai_CS2309.md
-└── (sau này) notebooks/, results/, report/
+├── notebooks/
+│   └── CS2309_SwiftEdit_test.ipynb
+└── (sau này) results/, report/
 ```
 
 ---
@@ -123,17 +125,24 @@ bash scripts/download_hf_models.sh
 
 ### 5. Chạy demo
 
+**CLI:**
+
 ```bash
 source .venv/bin/activate
 bash scripts/run_swiftedit.sh
 ```
 
-Hoặc:
+Hoặc `cd SwiftEdit && python infer.py`.
+
+**Notebook (test tương tác):**
 
 ```bash
-cd SwiftEdit
-python infer.py
+source .venv/bin/activate
+pip install jupyter ipywidgets matplotlib   # hoặc đã có trong requirements-mac.txt
+jupyter notebook notebooks/CS2309_SwiftEdit_test.ipynb
 ```
+
+Chọn kernel `.venv`, chạy lần lượt các cell. Kết quả lưu `results/notebook/`. Trên Colab: đặt `IN_COLAB = True` ở cell 2.
 
 Ảnh mặc định: `SwiftEdit/assets/imgs_demo/woman_face.jpg` — prompt `woman` → `Taylor Swift`. Kết quả: `SwiftEdit/result_woman->Taylor Swift.png` (trên Mac M4 thường **~90 giây/ảnh** lần đầu, gồm load model).
 
@@ -151,10 +160,13 @@ edit_p = "Taylor Swift"  # bắt buộc — mô tả chỉnh sửa
 
 ### Google Colab (tóm tắt)
 
-1. Runtime → **T4 GPU**
-2. Mount Drive → `MyDrive/CS2309_SwiftEdit/`
-3. `pip install -r SwiftEdit/requirements.txt` (CUDA)
-4. Tải weights 1 lần, lưu Drive; session sau symlink
+**Cách nhanh:** mở [`notebooks/CS2309_SwiftEdit_test.ipynb`](./notebooks/CS2309_SwiftEdit_test.ipynb) trên Colab → Runtime **T4 GPU** → chạy all cells.
+
+- **Chỉ clone repo đề tài** `CS2309.CH201` (đã có `SwiftEdit/` + patch) — không clone Qualcomm riêng
+- Tải weights + HF vào **`/content`** (ổ Colab, **không** bắt buộc Google Drive; mất khi reset runtime)
+- Đổi `REPO_URL` trong notebook nếu dùng fork
+
+**Lưu weights lâu dài (tùy chọn):** copy `swiftedit_weights/` lên Drive thủ công; notebook mặc định không mount Drive.
 
 Chi tiết: [Mục 4.2 đề tài](./SwiftEdit_DeTai_CS2309.md#42-google-colab--môi-trường-gpu-cuda).
 
@@ -163,17 +175,18 @@ Chi tiết: [Mục 4.2 đề tài](./SwiftEdit_DeTai_CS2309.md#42-google-colab--
 ## Checklist tổng thể
 
 > Đánh dấu `[x]` khi hoàn thành. Cập nhật file này trong quá trình làm đề tài.
-> Cập nhật tiến độ lần cuối: 2026-06-04 — 7/64 task bắt buộc
+> Cập nhật tiến độ lần cuối: 2026-06-04 — 8/64 task bắt buộc
 
 ### Trạng thái nhanh
 
 | Giai đoạn | Tiến độ |
 |---|---|
 | 1. Lý thuyết | ⬜ Chưa bắt đầu |
-| 2. Setup Mac + Colab | 🔄 Đang làm (7/17) |
+| 2. Setup Mac + Colab | 🔄 Đang làm (8/17) |
 | 3. Thực nghiệm cơ bản | ⬜ Chưa bắt đầu |
 | 4. So sánh & mở rộng | ⬜ Chưa bắt đầu |
 | 5. Báo cáo & nộp | ⬜ Chưa bắt đầu |
+
 
 
 
@@ -208,7 +221,7 @@ Chi tiết: [Mục 4.2 đề tài](./SwiftEdit_DeTai_CS2309.md#42-google-colab--
 
 ### 2b. Google Colab
 
-- [ ] Tạo notebook `CS2309_SwiftEdit.ipynb`
+- [x] Tạo notebook `CS2309_SwiftEdit.ipynb`
 - [ ] Tạo folder `MyDrive/CS2309_SwiftEdit/` trên Drive
 - [ ] Mount Drive + clone repo
 - [ ] Cài `requirements.txt` (CUDA)
@@ -344,7 +357,9 @@ Chi tiết: [Mục 4.2 đề tài](./SwiftEdit_DeTai_CS2309.md#42-google-colab--
 | HF **timeout** / `cas-bridge.xethub` | `export HF_HUB_DOWNLOAD_TIMEOUT=900`; chạy lại `download_hf_models.sh` |
 | `deserialize object on a CUDA device` (Mac) | `models.py` đã dùng `map_location="cpu"` cho `ip_adapter.bin` |
 | Mac: lỗi MPS operator | `export PYTORCH_ENABLE_MPS_FALLBACK=1` hoặc chạy mẫu đó trên Colab |
-| Mac: OOM / chậm | Giữ 512×512, đóng app nặng; benchmark lớn → Colab |
+| Mac: OOM / chậm (~90s/ảnh MPS) | Bình thường vs A100 paper; giữ 512×512; benchmark lớn → Colab T4 |
+| Colab: Drive ~15 GB trống | Chật — weights ~9.6 GB + HF tối thiểu; khuyến nghị ≥20–25 GB trên Drive |
+| Colab T4 VRAM ~15 GB | Đủ inference 512×512; PieBench batch=1 |
 | Colab: disconnect | Chia batch 20 mẫu/session; lưu progress trên Drive |
 | Colab: OOM T4 | `float16`, batch=1 |
 | Không tải được weights Qualcomm | `bash scripts/download_swiftedit_weights.sh` hoặc `curl` từng `part-aa`…`ae` |

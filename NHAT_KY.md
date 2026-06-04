@@ -9,6 +9,7 @@
 
 | Ngày | Giai đoạn | Công việc | Kết quả / Ghi chú | Môi trường |
 |---|---|---|---|---|
+| 2026-06-04 | 2a. Mac | Notebook notebooks/CS2309_SwiftEdit_test.ipynb (preset, upload ipywidgets 8, inf | Notebook chạy OK trên Mac (.venv); upload widget sửa tuple ipywidgets 8 | Mac M4 (MPS); Jupyter .venv |
 | 2026-06-04 | 2a. Mac | Clone SwiftEdit; pyenv 3.12.10 + .venv + requirements-mac.txt (PyTorch MPS) | Demo woman→Taylor Swift OK; output SwiftEdit/result_woman->Taylor Swift.png; ~91s/ảnh trên MPS | Mac M4 (MPS); pyenv 3.12.10; .venv |
 | 2026-06-01 | 0. Khởi tạo project | Tạo README, đề tài chi tiết, skill Cursor hỗ trợ nhật ký | Repo CS2309.CH201 sẵn sàng; skill sync README + NHAT_KY + §8.1 | Mac M4 |
 
@@ -17,6 +18,30 @@
 ## Chi tiết theo phiên làm việc
 
 *(Các entry chi tiết xuất hiện bên dưới, mới nhất ở trên cùng.)*
+
+### 2026-06-04 — [2a. Mac] Notebook test, tài liệu Colab/T4, ghi chú runtime
+
+**Môi trường:** Mac M4 (MPS); Jupyter .venv
+
+**Công việc đã làm:**
+- Notebook notebooks/CS2309_SwiftEdit_test.ipynb (preset, upload ipywidgets 8, inference)
+- README: hướng dẫn cài đặt/pyenv/scripts; .gitignore loại weights
+- Ghi nhận: Mac MPS ~91s vs paper A100 ~0.23s; Colab T4 VRAM 15GB đủ inference; Drive ~15GB chật (weights 9.6GB+HF)
+
+**Kết quả:**
+- Notebook chạy OK trên Mac (.venv); upload widget sửa tuple ipywidgets 8
+- Chưa chạy Colab thực tế — đã ghi kế hoạch T4 + lưu weights Drive trong đề tài/README
+
+**Task README đã đánh [x]:**
+- Tạo notebook `CS2309_SwiftEdit_test.ipynb`
+
+**Vấn đề / cách xử lý:**
+matplotlib thiếu kernel → %pip trong notebook; FileUpload value tuple (ipywidgets 8)
+
+**Bước tiếp theo:**
+- Chạy thử Colab T4: IN_COLAB=True, weights trên Drive; đo runtime inference-only; PieBench batch
+
+---
 
 ### 2026-06-04 — [2a. Mac] Setup Mac (pyenv/venv) và chạy demo SwiftEdit
 

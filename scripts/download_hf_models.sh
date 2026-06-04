@@ -5,12 +5,13 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
-if [[ ! -d .venv ]]; then
-  echo "Chưa có .venv — tạo venv trước (xem README § Cài đặt nhanh)."
-  exit 1
+if [[ -d .venv ]]; then
+  source .venv/bin/activate
+elif [[ -n "${VIRTUAL_ENV:-}" ]]; then
+  :
+else
+  echo "Dùng python hệ thống (Colab / chưa có .venv)."
 fi
-
-source .venv/bin/activate
 export HF_HUB_DOWNLOAD_TIMEOUT="${HF_HUB_DOWNLOAD_TIMEOUT:-900}"
 
 python <<'PY'

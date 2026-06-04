@@ -323,6 +323,7 @@ bash scripts/run_swiftedit.sh                # demo → SwiftEdit/result_*.png
 | Bộ nhớ            | \~12–15GB VRAM (T4) — đủ inference SwiftEdit      |
 | Thời gian session | Free \~12h/session, có thể disconnect             |
 | Lưu trữ           | Google Drive mount — lưu weights, kết quả         |
+| Dung lượng Drive  | Weights ~9.6 GB + HF ~3–8 GB → **khuyến nghị ≥20–25 GB** trống; **15 GB** chỉ vừa đủ nếu tối thiểu hóa cache HF |
 
 ### Khả năng trên Colab
 
@@ -661,8 +662,9 @@ device = "cuda"  # Colab luôn dùng cuda
 
 | Ngày       | Giai đoạn           | Công việc                                                | Kết quả / Ghi chú                                                        |
 | ---------- | ------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------ |
-| 2026-06-04 | 2a. Mac             | Clone SwiftEdit; pyenv/venv + MPS; demo `assets/imgs_demo` | Demo OK ~91s/ảnh; `SwiftEdit/result_woman->Taylor Swift.png` (Mac M4 MPS) |
-| 2026-06-01 | 0. Khởi tạo project | Tạo README, đề tài chi tiết, skill Cursor hỗ trợ nhật ký | Repo CS2309.CH201 sẵn sàng; skill sync README + NHAT_KY + §8.1 (Mac M4) |
+| 2026-06-04 | 2a. Mac             | Notebook test + README/gitignore; ghi chú Colab T4 / 15GB | Notebook OK Mac; Colab chưa chạy — xem QA §6 |
+| 2026-06-04 | 2a. Mac             | Setup pyenv/venv, demo SwiftEdit                         | ~91s/ảnh MPS; `result_woman->Taylor Swift.png` |
+| 2026-06-01 | 0. Khởi tạo project | Tạo README, đề tài, skill nhật ký                        | Repo CS2309.CH201 sẵn sàng |
 
 ### 8.2. Kết quả trung gian
 
@@ -671,7 +673,7 @@ device = "cuda"  # Colab luôn dùng cuda
 | Môi trường   | Backend | GPU/RAM      | Thời gian/ảnh |
 | ------------ | ------- | ------------ | ------------- |
 | Mac Air M4   | MPS     | 24GB unified | ~91 giây (demo `woman`→`Taylor Swift`, 512×512) |
-| Google Colab | CUDA    | T4 / A100    | … giây        |
+| Google Colab | CUDA    | T4 ~15GB VRAM | Chưa đo (dự kiến nhanh hơn Mac MPS; chưa chạy session Colab) |
 | Paper (ref)  | CUDA    | A100 40GB    | 0.23s         |
 
 ```
@@ -704,6 +706,11 @@ device = "cuda"  # Colab luôn dùng cuda
 
 | Vấn đề                      | Cách xử lý                                                                    |
 | --------------------------- | ----------------------------------------------------------------------------- |
+| Mac chậm (~90s/ảnh) vs paper 0.23s (A100) | Ghi 3 cột runtime Mac MPS / Colab T4 / Paper; không đổi thuật toán — do MPS + fp32 + load nhiều model |
+| HF `stable-diffusion-2-1-base` 401 | Dùng mirror `Manojb/stable-diffusion-2-1-base` trong `models.py` |
+| `ip_adapter.bin` lỗi CUDA trên Mac | `torch.load(..., map_location="cpu")` |
+| Drive/ổ đĩa chỉ ~15 GB trống | Weights ~9.6 GB + HF tối thiểu; tránh snapshot full SD2.1; xóa `.tar.gz.part-*` sau giải nén |
+| Colab T4 VRAM ~15 GB | Đủ inference 512×512; PieBench batch=1 |
 | Colab disconnect giữa chừng | Lưu weights + checkpoint progress trên Drive; chia batch nhỏ (20 mẫu/session) |
 | OOM trên Colab T4           | `float16`, batch=1, giảm resolution                                           |
 | Mac MPS lỗi operator        | `PYTORCH_ENABLE_MPS_FALLBACK=1`; chạy mẫu đó trên Colab                       |

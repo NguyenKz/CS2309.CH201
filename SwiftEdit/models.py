@@ -197,7 +197,9 @@ class IPSBV2Model(torch.nn.Module):
         self.sigma_t = ((1 - alphas_cumprod[self.timestep]) ** 0.5).view(-1, 1, 1, 1)
         del alphas_cumprod
 
-        self.load_state_dict(torch.load(ip_model_path, map_location="cpu"))
+        self.load_state_dict(
+            torch.load(ip_model_path, map_location="cpu", weights_only=True)
+        )
         # self.load_ip_adapter(path_ckpt_ip)
 
     def load_ip_adapter(self, path_ckpt_ip):

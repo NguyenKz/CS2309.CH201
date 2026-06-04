@@ -33,23 +33,43 @@ ENV/
 .ipynb_checkpoints/
 *.ipynb_checkpoints
 
-# --- SwiftEdit & model weights (rất nặng — tải riêng) ---
+# --- SwiftEdit: checkpoint Qualcomm (~9.6 GB, tải bằng scripts/download_swiftedit_weights.sh) ---
 SwiftEdit/swiftedit_weights/
 swiftedit_weights/
+
+# Archive tải weights (thường nằm trong SwiftEdit/)
+SwiftEdit/swiftedit_weights.tar.gz
+SwiftEdit/swiftedit_weights.tar.gz.part-*
 *.tar.gz
 *.tar.gz.part-*
 
-# Hugging Face / diffusers cache
+# Weight / checkpoint lớn (nếu nằm ngoài swiftedit_weights/)
+**/*.safetensors
+**/*.ckpt
+**/*.pt
+**/*.pth
+**/pytorch_model.bin
+**/model.fp16.safetensors
+**/diffusion_pytorch_model.safetensors
+# ip_adapter.bin và *.bin khác trong SwiftEdit (trừ khi là file text nhỏ — không có)
+SwiftEdit/**/*.bin
+
+# Ảnh output inference (tạo lại bằng run_swiftedit.sh)
+SwiftEdit/result*.png
+SwiftEdit/result_*.png
+
+# Hugging Face / diffusers cache (nếu đặt trong project)
 .cache/
 huggingface/
 .huggingface/
+**/models--*/
+**/snapshots/**
 
 # --- Kết quả thực nghiệm (giữ cấu trúc folder, bỏ file nặng) ---
 results/**/*
 !results/**/.gitkeep
 !results/piebench/metrics.csv
 
-# Ảnh / video output (uncomment dòng dưới nếu muốn commit vài ảnh demo)
 results/**/*.png
 results/**/*.jpg
 results/**/*.jpeg
@@ -77,7 +97,6 @@ Desktop.ini
 .vscode/
 !.vscode/settings.json
 !.vscode/extensions.json
-
 
 # --- Log / temp ---
 *.log

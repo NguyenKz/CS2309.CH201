@@ -41,86 +41,140 @@ Tài liệu: [`SwiftEdit_Overview.md`](./SwiftEdit_Overview.md) · [`SwiftEdit_D
 
 ```
 CS2309.CH201/
-├── README.md                  ← File này (hướng dẫn + checklist)
-├── assets/pipeline/           ← Ảnh minh họa pipeline (xem trong MD preview)
-├── NHAT_KY.md                 ← Nhật ký làm việc (tự cập nhật bởi skill)
-├── QA.md                      ← Câu hỏi & giải đáp khái niệm
-├── SwiftEdit_DeTai_CS2309.md  ← Báo cáo / kế hoạch chi tiết
-├── .cursor/skills/
-│   ├── update-readme-progress/  ← README + NHAT_KY
-│   ├── update-qa/               ← Tự thêm Q&A khái niệm
-│   └── write-markdown/            ← Viết MD (không LaTeX)
-└── (sau này)
-    ├── SwiftEdit/             ← Clone từ GitHub
-    ├── notebooks/
-    │   └── CS2309_SwiftEdit.ipynb
-    ├── results/
-    │   ├── ablation/
-    │   ├── piebench/
-    │   └── custom_vn/
-    └── report/                ← Slide, ảnh báo cáo
+├── README.md                  ← Hướng dẫn + checklist
+├── .python-version            ← pyenv: 3.12.10
+├── requirements-mac.txt       ← pip cho Mac MPS
+├── .venv/                     ← virtualenv (tạo local, không commit)
+├── scripts/
+│   ├── download_swiftedit_weights.sh
+│   ├── download_hf_models.sh
+│   └── run_swiftedit.sh
+├── SwiftEdit/                 ← Repo gốc + patch MPS (infer.py, models.py)
+│   ├── infer.py
+│   └── swiftedit_weights/     ← Checkpoint Qualcomm (~9.6 GB)
+├── assets/pipeline/
+├── NHAT_KY.md · QA.md · SwiftEdit_DeTai_CS2309.md
+└── (sau này) notebooks/, results/, report/
 ```
 
 ---
 
-## Cài đặt nhanh
+## Cài đặt và chạy cơ bản (Mac MPS)
 
-### Mac (MPS)
+Yêu cầu: **macOS**, **pyenv** + Python **3.12**, **~25 GB** disk (weights + cache HF), RAM khuyến nghị **24 GB**.
+
+### 1. Clone repo đề tài (nếu chưa có)
 
 ```bash
-conda create -n SwiftEdit python=3.12 -y
-conda activate SwiftEdit
-
-pip install torch torchvision torchaudio
-pip install transformers==4.37.2 accelerate ftfy tensorboard Jinja2 \
-            diffusers==0.22.0 huggingface-hub==0.25.2 einops
-pip install numpy==1.26.4
-
-git clone https://github.com/Qualcomm-AI-research/SwiftEdit.git
-cd SwiftEdit
-# Tải weights → swiftedit_weights/ (GitHub Releases v1.0)
+git clone <url-repo-CS2309.CH201> CS2309.CH201
+cd CS2309.CH201
 ```
 
-Sửa `device = "mps"` trong `infer.py` / `models.py`.
+Repo đã có sẵn thư mục `SwiftEdit/` (fork/clone từ [Qualcomm SwiftEdit](https://github.com/Qualcomm-AI-research/SwiftEdit)) kèm patch cho Mac.
 
-### Google Colab
+### 2. Môi trường Python (pyenv + venv)
+
+```bash
+# Cài Python 3.12 qua pyenv (một lần)
+pyenv install 3.12.10   # bỏ qua nếu đã có
+pyenv local 3.12.10     # đọc từ .python-version
+
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install -U pip
+python -m pip install -r requirements-mac.txt
+```
+
+Kiểm tra MPS:
+
+```bash
+python -c "import torch; print('MPS:', torch.backends.mps.is_available())"
+```
+
+*(Có thể dùng conda thay venv — xem [Mục 4.1 đề tài](./SwiftEdit_DeTai_CS2309.md#41-macbook-air-m4-24gb--môi-trường-local).)*
+
+### 3. Tải checkpoint SwiftEdit (~9.6 GB)
+
+```bash
+bash scripts/download_swiftedit_weights.sh
+```
+
+Script tải 5 file `part-aa` … `part-ae` từ GitHub Releases, ghép và giải nén vào `SwiftEdit/swiftedit_weights/`.
+
+Tải tay (nếu script lỗi): xem [releases v1.0](https://github.com/Qualcomm-AI-research/SwiftEdit/releases/tag/v1.0).
+
+### 4. Tải model Hugging Face (lần đầu)
+
+SwiftEdit cần thêm **sd-turbo**, **SD 2.1** (text encoder/VAE cho edit), **IP-Adapter image_encoder**. Lần chạy `infer.py` cũng có thể tự tải, nhưng nên prefetch:
+
+```bash
+source .venv/bin/activate
+bash scripts/download_hf_models.sh
+```
+
+**Lưu ý:** Repo `stabilityai/stable-diffusion-2-1-base` trên HF có thể trả **401**; code trong `SwiftEdit/models.py` đã trỏ mirror `Manojb/stable-diffusion-2-1-base` (cùng weights).
+
+Nếu timeout mạng:
+
+```bash
+export HF_HUB_DOWNLOAD_TIMEOUT=900
+bash scripts/download_hf_models.sh
+```
+
+### 5. Chạy demo
+
+```bash
+source .venv/bin/activate
+bash scripts/run_swiftedit.sh
+```
+
+Hoặc:
+
+```bash
+cd SwiftEdit
+python infer.py
+```
+
+Ảnh mặc định: `SwiftEdit/assets/imgs_demo/woman_face.jpg` — prompt `woman` → `Taylor Swift`. Kết quả: `SwiftEdit/result_woman->Taylor Swift.png` (trên Mac M4 thường **~90 giây/ảnh** lần đầu, gồm load model).
+
+### 6. Đổi ảnh / prompt
+
+Sửa cuối file `SwiftEdit/infer.py`:
+
+```python
+img_path = "./assets/imgs_demo/woman_face.jpg"
+src_p = "woman"          # mô tả ảnh gốc (có thể để ngắn hoặc "")
+edit_p = "Taylor Swift"  # bắt buộc — mô tả chỉnh sửa
+```
+
+`src_p` giúp mask/inversion; có thể bỏ trống nhưng kém ổn định (xem `QA.md`).
+
+### Google Colab (tóm tắt)
 
 1. Runtime → **T4 GPU**
 2. Mount Drive → `MyDrive/CS2309_SwiftEdit/`
-3. `pip install -r requirements.txt` (CUDA — dùng file gốc)
-4. Tải weights 1 lần, lưu Drive, session sau symlink
+3. `pip install -r SwiftEdit/requirements.txt` (CUDA)
+4. Tải weights 1 lần, lưu Drive; session sau symlink
 
-Chi tiết: [Mục 4 trong tài liệu đề tài](./SwiftEdit_DeTai_CS2309.md#4-môi-trường-thực-nghiệm-mac-m4--google-colab)
-
-### Tải checkpoint
-
-```bash
-# Trong thư mục SwiftEdit (Mac hoặc Colab)
-wget https://github.com/Qualcomm-AI-research/SwiftEdit/releases/download/v1.0/swiftedit_weights.tar.gz.part-aa
-wget https://github.com/Qualcomm-AI-research/SwiftEdit/releases/download/v1.0/swiftedit_weights.tar.gz.part-ab
-wget https://github.com/Qualcomm-AI-research/SwiftEdit/releases/download/v1.0/swiftedit_weights.tar.gz.part-ac
-wget https://github.com/Qualcomm-AI-research/SwiftEdit/releases/download/v1.0/swiftedit_weights.tar.gz.part-ad
-wget https://github.com/Qualcomm-AI-research/SwiftEdit/releases/download/v1.0/swiftedit_weights.tar.gz.part-ae
-cat swiftedit_weights.tar.gz.part-* > swiftedit_weights.tar.gz
-tar zxf swiftedit_weights.tar.gz
-```
+Chi tiết: [Mục 4.2 đề tài](./SwiftEdit_DeTai_CS2309.md#42-google-colab--môi-trường-gpu-cuda).
 
 ---
 
 ## Checklist tổng thể
 
 > Đánh dấu `[x]` khi hoàn thành. Cập nhật file này trong quá trình làm đề tài.
-> Cập nhật tiến độ lần cuối: 2026-06-01 — 0/64 task bắt buộc
+> Cập nhật tiến độ lần cuối: 2026-06-04 — 7/64 task bắt buộc
 
 ### Trạng thái nhanh
 
 | Giai đoạn | Tiến độ |
 |---|---|
 | 1. Lý thuyết | ⬜ Chưa bắt đầu |
-| 2. Setup Mac + Colab | ⬜ Chưa bắt đầu |
+| 2. Setup Mac + Colab | 🔄 Đang làm (7/17) |
 | 3. Thực nghiệm cơ bản | ⬜ Chưa bắt đầu |
 | 4. So sánh & mở rộng | ⬜ Chưa bắt đầu |
 | 5. Báo cáo & nộp | ⬜ Chưa bắt đầu |
+
 
 
 
@@ -143,13 +197,13 @@ tar zxf swiftedit_weights.tar.gz
 ### 2a. MacBook Air M4
 
 - [ ] Tạo conda env `SwiftEdit` (Python 3.12)
-- [ ] Cài PyTorch Mac (MPS) — **không** dùng bản CUDA
-- [ ] Cài dependencies còn lại
-- [ ] Clone repo SwiftEdit
-- [ ] Tải checkpoint → `swiftedit_weights/`
-- [ ] Sửa `device = "mps"` trong code
-- [ ] Chạy demo `assets/imgs_demo` thành công
-- [ ] Ghi thời gian/ảnh và RAM peak (Activity Monitor)
+- [x] Cài PyTorch Mac (MPS) — **không** dùng bản CUDA
+- [x] Cài dependencies còn lại
+- [x] Clone repo SwiftEdit
+- [x] Tải checkpoint → `swiftedit_weights/`
+- [x] Sửa `device = "mps"` trong code
+- [x] Chạy demo `assets/imgs_demo` thành công
+- [x] Ghi thời gian/ảnh và RAM peak (Activity Monitor)
 - [ ] Đọc và ghi chú `infer.py`, `models.py`
 
 ### 2b. Google Colab
@@ -286,12 +340,15 @@ tar zxf swiftedit_weights.tar.gz
 
 | Vấn đề | Cách xử lý |
 |---|---|
+| HF **401** `stable-diffusion-2-1-base` | Dùng `models.py` đã patch (mirror `Manojb/...`); chạy `bash scripts/download_hf_models.sh` |
+| HF **timeout** / `cas-bridge.xethub` | `export HF_HUB_DOWNLOAD_TIMEOUT=900`; chạy lại `download_hf_models.sh` |
+| `deserialize object on a CUDA device` (Mac) | `models.py` đã dùng `map_location="cpu"` cho `ip_adapter.bin` |
 | Mac: lỗi MPS operator | `export PYTORCH_ENABLE_MPS_FALLBACK=1` hoặc chạy mẫu đó trên Colab |
-| Mac: OOM / chậm | `float16`, giữ 512×512, đóng app nặng |
+| Mac: OOM / chậm | Giữ 512×512, đóng app nặng; benchmark lớn → Colab |
 | Colab: disconnect | Chia batch 20 mẫu/session; lưu progress trên Drive |
 | Colab: OOM T4 | `float16`, batch=1 |
-| Metrics Mac ≠ Colab | Kiểm tra cùng seed, dtype, hyperparameter |
-| Không tải được weights | Dùng `wget` từng part; kiểm tra dung lượng Drive |
+| Không tải được weights Qualcomm | `bash scripts/download_swiftedit_weights.sh` hoặc `curl` từng `part-aa`…`ae` |
+| Metrics Mac ≠ Colab | Cùng seed, dtype, hyperparameter |
 
 ---
 

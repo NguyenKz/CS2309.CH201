@@ -1,0 +1,17 @@
+# CS2309 — SwiftEdit trên Mac (MPS). Cài sau khi tạo .venv:
+#   pyenv local 3.12.10 && python -m venv .venv && source .venv/bin/activate
+#   python -m pip install -r requirements-mac.txt
+
+torch
+torchvision
+torchaudio
+transformers==4.37.2
+accelerate
+ftfy
+tensorboard
+Jinja2
+diffusers==0.22.0
+huggingface-hub==0.25.2
+einops
+numpy==1.26.4
+pillow

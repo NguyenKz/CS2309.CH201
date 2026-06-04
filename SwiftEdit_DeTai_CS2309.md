@@ -283,37 +283,27 @@ Output:
 
 ### Cài đặt trên macOS
 
+Hướng dẫn đầy đủ (đã kiểm tra trên Mac M4): **[README.md — Cài đặt và chạy cơ bản](./README.md#cài-đặt-và-chạy-cơ-bản-mac-mps)**.
+
+Tóm tắt:
+
 ```bash
-# 1. Tạo môi trường
-conda create -n SwiftEdit python=3.12 -y
-conda activate SwiftEdit
+cd CS2309.CH201
+pyenv local 3.12.10
+python -m venv .venv && source .venv/bin/activate
+python -m pip install -r requirements-mac.txt
 
-# 2. PyTorch cho Mac (MPS) — KHÔNG dùng dòng cu118 trong requirements.txt
-pip install torch torchvision torchaudio
-
-# 3. Các package còn lại (bỏ qua dòng --extra-index-url cu118)
-pip install transformers==4.37.2 accelerate ftfy tensorboard Jinja2 \
-            diffusers==0.22.0 huggingface-hub==0.25.2 einops
-pip install numpy==1.26.4
-
-# 4. Clone và tải weights
-git clone https://github.com/Qualcomm-AI-research/SwiftEdit.git
-cd SwiftEdit
-# Tải checkpoint từ GitHub Releases v1.0 → giải nén vào swiftedit_weights/
+bash scripts/download_swiftedit_weights.sh   # ~9.6 GB → SwiftEdit/swiftedit_weights/
+bash scripts/download_hf_models.sh           # sd-turbo, SD2.1 mirror, IP-Adapter encoder
+bash scripts/run_swiftedit.sh                # demo → SwiftEdit/result_*.png
 ```
 
-**Sửa device trong code** (`infer.py` / `models.py` — tùy repo gốc):
+**Patch trong repo đề tài (không cần sửa tay):**
 
-```python
-import torch
+- `infer.py`: `get_device()` — cuda → mps → cpu
+- `models.py`: SD 2.1 mirror `Manojb/stable-diffusion-2-1-base`; `torch.load(..., map_location="cpu")` cho checkpoint IP-Adapter
 
-if torch.backends.mps.is_available():
-    device = "mps"
-elif torch.cuda.is_available():
-    device = "cuda"
-else:
-    device = "cpu"
-```
+**Phương án conda** (thay pyenv/venv): `conda create -n SwiftEdit python=3.12` rồi cài PyTorch Mac + cùng phiên bản package như `requirements-mac.txt` (không dùng `cu118`).
 
 **Mẹo giảm RAM trên Mac:**
 
@@ -671,7 +661,8 @@ device = "cuda"  # Colab luôn dùng cuda
 
 | Ngày       | Giai đoạn           | Công việc                                                | Kết quả / Ghi chú                                                        |
 | ---------- | ------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------ |
-| 2026-06-01 | 0. Khởi tạo project | Tạo README, đề tài chi tiết, skill Cursor hỗ trợ nhật ký | Repo CS2309.CH201 sẵn sàng; skill sync README + NHAT\_KY + §8.1 (Mac M4) |
+| 2026-06-04 | 2a. Mac             | Clone SwiftEdit; pyenv/venv + MPS; demo `assets/imgs_demo` | Demo OK ~91s/ảnh; `SwiftEdit/result_woman->Taylor Swift.png` (Mac M4 MPS) |
+| 2026-06-01 | 0. Khởi tạo project | Tạo README, đề tài chi tiết, skill Cursor hỗ trợ nhật ký | Repo CS2309.CH201 sẵn sàng; skill sync README + NHAT_KY + §8.1 (Mac M4) |
 
 ### 8.2. Kết quả trung gian
 
@@ -679,7 +670,7 @@ device = "cuda"  # Colab luôn dùng cuda
 
 | Môi trường   | Backend | GPU/RAM      | Thời gian/ảnh |
 | ------------ | ------- | ------------ | ------------- |
-| Mac Air M4   | MPS     | 24GB unified | … giây        |
+| Mac Air M4   | MPS     | 24GB unified | ~91 giây (demo `woman`→`Taylor Swift`, 512×512) |
 | Google Colab | CUDA    | T4 / A100    | … giây        |
 | Paper (ref)  | CUDA    | A100 40GB    | 0.23s         |
 

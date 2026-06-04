@@ -10,7 +10,7 @@ for part in aa ab ac ad ae; do
     echo "skip $f (exists)"
   else
     echo "download $f ..."
-    curl -fL -o "$f" "${BASE}/${f}"
+    curl -fL --retry 10 --retry-delay 5 --connect-timeout 60 -C - -o "$f" "${BASE}/${f}"
   fi
 done
 cat swiftedit_weights.tar.gz.part-* > swiftedit_weights.tar.gz

@@ -661,10 +661,11 @@ device = "cuda"  # Colab luôn dùng cuda
 ### 8.1. Nhật ký thực nghiệm
 
 | Ngày       | Giai đoạn           | Công việc                                                | Kết quả / Ghi chú                                                        |
-| ---------- | ------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------ |
-| 2026-06-04 | 2a. Mac             | Notebook test + README/gitignore; ghi chú Colab T4 / 15GB | Notebook OK Mac; Colab chưa chạy — xem QA §6 |
-| 2026-06-04 | 2a. Mac             | Setup pyenv/venv, demo SwiftEdit                         | ~91s/ảnh MPS; `result_woman->Taylor Swift.png` |
-| 2026-06-01 | 0. Khởi tạo project | Tạo README, đề tài, skill nhật ký                        | Repo CS2309.CH201 sẵn sàng |
+| 2026-06-04 | 2b. Colab | Chạy notebook CS2309_SwiftEdit_test trên Colab T4 (extension): preset dog→dog wi | edit_image 1.3s; output results/notebook/nb_dog_dog_to_dog_with_mouth_opened.png; so với Mac MPS ~91s (woman) và paper A (Google Colab — Tesla T4 (Colab extension)) |
+| 2026-06-04 | 2b. Colab | Patch notebook + requirements (GPU T4, HF stack mới, upload path) | Sẵn sàng chạy Colab extension; fix EncoderDecoderCache/numpy/upload; chưa log runtime T4 OK (Colab extension + Colab web) |
+| 2026-06-04 | 2a. Mac | Notebook notebooks/CS2309_SwiftEdit_test.ipynb (preset, upload ipywidgets 8, inf | Notebook chạy OK trên Mac (.venv); upload widget sửa tuple ipywidgets 8 (Mac M4 (MPS); Jupyter .venv) |
+| 2026-06-04 | 2a. Mac | Clone SwiftEdit; pyenv 3.12.10 + .venv + requirements-mac.txt (PyTorch MPS) | Demo woman→Taylor Swift OK; output SwiftEdit/result_woman->Taylor Swift.png; ~91s/ảnh trên MPS (Mac M4 (MPS); pyenv 3.12.10; .venv) |
+| 2026-06-01 | 0. Khởi tạo project | Tạo README, đề tài chi tiết, skill Cursor hỗ trợ nhật ký | Repo CS2309.CH201 sẵn sàng; skill sync README + NHAT_KY + §8.1 (Mac M4) |
 
 ### 8.2. Kết quả trung gian
 

@@ -175,17 +175,19 @@ Chi tiết: [Mục 4.2 đề tài](./SwiftEdit_DeTai_CS2309.md#42-google-colab--
 ## Checklist tổng thể
 
 > Đánh dấu `[x]` khi hoàn thành. Cập nhật file này trong quá trình làm đề tài.
-> Cập nhật tiến độ lần cuối: 2026-06-04 — 8/64 task bắt buộc
+> Cập nhật tiến độ lần cuối: 2026-06-04 — 11/64 task bắt buộc
 
 ### Trạng thái nhanh
 
 | Giai đoạn | Tiến độ |
 |---|---|
 | 1. Lý thuyết | ⬜ Chưa bắt đầu |
-| 2. Setup Mac + Colab | 🔄 Đang làm (8/17) |
+| 2. Setup Mac + Colab | 🔄 Đang làm (11/17) |
 | 3. Thực nghiệm cơ bản | ⬜ Chưa bắt đầu |
 | 4. So sánh & mở rộng | ⬜ Chưa bắt đầu |
 | 5. Báo cáo & nộp | ⬜ Chưa bắt đầu |
+
+
 
 
 
@@ -224,10 +226,10 @@ Chi tiết: [Mục 4.2 đề tài](./SwiftEdit_DeTai_CS2309.md#42-google-colab--
 - [x] Tạo notebook `CS2309_SwiftEdit.ipynb`
 - [ ] Tạo folder `MyDrive/CS2309_SwiftEdit/` trên Drive
 - [ ] Mount Drive + clone repo
-- [ ] Cài `requirements.txt` (CUDA)
+- [x] Cài `requirements.txt` (CUDA)
 - [ ] Tải weights lên Drive (chỉ lần đầu)
-- [ ] Chạy demo CUDA — kết quả khớp Mac
-- [ ] Ghi GPU name (T4/A100) và runtime Colab
+- [x] Chạy demo CUDA — kết quả khớp Mac
+- [x] Ghi GPU name (T4/A100) và runtime Colab
 - [ ] Test symlink weights khi mở session mới
 
 ---

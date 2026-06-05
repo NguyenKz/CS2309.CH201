@@ -507,7 +507,54 @@ python scripts/run_piebench_eval.py --piebench-dir data/PIE-Bench-smoke --max-sa
 11. **Yêu cầu tài nguyên và khả năng triển khai on-device?**
     - Mac M4 là case study gần on-device; Colab T4 mô phỏng server-side GPU.
 
-### 5.3. Câu hỏi nghiên cứu đề xuất (Research Questions)
+### 5.3. Hướng thay thế module pipeline sau khảo sát 2025–2026
+
+Một số nhóm khác mở rộng bài toán bằng cách **thay một khối trong pipeline gốc** thay vì chỉ chạy lại paper. Với SwiftEdit, các khối có thể cân nhắc là source prompt, editing mask, image condition, backbone edit model hoặc metric đánh giá.
+
+| Hướng thay / thêm module | Vị trí trong pipeline SwiftEdit | Khả thi | Giá trị báo cáo | Kết luận |
+|---|---|---:|---:|---|
+| **SAM 3 concept-guided mask** | Thay self-guided mask `M = |eps_source - eps_edit|` | Cao | Rất cao | **Chọn làm hướng đào sâu chính** |
+| GroundingDINO + SAM 2 mask | Thay self-guided mask bằng open-vocabulary detection + segmentation | Trung bình | Cao | Phương án dự phòng nếu SAM 3 khó chạy |
+| Florence-2 / Qwen2.5-VL source prompt | Tự sinh `source prompt` từ ảnh thay vì người dùng viết tay | Cao | Cao | Có thể làm mở rộng phụ |
+| GIE-Bench / grounded evaluation | Thay/bổ sung CLIP bằng đánh giá câu hỏi + object-aware preservation | Trung bình | Cao | Phù hợp phần phân tích, không cần thay model |
+| FLUX.1 Kontext / Qwen-Image-Edit / Step1X-Edit | Baseline hiện đại ngoài pipeline SwiftEdit | Trung bình thấp | Cao | So sánh định tính nếu còn thời gian |
+| Thay CLIP image encoder / IP-Adapter bằng VLM | Thay image condition branch `c_x` | Thấp | Trung bình | Không khuyến nghị vì cần train lại adapter |
+| Thay VAE encoder / SBv2 backbone | Thay latent/image generator chính | Rất thấp | Thấp-trung bình | Ngoài phạm vi đề tài |
+
+### 5.4. Hướng chọn đào sâu: SwiftEdit + SAM 3
+
+**Tên hướng:** *SwiftEdit + SAM 3: Concept-guided Mask Replacement*
+
+**Ý tưởng:** SwiftEdit gốc tự sinh editing mask bằng chênh lệch inverted noise giữa source prompt và edit prompt. Hướng mở rộng này thay mask tự sinh bằng **SAM 3 concept-guided segmentation**, tức dùng prompt khái niệm như `"cat"`, `"yellow school bus"`, `"shirt"` để SAM 3 phát hiện và segment vùng cần sửa. Mask từ SAM 3 sau đó được đưa vào ARaM để điều khiển vùng edit/non-edit.
+
+```text
+Source image + source/edit prompt
+        │
+        ├── SwiftEdit gốc:
+        │     F_theta(source prompt) vs F_theta(edit prompt)
+        │     → self-guided mask
+        │
+        └── Hướng mở rộng:
+              trích concept cần sửa
+              → SAM 3 text/concept prompt
+              → SAM 3 mask
+              → ARaM editing với mask ngoài
+```
+
+**Lý do chọn SAM 3 thay vì SAM 2/GroundingDINO:**
+
+- SAM 3 gộp detection + segmentation + tracking bằng **concept prompt**, nên pipeline gọn hơn GroundingDINO + SAM 2.
+- Phù hợp trực tiếp với điểm mở của SwiftEdit: paper cho phép dùng mask người dùng cung cấp hoặc mask tự sinh.
+- Có thể đánh giá định lượng bằng IoU/Dice với GT mask của PIE-Bench, đồng thời đo ảnh edited bằng PSNR/MSE/CLIP như mục 9.3.
+- Là hướng mới hơn SwiftEdit, dễ tạo câu chuyện nghiên cứu: *một module foundation segmentation mới có cải thiện localized one-step editing không?*
+
+**Lưu ý phạm vi:**
+
+- Với edit kiểu đổi thuộc tính/đổi object đang tồn tại (`"orange cat" → "black cat"`), SAM 3 prompt nên là object hiện có trong ảnh (`"cat"` hoặc `"orange cat"`), không phải object sau edit nếu object đó chưa xuất hiện.
+- Với task add object, SAM 3 khó sinh mask vì vùng cần thêm chưa có object; nhóm này nên dùng GT mask, box thủ công hoặc phân tích như failure case.
+- SAM 3 nên chạy ở môi trường riêng trên Colab/CUDA, xuất mask `.png`/`.npy`, rồi SwiftEdit đọc mask đó. Không nên ép chung env với SwiftEdit ngay từ đầu vì dependency SAM 3 mới hơn.
+
+### 5.5. Câu hỏi nghiên cứu đề xuất (Research Questions)
 
 - **RQ1:** SwiftEdit có tái hiện được kết quả định lượng trên PieBench (PSNR, CLIP) khi chỉ dùng checkpoint pretrained không?
 - **RQ2:** Tham số ARaM ảnh hưởng thế nào đến trade-off giữa editing semantics và background preservation?
@@ -516,6 +563,8 @@ python scripts/run_piebench_eval.py --piebench-dir data/PIE-Bench-smoke --max-sa
 - **RQ5:** Trên Mac M4 (MPS) và Colab T4 (CUDA), runtime và memory peak của SwiftEdit khác nhau thế nào so với paper (A100)?
 - **RQ6:** Colab có giúp tái hiện metrics PieBench (PSNR, CLIP) gần với Table 1 paper hơn Mac MPS không?
 - **RQ7:** (Tùy chọn — Colab) Fine-tune nhẹ Stage 2 trên Colab có cải thiện reconstruction trên domain-specific không?
+- **RQ8:** Thay self-guided mask bằng SAM 3 concept-guided mask có cải thiện IoU/Dice và background preservation không?
+- **RQ9:** Loại chỉnh sửa nào hưởng lợi nhiều nhất từ SAM 3 mask, và loại nào thất bại do concept/mask không xác định được vùng edit?
 
 ---
 
@@ -544,12 +593,26 @@ python scripts/run_piebench_eval.py --piebench-dir data/PIE-Bench-smoke --max-sa
 | C10 | **Benchmark đa nền tảng**               | Runtime: Mac MPS vs Colab T4 vs Paper A100                          | Không    |
 | C11 | **Colab notebook tái sử dụng**          | Notebook setup + eval script lưu trên Drive, dùng lại nhiều session | Không    |
 | C12 | **Fine-tune nhẹ trên Colab (tùy chọn)** | Stage 2 vài nghìn iter; **không train trên Mac**                    | Colab    |
+| C13 | **SwiftEdit + SAM 3 mask replacement**  | SAM 3 sinh concept-guided mask; so với self-guided mask và GT mask  | Colab    |
 
-### 6.3. Phạm vi không thực hiện (để giới hạn đề tài)
+### 6.3. Hướng mở rộng được chọn
+
+Hướng chính được chọn để đào sâu là **C13 — SwiftEdit + SAM 3: Concept-guided Mask Replacement**.
+
+| Lý do | Giải thích |
+|---|---|
+| Đúng điểm yếu/mở của SwiftEdit | Mask tự sinh là module độc lập tương đối, có thể thay bằng mask ngoài mà không train lại toàn bộ model |
+| Có định lượng rõ | So IoU/Dice mask với GT, rồi đo PSNR/MSE/CLIP/runtime sau edit |
+| Có tính thời sự | SAM 3 mới hơn SwiftEdit, hỗ trợ concept prompt và open-vocabulary segmentation |
+| Vừa sức đề tài | Chạy SAM 3 như preprocessing mask trên Colab, không cần train |
+| Dễ trình bày | Có pipeline before/after, ảnh mask visualization, bảng metric và failure cases |
+
+### 6.4. Phạm vi không thực hiện (để giới hạn đề tài)
 
 - Huấn luyện lại toàn bộ inversion network từ đầu (Stage 1: 100k iter + Stage 2: 180k iter).
 - Xây dựng mô hình one-step generation mới thay SBv2.
 - Huấn luyện diffusion model đa bước làm baseline từ scratch.
+- Thay VAE encoder, SBv2 backbone hoặc IP-Adapter image encoder bằng VLM/LLM nếu không có training tương ứng.
 
 ---
 
@@ -595,7 +658,7 @@ python scripts/run_piebench_eval.py --piebench-dir data/PIE-Bench-smoke --max-sa
 #### 3b. Self-guided mask vs GT mask — **Colab**
 
 - [ ] Tải subset PieBench có GT mask lên Colab.
-- [ ] Chạy SwiftEdit với/không mask; tính IoU/Dice (batch trên Colab).
+- [ ] Chạy SwiftEdit self-guided mask và SwiftEdit với GT mask; tính IoU/Dice (batch trên Colab).
 - [ ] Download ảnh mask visualization về Mac.
 
 #### 3c. Đánh giá PieBench — **Colab (chính) + Mac (xác nhận)**
@@ -638,7 +701,37 @@ python scripts/run_piebench_eval.py --piebench-dir data/PIE-Bench-smoke --max-sa
 - [ ] Thử prompt dạng: `"same scene in watercolor style"`, `"anime style portrait"`, …
 - [ ] Đánh giá định tính khả năng "thay đổi phong cách" so với semantic editing.
 
-**Deliverable:** Bảng so sánh model, phân tích failure cases, (nếu có) demo web.
+#### 4d. Hướng đào sâu — SwiftEdit + SAM 3 concept-guided mask
+
+**Mục tiêu:** thay module self-guided mask của SwiftEdit bằng mask do SAM 3 sinh từ concept prompt, sau đó đánh giá tác động lên định vị vùng edit, bảo toàn background và độ đúng prompt.
+
+**Thiết kế thí nghiệm:**
+
+| Cấu hình | Mask dùng cho ARaM | Vai trò |
+|---|---|---|
+| SwiftEdit-SG | Self-guided mask gốc `|eps_source - eps_edit|` | Baseline chính |
+| SwiftEdit-GT | GT mask của PIE-Bench | Upper bound |
+| SwiftEdit-SAM3 | SAM 3 concept-guided mask | Hướng mở rộng |
+| SwiftEdit-SAM3+VLM (tùy chọn) | SAM 3 mask + concept/source prompt do VLM gợi ý | Mở rộng phụ |
+
+**Quy trình thực hiện:**
+
+1. Chọn 30–50 mẫu PIE-Bench có object/attribute edit rõ ràng; tránh hoặc tách riêng nhóm add object.
+2. Trích concept cần segment từ `original_prompt`/`editing_prompt`, ví dụ `"cat"`, `"shirt"`, `"car"`.
+3. Chạy SAM 3 trong env Colab riêng, xuất mask 512×512 ra `results/sam3_masks/`.
+4. Patch SwiftEdit để nhận external mask thay cho `mask12` tự sinh.
+5. Chạy 3 cấu hình SwiftEdit-SG / SwiftEdit-GT / SwiftEdit-SAM3 trên cùng sample.
+6. Tính IoU/Dice mask với GT; tính PSNR/MSE background, CLIP-Whole, CLIP-Edited và runtime.
+7. Phân tích failure cases: concept mơ hồ, nhiều instance, object bị che khuất, add/delete object, style/global edit.
+
+**Deliverable riêng cho hướng SAM 3:**
+
+- `sam3_masks/` gồm mask sinh từ SAM 3.
+- `metrics_sam3.csv` gồm các cột: `sample_id`, `concept_prompt`, `mask_type`, `mask_iou`, `mask_dice`, `psnr_unedit`, `mse_unedit`, `clip_whole`, `clip_edited`, `runtime_s`.
+- Grid ảnh: source / GT mask / self-guided mask / SAM 3 mask / kết quả edit từng cấu hình.
+- Bảng kết luận: task nào SAM 3 tốt hơn, task nào self-guided mask tốt hơn.
+
+**Deliverable chung giai đoạn 4:** Bảng so sánh model, phân tích failure cases, kết quả SAM 3 mask replacement, (nếu có) demo web.
 
 ### 7.6. Giai đoạn 5 — (Tùy chọn) Fine-tune nhẹ trên Colab
 
@@ -807,6 +900,7 @@ Code hiện thực: [`scripts/piebench_utils.py`](./scripts/piebench_utils.py), 
 - [ ] Đã tái hiện trên **Mac M4** (demo, ablation) và **Colab** (PieBench metrics)
 - [ ] Metrics trên PieBench subset: …
 - [ ] Phát hiện chính về hyperparameter / mask / so sánh baseline: …
+- [ ] Hướng mở rộng SAM 3: so sánh self-guided mask / GT mask / SAM 3 concept-guided mask
 
 ### 10.2. Đánh giá mức độ đáp ứng mục tiêu
 
@@ -817,6 +911,7 @@ Code hiện thực: [`scripts/piebench_utils.py`](./scripts/piebench_utils.py), 
 | Ablation hyperparameter ARaM             | <br />     | <br />  |
 | Đánh giá định lượng trên PieBench        | <br />     | <br />  |
 | So sánh với ít nhất 1 baseline           | <br />     | <br />  |
+| Đào sâu hướng SwiftEdit + SAM 3 mask     | <br />     | <br />  |
 
 ### 10.3. Hạn chế
 
@@ -828,7 +923,11 @@ Code hiện thực: [`scripts/piebench_utils.py`](./scripts/piebench_utils.py), 
 
 ### 10.4. Hướng phát triển
 
-- Thử nghiệm trên one-step generator mới hơn (thay SBv2).
+- **Đã chọn đào sâu:** thay self-guided mask bằng **SAM 3 concept-guided mask** để đánh giá khả năng định vị vùng edit và bảo toàn background.
+- Tự động trích concept/source prompt bằng Florence-2 hoặc Qwen2.5-VL, giảm phụ thuộc vào prompt viết tay.
+- Bổ sung grounded evaluation kiểu GIE-Bench để kiểm tra functional correctness thay vì chỉ CLIPScore.
+- So sánh định tính với baseline hiện đại như FLUX.1 Kontext, Qwen-Image-Edit hoặc Step1X-Edit nếu đủ tài nguyên/API.
+- Thử nghiệm trên one-step generator mới hơn (thay SBv2) — chỉ nên xem là hướng dài hạn.
 - Tích hợp prompt tiếng Việt (dịch hoặc multilingual CLIP).
 - Tối ưu inference cho Apple Silicon (Core ML, quantization) — gần với hướng on-device của SwiftEdit.
 - Kết hợp ControlNet / reference image cho style editing mạnh hơn.
@@ -847,6 +946,12 @@ Code hiện thực: [`scripts/piebench_utils.py`](./scripts/piebench_utils.py), 
 8. Ye, H., et al. (2023). **IP-Adapter.** (Image prompt adapter)
 9. Radford, A., et al. (2021). **Learning Transferable Visual Models From Natural Language Supervision (CLIP).** ICML 2021. [PMLR](https://proceedings.mlr.press/v139/radford21a)
 10. Hessel, J., et al. (2021). **CLIPScore: A Reference-free Evaluation Metric for Image Captioning.** EMNLP 2021. [arXiv](https://arxiv.org/abs/2104.08718)
+11. Carion, N., et al. (2025). **SAM 3: Segment Anything with Concepts.** [Paper](https://ai.meta.com/research/publications/sam-3-segment-anything-with-concepts/) · [arXiv](https://arxiv.org/abs/2511.16719) · [Code](https://github.com/facebookresearch/sam3)
+12. Xiao, B., et al. (2024). **Florence-2: Advancing a Unified Representation for a Variety of Vision Tasks.** CVPR 2024. [Microsoft Research](https://www.microsoft.com/en-us/research/publication/florence-2-advancing-a-unified-representation-for-a-variety-of-vision-tasks/)
+13. Bai, S., et al. (2025). **Qwen2.5-VL Technical Report.** [arXiv](https://arxiv.org/abs/2502.13923)
+14. Black Forest Labs, et al. (2025). **FLUX.1 Kontext: Flow Matching for In-Context Image Generation and Editing in Latent Space.** [arXiv](https://arxiv.org/abs/2506.15742)
+15. Liu, Y., et al. (2025). **Step1X-Edit: A Practical Framework for General Image Editing.** [arXiv](https://arxiv.org/abs/2504.17761)
+16. Qwen Team. (2025). **Qwen-Image-Edit.** [Blog](https://qwenlm.github.io/zh/blog/qwen-image-edit/) · [Technical Report](https://arxiv.org/abs/2508.02324)
 
 ---
 

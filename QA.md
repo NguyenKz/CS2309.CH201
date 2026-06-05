@@ -37,7 +37,7 @@ Tài liệu liên quan: [Overview](./SwiftEdit_Overview.md) · [Đề tài](./Sw
 | 1 | [Diffusion & Text-to-Image](#1-diffusion--text-to-image) | 1 |
 | 2 | [SwiftEdit & Pipeline](#2-swiftedit--pipeline) | 3 |
 | 3 | [Inversion & Noise](#3-inversion--noise) | 0 |
-| 4 | [Mask & ARaM](#4-mask--aram) | 0 |
+| 4 | [Mask & ARaM](#4-mask--aram) | 1 |
 | 5 | [Đánh giá & PieBench](#5-đánh-giá--piebench) | 1 |
 | 6 | [Triển khai Mac / Colab](#6-triển-khai-mac--colab) | 3 |
 | 7 | [Chỉnh sửa & Style](#7-chỉnh-sửa--style) | 0 |
@@ -126,8 +126,20 @@ Tài liệu liên quan: [Overview](./SwiftEdit_Overview.md) · [Đề tài](./Sw
 *DDIM inversion, Null-text, one-step inversion `F_theta`, inverted noise `eps_hat`, stage 1/2 training, …*
 
 <!-- qa:insert -->
+### Q: Vì sao chọn SAM 3 để thay self-guided mask của SwiftEdit?
 
-*(Chưa có câu hỏi.)*
+**Ngày:** 2026-06-05  
+**Chủ đề:** #sam3 #mask #swiftedit #aram #segmentation
+
+**Trả lời (tóm tắt):**
+- SwiftEdit gốc tự sinh mask bằng chênh lệch inverted noise giữa source prompt và edit prompt; mask này nằm ngay trước ARaM nên là module tương đối dễ thay.
+- SAM 3 hỗ trợ promptable concept segmentation: dùng text/concept prompt như `"cat"`, `"shirt"`, `"yellow school bus"` để detect + segment các instance khớp concept.
+- Hướng mở rộng: source/edit prompt → trích concept cần sửa → SAM 3 mask → đưa mask vào ARaM thay `mask12` tự sinh.
+- Đánh giá được rõ: IoU/Dice mask với GT mask PIE-Bench; ảnh edited đo PSNR/MSE background, CLIP-Whole, CLIP-Edited và runtime.
+- Nên chạy SAM 3 ở env Colab riêng rồi xuất mask `.png/.npy`, sau đó SwiftEdit đọc external mask; tránh kẹt dependency vì SAM 3 cần stack PyTorch/CUDA mới.
+- Hạn chế: add object/style/global edit khó dùng SAM 3 vì vùng cần sửa có thể chưa tồn tại; nên tách thành failure case hoặc dùng GT/box thủ công.
+
+**Nguồn:** [SAM 3 paper/project](https://ai.meta.com/research/publications/sam-3-segment-anything-with-concepts/) · [arXiv](https://arxiv.org/abs/2511.16719) · [GitHub](https://github.com/facebookresearch/sam3)
 
 ---
 

@@ -37,6 +37,8 @@ Tài liệu: [`SwiftEdit_Overview.md`](./SwiftEdit_Overview.md) · [`SwiftEdit_D
 
 **Đánh giá chính:** dùng PIE-Bench/PnP Inversion với PSNR/MSE trên vùng background `(1 - mask)`, CLIP-Whole/CLIP-Edited theo `edit_prompt`, và runtime mỗi lần gọi `edit_image()`. Chi tiết xem [Đề tài §9.3](./SwiftEdit_DeTai_CS2309.md#93-metrics-đánh-giá) và [Q&A §5](./QA.md#5-đánh-giá--piebench).
 
+**Hướng mở rộng được chọn:** **SwiftEdit + SAM 3: Concept-guided Mask Replacement** — thay self-guided mask của SwiftEdit bằng mask do SAM 3 sinh từ concept prompt, rồi so sánh với self-guided mask và GT mask. Chi tiết xem [Đề tài §5.4](./SwiftEdit_DeTai_CS2309.md#54-hướng-chọn-đào-sâu-swiftedit--sam-3) và [§7.5.4d](./SwiftEdit_DeTai_CS2309.md#4d-hướng-đào-sâu--swiftedit--sam-3-concept-guided-mask).
+
 ---
 
 ## Cấu trúc repo
@@ -295,13 +297,23 @@ Chi tiết: [Mục 4.2 đề tài](./SwiftEdit_DeTai_CS2309.md#42-google-colab--
 - [ ] Đánh giá định tính khả năng chuyển phong cách
 - [ ] So sánh với semantic editing (đổi đối tượng/màu)
 
-### 4d. Demo Gradio (tùy chọn)
+### 4d. SwiftEdit + SAM 3 mask replacement (hướng đào sâu)
+
+- [ ] Chọn 30–50 mẫu PIE-Bench có object/attribute edit rõ ràng
+- [ ] Trích concept prompt cho SAM 3 từ source/edit prompt
+- [ ] Chạy SAM 3 trên Colab/env riêng → lưu `results/sam3_masks/`
+- [ ] Patch SwiftEdit nhận external mask
+- [ ] So sánh SwiftEdit self-guided / GT mask / SAM 3 mask
+- [ ] Tính IoU/Dice, PSNR/MSE background, CLIP-Whole/Edited, runtime
+- [ ] Lưu grid source/mask/output và 3–5 failure cases
+
+### 4e. Demo Gradio (tùy chọn)
 
 - [ ] Gradio: upload ảnh + nhập prompt
 - [ ] Hiển thị ảnh output + thời gian suy luận
 - [ ] Chạy local trên Mac
 
-### 4e. Fine-tune nhẹ Colab (tùy chọn — bỏ qua vẫn đủ)
+### 4f. Fine-tune nhẹ Colab (tùy chọn — bỏ qua vẫn đủ)
 
 - [ ] Chuẩn bị 200–500 ảnh + caption
 - [ ] Stage 2 vài nghìn iterations
@@ -328,6 +340,7 @@ Chi tiết: [Mục 4.2 đề tài](./SwiftEdit_DeTai_CS2309.md#42-google-colab--
 - [ ] Mac: ≥5 ví dụ chỉnh sửa (input → output)
 - [ ] Colab: `metrics.csv` PieBench ≥50 mẫu
 - [ ] Có ablation ≥1 hyperparameter (grid ảnh)
+- [ ] Có phân tích SAM 3 mask replacement hoặc self-guided mask vs GT mask
 - [ ] Có so sánh baseline (Colab) **hoặc** phân tích failure cases chi tiết
 - [ ] Bảng runtime: Mac / Colab / Paper
 - [ ] Slide trình bày (pipeline + kết quả + demo)
@@ -380,7 +393,8 @@ Chi tiết: [Mục 4.2 đề tài](./SwiftEdit_DeTai_CS2309.md#42-google-colab--
 3. [Project page](https://swift-edit.github.io/)
 4. [PIE-Bench / PnP Inversion](https://github.com/cure-lab/PnPInversion)
 5. [CLIP](https://proceedings.mlr.press/v139/radford21a) · [CLIPScore](https://arxiv.org/abs/2104.08718)
-6. [TurboEdit](https://github.com/GaMaLielD/TurboEdit) *(baseline, nếu so sánh)*
+6. [SAM 3 — Segment Anything with Concepts](https://github.com/facebookresearch/sam3)
+7. [TurboEdit](https://github.com/GaMaLielD/TurboEdit) *(baseline, nếu so sánh)*
 
 ---
 

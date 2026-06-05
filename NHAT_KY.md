@@ -9,6 +9,7 @@
 
 | Ngày | Giai đoạn | Công việc | Kết quả / Ghi chú | Môi trường |
 |---|---|---|---|---|
+| 2026-06-05 | 4d | Chọn hướng mở rộng chính: SwiftEdit + SAM 3 concept-guided mask replacement | Cập nhật đề tài/README/Overview/QA: bảng các hướng thay module pipeline, chọn SAM 3 để thay self-guided mask, thiết kế thí nghiệm SG vs GT vs SAM3, metric IoU/Dice + PSNR/MSE/CLIP/runtime, references SAM 3/Qwen/FLUX/Step1X. | Mac M4; tài liệu |
 | 2026-06-05 | 3c | Chuẩn hóa tài liệu đánh giá SwiftEdit/PieBench và sửa `CLIP-Whole` trong metric code | Ghi rõ PSNR/MSE vùng nền, CLIP-Whole/Edited theo edit prompt, runtime; nguồn: PIE-Bench/PnP Inversion ICLR 2024, SwiftEdit CVPR 2025, CLIP/CLIPScore. `piebench_metrics.py` đã sửa `clip_whole` dùng `edit_prompt`; compileall OK. | Mac M4 (MPS); .venv |
 | 2026-06-05 | 3c | Viết scripts đánh giá PIE-Bench (`piebench_utils.py`, `piebench_metrics.py`, `run_piebench_eval.py`) | Smoke eval 1 mẫu chạy OK trên Mac MPS (~50s/ảnh, CLIP-Whole=18.76, CLIP-Edited=22.64); `metrics.csv` sinh đúng; PIE-Bench đầy đủ tải qua form PnP Inversion. | Mac M4 (MPS); .venv; torchmetrics 1.9.0 |
 | 2026-06-05 | 2a. Mac | Chạy preset 02.jpg dog→dog with mouth opened trên Mac MPS (cùng prompt Colab T4) | edit_image 30.1s; results/notebook/nb_dog_dog_to_dog_with_mouth_opened.png; T4 1.3s cùng preset → Mac ~23× chậm hơn T4; | Mac M4 (MPS); pyenv 3.12.10; .venv |
@@ -23,6 +24,26 @@
 ## Chi tiết theo phiên làm việc
 
 *(Các entry chi tiết xuất hiện bên dưới, mới nhất ở trên cùng.)*
+
+### 2026-06-05 — [4d] Chọn hướng đào sâu: SwiftEdit + SAM 3
+
+**Môi trường:** Mac M4; tài liệu đề tài
+
+**Công việc đã làm:**
+- Khảo sát các hướng thay module pipeline: SAM 3 mask, GroundingDINO+SAM2, auto source prompt bằng Florence-2/Qwen2.5-VL, grounded evaluation, baseline FLUX.1 Kontext/Qwen-Image-Edit/Step1X-Edit.
+- Chọn hướng chính: **SwiftEdit + SAM 3: Concept-guided Mask Replacement**.
+- Cập nhật `SwiftEdit_DeTai_CS2309.md`, `README.md`, `SwiftEdit_Overview.md`, `QA.md` với pipeline mới, research questions RQ8/RQ9, đóng góp C13, kế hoạch thí nghiệm và tài liệu tham khảo.
+
+**Kết quả:**
+- Hướng đào sâu được định nghĩa rõ: trích concept → SAM 3 sinh mask → SwiftEdit ARaM dùng external mask → so sánh self-guided / GT / SAM 3.
+- Metric: IoU/Dice mask, PSNR/MSE background, CLIP-Whole/Edited, runtime; có failure cases cho add object/style/global edit.
+
+**Bước tiếp theo:**
+- Patch `edit_image()` để nhận external mask.
+- Tạo script/env riêng chạy SAM 3 trên Colab và xuất mask 512×512.
+- Chạy thử 5 mẫu PIE-Bench trước khi batch 30–50 mẫu.
+
+---
 
 ### 2026-06-05 — [3c] Chốt bộ độ đo đánh giá SwiftEdit/PieBench
 

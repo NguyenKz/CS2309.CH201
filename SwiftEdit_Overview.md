@@ -293,7 +293,9 @@ Dataset chuẩn: [PIE-Bench / PnP Inversion](https://github.com/cure-lab/PnPInve
 | Evaluation | PSNR, CLIP, PieBench |
 | Ứng dụng | Chỉnh sửa ảnh nhanh, gần on-device (Mac M4) |
 
-**Hướng nghiên cứu đề tài (không train nặng):** tái hiện inference, ablation hyperparameter, đánh giá PieBench subset, so sánh TurboEdit, thử style editing & ảnh bối cảnh Việt Nam.
+**Hướng nghiên cứu đề tài (không train nặng):** tái hiện inference, ablation hyperparameter, đánh giá PieBench subset, thử style editing & ảnh bối cảnh Việt Nam.
+
+**Hướng mở rộng được chọn:** **SwiftEdit + SAM 3: Concept-guided Mask Replacement**. Ý tưởng là thay self-guided mask trong SwiftEdit bằng mask do SAM 3 sinh từ concept prompt, sau đó so sánh với self-guided mask và GT mask bằng IoU/Dice, PSNR/MSE background, CLIP-Whole/Edited và runtime.
 
 ---
 
@@ -313,6 +315,7 @@ Dataset chuẩn: [PIE-Bench / PnP Inversion](https://github.com/cure-lab/PnPInve
 
 - [SwiftBrush v2 (ECCV 2025)](https://github.com/) — backbone one-step T2I
 - [PIE-Bench / PnP Inversion (ICLR 2024)](https://github.com/cure-lab/PnPInversion)
+- [SAM 3: Segment Anything with Concepts](https://github.com/facebookresearch/sam3)
 - [CLIP (ICML 2021)](https://proceedings.mlr.press/v139/radford21a) · [CLIPScore (EMNLP 2021)](https://arxiv.org/abs/2104.08718)
 - [IP-Adapter](https://github.com/tencent-ailab/IP-Adapter)
 - [TurboEdit](https://github.com/GaMaLielD/TurboEdit) — baseline few-step

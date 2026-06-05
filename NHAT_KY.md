@@ -9,7 +9,11 @@
 
 | Ngày | Giai đoạn | Công việc | Kết quả / Ghi chú | Môi trường |
 |---|---|---|---|---|
-| 2026-06-05 | 4d | Chọn hướng mở rộng chính: SwiftEdit + SAM 3 concept-guided mask replacement | Cập nhật đề tài/README/Overview/QA: bảng các hướng thay module pipeline, chọn SAM 3 để thay self-guided mask, thiết kế thí nghiệm SG vs GT vs SAM3, metric IoU/Dice + PSNR/MSE/CLIP/runtime, references SAM 3/Qwen/FLUX/Step1X. | Mac M4; tài liệu |
+| 2026-06-05 | 4d | Đề xuất hướng ứng dụng xóa vật thể / inpainting | Cập nhật đề tài/README/Overview/QA: dùng SwiftEdit để xóa object bằng prompt + self/user mask; đánh giá khả thi trung bình-cao với object nhỏ/vừa; metric detector confidence drop, CLIP margin, PSNR/SSIM/LPIPS ngoài mask, realism/human rating; so LaMa nếu kịp. | Mac M4; tài liệu |
+| 2026-06-05 | 4c | Đề xuất hướng ứng dụng global style/weather edit | Cập nhật đề tài/README/Overview/QA: dùng SwiftEdit cho ngày↔đêm, mùa, mưa↔nắng; đánh giá khả thi trung bình; bỏ mask metric, dùng CLIP target, zero-shot CLIP label, DINO/CLIP image similarity, LPIPS/SSIM phụ, IQA/human rating, FID/KID nếu có target domain. | Mac M4; tài liệu |
+| 2026-06-05 | 4d | Chốt hướng SwiftEdit-RT đầu tiên: bỏ decode `noise_image` | Patch `IPSBV2Model.gen_img()` thêm `return_noise_image=False`, mặc định không decode ảnh nhiễu không dùng; cập nhật README/QA/đề tài với ranking ưu tiên các hướng tăng tốc không train. | Mac M4; code + tài liệu |
+| 2026-06-05 | 4d | Đổi hướng đào sâu sang SwiftEdit-RT realtime inference acceleration | Cập nhật đề tài/README/Overview/QA: loại SAM 3 khỏi pipeline chính vì tăng latency; chọn hướng profile bottleneck, GPU mask threshold, bỏ decode thừa, cache latent/embedding, thử fp16/channels_last/torch.compile và TinyVAE/TAESD. | Mac M4; tài liệu |
+| 2026-06-05 | 4d | Khảo sát ban đầu: SwiftEdit + SAM 3 concept-guided mask replacement | Đã từng cân nhắc SAM 3 để thay self-guided mask; sau phản biện realtime, hướng này chuyển thành optional/offline mask analysis thay vì hướng chính. | Mac M4; tài liệu |
 | 2026-06-05 | 3c | Chuẩn hóa tài liệu đánh giá SwiftEdit/PieBench và sửa `CLIP-Whole` trong metric code | Ghi rõ PSNR/MSE vùng nền, CLIP-Whole/Edited theo edit prompt, runtime; nguồn: PIE-Bench/PnP Inversion ICLR 2024, SwiftEdit CVPR 2025, CLIP/CLIPScore. `piebench_metrics.py` đã sửa `clip_whole` dùng `edit_prompt`; compileall OK. | Mac M4 (MPS); .venv |
 | 2026-06-05 | 3c | Viết scripts đánh giá PIE-Bench (`piebench_utils.py`, `piebench_metrics.py`, `run_piebench_eval.py`) | Smoke eval 1 mẫu chạy OK trên Mac MPS (~50s/ảnh, CLIP-Whole=18.76, CLIP-Edited=22.64); `metrics.csv` sinh đúng; PIE-Bench đầy đủ tải qua form PnP Inversion. | Mac M4 (MPS); .venv; torchmetrics 1.9.0 |
 | 2026-06-05 | 2a. Mac | Chạy preset 02.jpg dog→dog with mouth opened trên Mac MPS (cùng prompt Colab T4) | edit_image 30.1s; results/notebook/nb_dog_dog_to_dog_with_mouth_opened.png; T4 1.3s cùng preset → Mac ~23× chậm hơn T4; | Mac M4 (MPS); pyenv 3.12.10; .venv |
@@ -25,23 +29,106 @@
 
 *(Các entry chi tiết xuất hiện bên dưới, mới nhất ở trên cùng.)*
 
-### 2026-06-05 — [4d] Chọn hướng đào sâu: SwiftEdit + SAM 3
+### 2026-06-05 — [4d] Hướng ứng dụng: object removal / inpainting
+
+**Môi trường:** Mac M4; tài liệu đề tài
+
+**Công việc đã làm:**
+- Thêm hướng dùng SwiftEdit để xóa vật thể khỏi ảnh.
+- Tách rõ đây là local edit/inpainting: mask vẫn có ý nghĩa, khác với global style/weather edit.
+- Đề xuất cấu hình SwiftEdit-SG, SwiftEdit-UserMask/GTMask, SwiftEdit-SG+Dilate và LaMa baseline nếu còn thời gian.
+- Cập nhật `SwiftEdit_DeTai_CS2309.md`, `README.md`, `SwiftEdit_Overview.md`, `QA.md`.
+
+**Kết quả:**
+- Độ khả thi đánh giá là **trung bình-cao** với object nhỏ/vừa và nền đơn giản.
+- Rủi ro chính: object lớn che nhiều background, viền/ghosting, texture nền bị méo; LaMa có thể mạnh hơn vì là inpainting model chuyên dụng.
+- Metric đề xuất: detector confidence drop, CLIP margin `"without object"` vs `"with object"`, PSNR/SSIM/LPIPS ngoài mask, realism/human rating, IoU/Dice mask nếu có GT.
+
+**Bước tiếp theo:**
+- Chọn 20–40 ảnh có object cần xóa.
+- Chạy SwiftEdit-SG trước, visualize mask; sau đó thử user/GT mask và mask dilation nếu cần.
+
+---
+
+### 2026-06-05 — [4c] Hướng ứng dụng: global style/weather edit
+
+**Môi trường:** Mac M4; tài liệu đề tài
+
+**Công việc đã làm:**
+- Đánh giá hướng dùng SwiftEdit cho global scene/style editing: ngày↔đêm, mùa xuân/hạ/thu/đông, mưa↔nắng, overcast/golden hour.
+- Ghi rõ mask IoU/Dice và PSNR/MSE background không phù hợp vì global edit tác động lên toàn ảnh.
+- Đề xuất metric mới theo 3 trục: đúng target/style, giữ content/layout, realism/artifact.
+- Cập nhật `SwiftEdit_DeTai_CS2309.md`, `README.md`, `SwiftEdit_Overview.md`, `QA.md`.
+
+**Kết quả:**
+- Độ khả thi đánh giá là **trung bình**: hợp để khảo sát ứng dụng và failure cases, đặc biệt với edit nhẹ như day→night, sunny→overcast, warm/cold tone.
+- Rủi ro cao hơn ở mùa đông/tuyết, mưa lớn, đêm có nguồn sáng/phản chiếu vì cần thay đổi ánh sáng, texture và chi tiết toàn cảnh.
+
+**Bước tiếp theo:**
+- Chọn 20–40 ảnh outdoor/street/landscape.
+- Chạy prompt nhẹ/mạnh; nếu có full-image mask thì so SwiftEdit-SG vs SwiftEdit-FullMask.
+- Tạo bảng metric: CLIP target, zero-shot CLIP label, DINO/CLIP image similarity, LPIPS/SSIM phụ, human rating và runtime.
+
+---
+
+### 2026-06-05 — [4d] Chốt hướng đầu: bỏ decode `noise_image`
+
+**Môi trường:** Mac M4; code + tài liệu
+
+**Công việc đã làm:**
+- Chọn hướng SwiftEdit-RT đầu tiên vì đơn giản nhất và không làm giảm chất lượng: không tạo `noise_image` trong `IPSBV2Model.gen_img()` khi caller không dùng.
+- Patch `SwiftEdit/models.py`: thêm cờ `return_noise_image=False`; chỉ decode `noise_image` khi bật cờ này.
+- Patch `SwiftEdit/infer.py`: gọi `gen_img(..., return_noise_image=False)` rõ ràng.
+- Cập nhật `README.md`, `QA.md`, `SwiftEdit_DeTai_CS2309.md` với thứ tự ưu tiên các hướng tăng tốc không train.
+
+**Kết quả:**
+- Output ảnh edited chính giữ nguyên công thức decode; chỉ bỏ một VAE decode phụ vốn bị discard bởi `res_gen_img, _`.
+- Thứ tự ưu tiên còn lại: GPU mask threshold → profiler → cache latent/embedding → channels_last/fp16 → torch.compile → TinyVAE/TAESD → TensorRT/Core ML/quantization.
+
+**Bước tiếp theo:**
+- Chạy đo baseline vs `SwiftEdit-no-noise-decode` trên Mac MPS và Colab T4.
+- Sau đó patch GPU mask threshold để bỏ `.cpu().apply_()`.
+
+---
+
+### 2026-06-05 — [4d] Đổi hướng đào sâu: SwiftEdit-RT
+
+**Môi trường:** Mac M4; tài liệu đề tài
+
+**Công việc đã làm:**
+- Rà lại luận điểm cốt lõi của SwiftEdit: realtime/instant editing.
+- Đánh giá lại hướng SAM 3: tuy dễ làm và có định lượng mask, nhưng thêm segmentation model sẽ tăng latency và tài nguyên end-to-end.
+- Chọn hướng mới: **SwiftEdit-RT: Realtime-Oriented Inference Acceleration**.
+- Cập nhật `SwiftEdit_DeTai_CS2309.md`, `README.md`, `SwiftEdit_Overview.md`, `QA.md` theo hướng profiling + tối ưu inference.
+
+**Kết quả:**
+- Hướng chính mới gồm: latency breakdown theo module, vectorized self-guided mask trên GPU, bỏ decode `noise_image` không dùng, cache latent/embedding cho cùng ảnh nhiều prompt, thử `fp16`, `channels_last`, `torch.compile`, TinyVAE/TAESD.
+- SAM 3 được hạ xuống optional/offline mask quality analysis, không tính là pipeline realtime.
+
+**Bước tiếp theo:**
+- Viết profiler cho `edit_image()` để đo từng module.
+- Patch nhanh 2 tối ưu ít rủi ro: GPU mask threshold và `return_noise_image=False`.
+- Chạy so sánh baseline vs optimized trên Mac MPS và Colab T4.
+
+---
+
+### 2026-06-05 — [4d] Khảo sát ban đầu: SwiftEdit + SAM 3
 
 **Môi trường:** Mac M4; tài liệu đề tài
 
 **Công việc đã làm:**
 - Khảo sát các hướng thay module pipeline: SAM 3 mask, GroundingDINO+SAM2, auto source prompt bằng Florence-2/Qwen2.5-VL, grounded evaluation, baseline FLUX.1 Kontext/Qwen-Image-Edit/Step1X-Edit.
-- Chọn hướng chính: **SwiftEdit + SAM 3: Concept-guided Mask Replacement**.
+- Ban đầu chọn hướng **SwiftEdit + SAM 3: Concept-guided Mask Replacement** để phân tích mask.
 - Cập nhật `SwiftEdit_DeTai_CS2309.md`, `README.md`, `SwiftEdit_Overview.md`, `QA.md` với pipeline mới, research questions RQ8/RQ9, đóng góp C13, kế hoạch thí nghiệm và tài liệu tham khảo.
 
 **Kết quả:**
-- Hướng đào sâu được định nghĩa rõ: trích concept → SAM 3 sinh mask → SwiftEdit ARaM dùng external mask → so sánh self-guided / GT / SAM 3.
+- Hướng SAM 3 được định nghĩa rõ: trích concept → SAM 3 sinh mask → SwiftEdit ARaM dùng external mask → so sánh self-guided / GT / SAM 3.
+- Sau phản biện realtime, hướng này được chuyển thành optional/offline analysis, không còn là hướng chính.
 - Metric: IoU/Dice mask, PSNR/MSE background, CLIP-Whole/Edited, runtime; có failure cases cho add object/style/global edit.
 
 **Bước tiếp theo:**
-- Patch `edit_image()` để nhận external mask.
-- Tạo script/env riêng chạy SAM 3 trên Colab và xuất mask 512×512.
-- Chạy thử 5 mẫu PIE-Bench trước khi batch 30–50 mẫu.
+- Chỉ quay lại hướng này nếu còn thời gian và cần phân tích chất lượng mask.
+- Không đưa SAM 3 vào pipeline realtime chính của đề tài.
 
 ---
 

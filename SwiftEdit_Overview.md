@@ -289,13 +289,17 @@ Dataset chuẩn: [PIE-Bench / PnP Inversion](https://github.com/cure-lab/PnPInve
 | Diffusion models | One-step SBv2, inversion |
 | Image editing | Text-guided, localized edit |
 | Attention mechanism | ARaM, cross-attention rescaling |
-| Segmentation / mask | Self-guided editing mask |
+| Segmentation / mask | Self-guided editing mask; SAM 3 chỉ là hướng phân tích mask optional |
 | Evaluation | PSNR, CLIP, PieBench |
-| Ứng dụng | Chỉnh sửa ảnh nhanh, gần on-device (Mac M4) |
+| Ứng dụng | Chỉnh sửa ảnh nhanh, gần on-device (Mac M4); tối ưu inference realtime |
 
-**Hướng nghiên cứu đề tài (không train nặng):** tái hiện inference, ablation hyperparameter, đánh giá PieBench subset, thử style editing & ảnh bối cảnh Việt Nam.
+**Hướng nghiên cứu đề tài (không train nặng):** tái hiện inference, ablation hyperparameter, đánh giá PieBench subset, thử style/weather global edit & ảnh bối cảnh Việt Nam.
 
-**Hướng mở rộng được chọn:** **SwiftEdit + SAM 3: Concept-guided Mask Replacement**. Ý tưởng là thay self-guided mask trong SwiftEdit bằng mask do SAM 3 sinh từ concept prompt, sau đó so sánh với self-guided mask và GT mask bằng IoU/Dice, PSNR/MSE background, CLIP-Whole/Edited và runtime.
+**Hướng mở rộng được chọn:** **SwiftEdit-RT: Realtime-Oriented Inference Acceleration**. Ý tưởng là giữ đúng điểm mạnh realtime của SwiftEdit bằng cách profile từng module, bỏ overhead không cần thiết, cache latent/embedding cho demo tương tác và thử các tối ưu inference như `fp16`, `channels_last`, `torch.compile` hoặc TinyVAE/TAESD. Hướng SAM 3 mask replacement được chuyển thành optional/không chọn làm hướng chính vì thêm segmentation model làm tăng latency end-to-end.
+
+**Hướng ứng dụng đang khảo sát:** **Global scene/style editing** như ngày↔đêm, mùa, mưa↔nắng. Hướng này khả thi mức trung bình: đáng làm để phân tích giới hạn của SwiftEdit, nhưng không dùng mask IoU/PSNR nền; thay bằng CLIP target/style, DINO/CLIP image similarity, LPIPS/SSIM phụ, IQA/human rating và runtime.
+
+**Hướng ứng dụng mới:** **Object removal / inpainting**. Hướng này phù hợp hơn global style vì vẫn là local edit có mask: dùng prompt `"without [object]"`, so SwiftEdit self-guided mask với user/GT mask, đo detector confidence drop, background preservation ngoài mask và realism vùng inpaint. Khả thi mức trung bình-cao với object nhỏ/vừa; cần so với baseline inpainting chuyên dụng như LaMa khi object lớn hoặc nền phức tạp.
 
 ---
 
@@ -315,7 +319,11 @@ Dataset chuẩn: [PIE-Bench / PnP Inversion](https://github.com/cure-lab/PnPInve
 
 - [SwiftBrush v2 (ECCV 2025)](https://github.com/) — backbone one-step T2I
 - [PIE-Bench / PnP Inversion (ICLR 2024)](https://github.com/cure-lab/PnPInversion)
-- [SAM 3: Segment Anything with Concepts](https://github.com/facebookresearch/sam3)
+- [Diffusers AutoencoderTiny / TAESD](https://huggingface.co/docs/diffusers/en/api/models/autoencoder_tiny)
+- [Diffusers inference optimization](https://huggingface.co/docs/diffusers/main/optimization/fp16)
+- [PyTorch `torch.compile` + Diffusers](https://docs.pytorch.org/devlogs/inductor/2026-05-11-torch-compile-and-diffusers/)
+- [SAM 3: Segment Anything with Concepts](https://github.com/facebookresearch/sam3) — optional mask analysis
+- [LaMa: Resolution-robust Large Mask Inpainting](https://openaccess.thecvf.com/content/WACV2022/html/Suvorov_Resolution-Robust_Large_Mask_Inpainting_With_Fourier_Convolutions_WACV_2022_paper.html)
 - [CLIP (ICML 2021)](https://proceedings.mlr.press/v139/radford21a) · [CLIPScore (EMNLP 2021)](https://arxiv.org/abs/2104.08718)
 - [IP-Adapter](https://github.com/tencent-ailab/IP-Adapter)
 - [TurboEdit](https://github.com/GaMaLielD/TurboEdit) — baseline few-step

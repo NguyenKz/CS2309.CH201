@@ -90,7 +90,10 @@ def edit_image(
     )
     ip_sb_model.set_controller(mask_controller, where=["mid_blocks", "up_blocks"])
     res_gen_img, _ = ip_sb_model.gen_img(
-        pil_image=pil_img_cond, prompts=[src_p, edit_p], noise=input_sb
+        pil_image=pil_img_cond,
+        prompts=[src_p, edit_p],
+        noise=input_sb,
+        return_noise_image=False,
     )
 
     return res_gen_img

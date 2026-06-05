@@ -259,15 +259,15 @@ class IPSBV2Model(torch.nn.Module):
         prompts=None,
         noise=None,
         scale=1.0,
+        return_noise_image=False,
     ):
 
         self.set_scale(scale)
-        num_samples = len(prompts)
-        
-        # Prepare prompt + image embeds
         if prompts is None:
             prompts = ["best quality, high quality"]
+        num_samples = len(prompts)
 
+        # Prepare prompt + image embeds
         image_prompt_embeds = self.get_image_embeds(pil_image=pil_image)
         bs_embed, seq_len, _ = image_prompt_embeds.shape
         image_prompt_embeds = image_prompt_embeds.repeat(1, num_samples, 1)
@@ -299,10 +299,12 @@ class IPSBV2Model(torch.nn.Module):
             self.aux_model.vae.decode(pred_original_sample.to(dtype=torch.float32)).sample.float() + 1
         ) / 2
 
-        noise_image = noise / self.aux_model.vae.config.scaling_factor
-        noise_image = (
-            self.aux_model.vae.decode(noise_image.to(dtype=self.aux_model.vae.dtype)).sample.float()
-            + 1
-        ) / 2
+        noise_image = None
+        if return_noise_image:
+            noise_image = noise / self.aux_model.vae.config.scaling_factor
+            noise_image = (
+                self.aux_model.vae.decode(noise_image.to(dtype=self.aux_model.vae.dtype)).sample.float()
+                + 1
+            ) / 2
 
         return image, noise_image

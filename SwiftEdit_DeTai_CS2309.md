@@ -499,62 +499,233 @@ python scripts/run_piebench_eval.py --piebench-dir data/PIE-Bench-smoke --max-sa
 7. **SwiftEdit so với baseline multi-step / few-step trên cùng phần cứng?**
    - So sánh trực quan và định lượng với TurboEdit, ReNoise, hoặc phương pháp multi-step đơn giản hơn (nếu tài nguyên cho phép).
 8. **Giới hạn khi áp dụng cho "thay đổi phong cách ảnh" (style transfer)?**
-   - SwiftEdit tập trung semantic editing (đổi đối tượng, thuộc tính); cần khảo sát khả năng chuyển phong cách (ví dụ: "oil painting style", "anime style") qua prompt.
-9. **Phân công Mac vs Colab có hiệu quả không?**
+   - SwiftEdit tập trung semantic/local editing (đổi đối tượng, thuộc tính); cần khảo sát riêng các edit **global attribute/style** như ngày↔đêm, mùa xuân/hạ/thu/đông, mưa/nắng vì mask và background-preservation metric không còn phù hợp.
+9. **SwiftEdit có dùng được cho xóa vật thể khỏi ảnh không?**
+   - Đây là bài toán local edit/inpainting: mask vẫn có ý nghĩa, nhưng cần đánh giá thêm khả năng lấp nền phía sau object và loại bỏ hoàn toàn dấu vết vật thể.
+10. **Phân công Mac vs Colab có hiệu quả không?**
    - Task nào nên chạy local, task nào cần CUDA? Runtime Colab T4 so với Mac MPS?
-10. **SwiftEdit chạy thế nào trên Mac Apple Silicon (M4, unified memory)?**
+11. **SwiftEdit chạy thế nào trên Mac Apple Silicon (M4, unified memory)?**
     - Repo gốc target CUDA; cần port sang MPS cho local dev.
-11. **Yêu cầu tài nguyên và khả năng triển khai on-device?**
+12. **Yêu cầu tài nguyên và khả năng triển khai on-device?**
     - Mac M4 là case study gần on-device; Colab T4 mô phỏng server-side GPU.
 
-### 5.3. Hướng thay thế module pipeline sau khảo sát 2025–2026
+### 5.3. Hướng thay thế / tối ưu module pipeline sau khảo sát 2025–2026
 
-Một số nhóm khác mở rộng bài toán bằng cách **thay một khối trong pipeline gốc** thay vì chỉ chạy lại paper. Với SwiftEdit, các khối có thể cân nhắc là source prompt, editing mask, image condition, backbone edit model hoặc metric đánh giá.
+Một số nhóm khác mở rộng bài toán bằng cách **thay một khối trong pipeline gốc**. Với SwiftEdit, cần ưu tiên hướng không phá lợi thế realtime. Vì vậy các hướng thêm model nặng như SAM 3 chỉ phù hợp phân tích phụ, còn hướng chính nên giảm latency của pipeline hiện có.
 
-| Hướng thay / thêm module | Vị trí trong pipeline SwiftEdit | Khả thi | Giá trị báo cáo | Kết luận |
+| Hướng thay / tối ưu module | Vị trí trong pipeline SwiftEdit | Khả thi | Giá trị báo cáo | Kết luận |
 |---|---|---:|---:|---|
-| **SAM 3 concept-guided mask** | Thay self-guided mask `M = |eps_source - eps_edit|` | Cao | Rất cao | **Chọn làm hướng đào sâu chính** |
-| GroundingDINO + SAM 2 mask | Thay self-guided mask bằng open-vocabulary detection + segmentation | Trung bình | Cao | Phương án dự phòng nếu SAM 3 khó chạy |
-| Florence-2 / Qwen2.5-VL source prompt | Tự sinh `source prompt` từ ảnh thay vì người dùng viết tay | Cao | Cao | Có thể làm mở rộng phụ |
-| GIE-Bench / grounded evaluation | Thay/bổ sung CLIP bằng đánh giá câu hỏi + object-aware preservation | Trung bình | Cao | Phù hợp phần phân tích, không cần thay model |
-| FLUX.1 Kontext / Qwen-Image-Edit / Step1X-Edit | Baseline hiện đại ngoài pipeline SwiftEdit | Trung bình thấp | Cao | So sánh định tính nếu còn thời gian |
-| Thay CLIP image encoder / IP-Adapter bằng VLM | Thay image condition branch `c_x` | Thấp | Trung bình | Không khuyến nghị vì cần train lại adapter |
-| Thay VAE encoder / SBv2 backbone | Thay latent/image generator chính | Rất thấp | Thấp-trung bình | Ngoài phạm vi đề tài |
+| **SwiftEdit-RT profiling + inference acceleration** | Toàn bộ đường inference `edit_image()` | Cao | Rất cao | **Chọn làm hướng đào sâu chính** |
+| Bỏ decode `noise_image` không dùng | `IPSBV2Model.gen_img()` sau generation UNet | Cao | Cao | **Chốt làm trước**; giảm VAE decode thừa |
+| Vectorized self-guided mask trên GPU | Bước `mask12 = |eps_source - eps_edit|` | Cao | Cao | Làm tiếp theo; không đổi chất lượng kỳ vọng |
+| Cache latent / image embedding / prompt embedding | Demo tương tác cùng ảnh nhiều prompt | Cao | Rất cao | Rất hợp realtime app |
+| `fp16`, `channels_last`, `torch.compile` | CUDA inference kernels | Trung bình | Cao | Thử trên Colab T4/A100 |
+| TinyVAE / TAESD | VAE encode/decode | Trung bình | Cao | Ablation tốc độ/chất lượng |
+| **Global attribute/style application** | Dùng SwiftEdit cho ngày/đêm, mùa, mưa/nắng | Cao | Cao | Hướng ứng dụng/phân tích khả thi; không dùng mask metric |
+| **Object removal / inpainting application** | Xóa vật thể bằng prompt + self/user mask | Cao | Cao | Hướng ứng dụng rất hợp pipeline mask-aware; cần so với LaMa |
+| SAM 3 concept-guided mask | Thêm segmentation trước ARaM | Cao | Trung bình | **Không chọn làm hướng chính** vì tăng latency end-to-end |
+| Florence-2 / Qwen2.5-VL source prompt | Tự sinh `source prompt` từ ảnh | Cao | Trung bình | Optional; có thể thêm latency |
+| FLUX.1 Kontext / Qwen-Image-Edit / Step1X-Edit | Baseline hiện đại ngoài SwiftEdit | Trung bình thấp | Cao | So sánh định tính nếu còn thời gian |
 
-### 5.4. Hướng chọn đào sâu: SwiftEdit + SAM 3
+### 5.4. Hướng chọn đào sâu: SwiftEdit-RT
 
-**Tên hướng:** *SwiftEdit + SAM 3: Concept-guided Mask Replacement*
+**Tên hướng:** *SwiftEdit-RT: Realtime-Oriented Inference Acceleration*
 
-**Ý tưởng:** SwiftEdit gốc tự sinh editing mask bằng chênh lệch inverted noise giữa source prompt và edit prompt. Hướng mở rộng này thay mask tự sinh bằng **SAM 3 concept-guided segmentation**, tức dùng prompt khái niệm như `"cat"`, `"yellow school bus"`, `"shirt"` để SAM 3 phát hiện và segment vùng cần sửa. Mask từ SAM 3 sau đó được đưa vào ARaM để điều khiển vùng edit/non-edit.
+**Ý tưởng:** SwiftEdit đã giảm số bước diffusion xuống 1 inversion + 1 editing. Khi số UNet step đã rất ít, bottleneck có thể chuyển sang các phần phụ như VAE encode/decode, text encoder, CLIP image encoder, CPU-GPU sync hoặc thao tác không cần thiết. Hướng mở rộng này không thêm model mới, mà đo và tối ưu latency của chính pipeline SwiftEdit.
 
 ```text
 Source image + source/edit prompt
         │
-        ├── SwiftEdit gốc:
-        │     F_theta(source prompt) vs F_theta(edit prompt)
-        │     → self-guided mask
+        ├── Profile baseline:
+        │     VAE encode → text encoder → inverse UNet → mask
+        │     → CLIP image encoder/IP-Adapter → generation UNet → VAE decode
         │
-        └── Hướng mở rộng:
-              trích concept cần sửa
-              → SAM 3 text/concept prompt
-              → SAM 3 mask
-              → ARaM editing với mask ngoài
+        └── SwiftEdit-RT:
+              GPU mask threshold
+              + skip unused noise decode
+              + cache latent/embeddings cho interactive editing
+              + fp16/channels_last/torch.compile trên CUDA
+              + TinyVAE/TAESD ablation
 ```
 
-**Lý do chọn SAM 3 thay vì SAM 2/GroundingDINO:**
+**Lý do chọn SwiftEdit-RT thay vì SAM 3:**
 
-- SAM 3 gộp detection + segmentation + tracking bằng **concept prompt**, nên pipeline gọn hơn GroundingDINO + SAM 2.
-- Phù hợp trực tiếp với điểm mở của SwiftEdit: paper cho phép dùng mask người dùng cung cấp hoặc mask tự sinh.
-- Có thể đánh giá định lượng bằng IoU/Dice với GT mask của PIE-Bench, đồng thời đo ảnh edited bằng PSNR/MSE/CLIP như mục 9.3.
-- Là hướng mới hơn SwiftEdit, dễ tạo câu chuyện nghiên cứu: *một module foundation segmentation mới có cải thiện localized one-step editing không?*
+- SwiftEdit được công bố như một phương pháp **lightning fast / instant editing**; mọi hướng đào sâu nên bảo vệ luận điểm này.
+- SAM 3 có thể cải thiện mask trong vài trường hợp nhưng phải thêm segmentation model, tăng VRAM/RAM và runtime end-to-end.
+- Một pipeline chậm hơn nhiều sẽ khó thuyết phục vì có thể bị so sánh với các editor chất lượng cao hơn ở cùng mức latency.
+- Tối ưu inference tạo câu chuyện rõ: *sau khi one-step diffusion giải quyết số bước denoising, bottleneck hệ thống còn nằm ở đâu và có thể giảm tiếp không?*
+- Hướng này vừa sức đề tài: có thể bắt đầu bằng profiling + patch code nhỏ, không cần train lại model.
 
-**Lưu ý phạm vi:**
+**Phạm vi SwiftEdit-RT:**
 
-- Với edit kiểu đổi thuộc tính/đổi object đang tồn tại (`"orange cat" → "black cat"`), SAM 3 prompt nên là object hiện có trong ảnh (`"cat"` hoặc `"orange cat"`), không phải object sau edit nếu object đó chưa xuất hiện.
-- Với task add object, SAM 3 khó sinh mask vì vùng cần thêm chưa có object; nhóm này nên dùng GT mask, box thủ công hoặc phân tích như failure case.
-- SAM 3 nên chạy ở môi trường riêng trên Colab/CUDA, xuất mask `.png`/`.npy`, rồi SwiftEdit đọc mask đó. Không nên ép chung env với SwiftEdit ngay từ đầu vì dependency SAM 3 mới hơn.
+- Thực hiện trên checkpoint pretrained; không train lại `F_theta`, SBv2 hoặc IP-Adapter.
+- Đo riêng **cold start** (load model) và **warm inference** (model đã load).
+- Ưu tiên Colab CUDA cho số liệu chính; Mac MPS dùng làm case study on-device/local.
+- SAM 3 vẫn có thể đặt trong phần hướng không chọn hoặc optional mask quality analysis, không tính vào pipeline realtime.
 
-### 5.5. Câu hỏi nghiên cứu đề xuất (Research Questions)
+**Thứ tự ưu tiên triển khai (không train, ưu tiên không giảm chất lượng):**
+
+| Ưu tiên | Hướng | Độ đơn giản | Benefit tốc độ | Rủi ro chất lượng | Ghi chú |
+|---:|---|---:|---:|---:|---|
+| 0 | **Bỏ decode `noise_image` không dùng** | Rất cao | Trung bình-cao nếu VAE decode tốn thời gian | Không | Đã chốt làm trước; output edited chính không đổi |
+| 1 | **Vectorized self-guided mask trên GPU** | Rất cao | Nhỏ-trung bình; tránh CPU sync | Không | Thay `.cpu().apply_()` bằng tensor threshold |
+| 2 | **Latency profiler theo module** | Cao | Không tăng tốc trực tiếp | Không | Bắt buộc để chứng minh bottleneck/speedup |
+| 3 | **Cache latent + CLIP image embedding cho cùng ảnh** | Trung bình | Cao trong demo nhiều prompt/cùng ảnh | Không nếu cache invalidation đúng | Rất hợp realtime interaction |
+| 4 | **Cache text/source prompt embedding** | Trung bình | Nhỏ-trung bình | Không | Có ích khi source prompt/ảnh giữ nguyên |
+| 5 | **`channels_last` trên CUDA** | Cao | Nhỏ-trung bình | Rất thấp | Nên thử chung với benchmark Colab |
+| 6 | **`fp16`/`bf16` inference trên CUDA** | Trung bình | Trung bình-cao, giảm VRAM | Thấp | Cần so PSNR/CLIP/ảnh để xác nhận không lệch |
+| 7 | **`torch.compile` cho UNet/VAE** | Trung bình | Trung bình-cao sau warmup | Thấp | Có compile overhead; hợp chạy batch/repeated |
+| 8 | **TinyVAE/TAESD** | Trung bình | Có thể cao ở VAE encode/decode | Trung bình | Chỉ là ablation vì có thể đổi chất lượng |
+| 9 | **TensorRT/Core ML/quantization** | Thấp-trung bình | Có thể rất cao | Thấp-trung bình | Hướng dài hơn, nhiều công tích hợp |
+
+**Không ưu tiên cho hướng tốc độ:** SAM 3, VLM auto-caption/source prompt, baseline editor mới. Các hướng này có giá trị phân tích hoặc so sánh, nhưng thêm model/bước xử lý nên không hợp mục tiêu giảm latency của SwiftEdit.
+
+### 5.5. Hướng ứng dụng: global attribute / style transfer
+
+**Tên hướng:** *SwiftEdit for Global Scene Attribute Editing*
+
+**Bài toán:** dùng SwiftEdit để chỉnh các thuộc tính bao phủ toàn ảnh, ví dụ:
+
+- Ngày → đêm / đêm → ngày.
+- Mùa: xuân ↔ hạ ↔ thu ↔ đông.
+- Thời tiết: nắng ↔ mưa, trời quang ↔ u ám, có tuyết.
+- Phong cách tổng quan: warm/cold tone, cinematic, overcast, golden hour.
+
+**Khác với PieBench/local editing:** với global edit, gần như toàn bộ ảnh được phép thay đổi. Vì vậy:
+
+- IoU/Dice mask không còn ý nghĩa.
+- PSNR/MSE trên background `(1 - mask)` không phù hợp vì không có vùng nền "không sửa".
+- Nếu dùng mask, nên xem **full-image mask** như một cấu hình ablation, không phải ground truth chuẩn.
+
+**Đánh giá độ khả thi của SwiftEdit:**
+
+| Tiêu chí | Đánh giá | Lý do |
+|---|---:|---|
+| Chạy được bằng checkpoint hiện tại | Cao | Chỉ cần đổi prompt, không train lại |
+| Ngày↔đêm nhẹ, sunny↔overcast, tone/mood | Trung bình-cao | Đây là thay đổi màu/ánh sáng toàn cục, có thể nằm trong khả năng prompt của SBv2 |
+| Mùa rõ rệt, đặc biệt winter/snow | Trung bình | Có thể cần thêm chi tiết mới như tuyết, lá rụng; dễ đổi không đều |
+| Mưa lớn, đêm có đèn/phản chiếu | Trung bình-thấp | Cần hallucinate hạt mưa, bóng đổ, phản xạ, nguồn sáng; one-step có thể thiếu ổn định |
+| Bảo toàn geometry/layout | Trung bình | SwiftEdit có IP-Adapter + inversion giữ scene, nhưng global prompt mạnh có thể làm lệch texture/chi tiết |
+| Làm hướng chính thay cho SwiftEdit-RT | Không khuyến nghị | Rủi ro chất lượng cao hơn; hợp làm hướng ứng dụng/phân tích giới hạn |
+
+**Kết luận khả thi:** hướng này **khả thi ở mức trung bình** và đáng làm như một nhánh ứng dụng/failure analysis. Nó có giá trị báo cáo vì trả lời câu hỏi: *SwiftEdit realtime có mở rộng tốt từ local semantic editing sang global scene/style editing không?* Tuy nhiên không nên đặt kỳ vọng chắc chắn tốt như bài toán đổi object/attribute cục bộ.
+
+**Cấu hình thí nghiệm đề xuất:**
+
+| Cấu hình | Ý nghĩa |
+|---|---|
+| SwiftEdit-SG | Dùng self-guided mask gốc; xem mask tự sinh có bao phủ global edit không |
+| SwiftEdit-FullMask | Dùng mask toàn ảnh nếu patch external mask; ép ARaM xem toàn ảnh là vùng edit |
+| SwiftEdit-WeakPrompt | Prompt nhẹ: `"same scene, at night"`, `"same scene, in autumn"` |
+| SwiftEdit-StrongPrompt | Prompt mạnh: `"a rainy nighttime street scene with wet reflections"` |
+
+**Bộ prompt mẫu:**
+
+```text
+source: "a daytime street photo"
+edit:   "the same street at night, realistic lighting"
+
+source: "a sunny landscape photo"
+edit:   "the same landscape in winter with snow"
+
+source: "a city street on a clear day"
+edit:   "the same city street on a rainy day, wet road, overcast sky"
+
+source: "a park in summer"
+edit:   "the same park in autumn, orange leaves, realistic photo"
+```
+
+**Metric đề xuất cho global edit:**
+
+| Nhóm metric | Độ đo | Cách dùng | Kỳ vọng |
+|---|---|---|---|
+| Target/style fidelity | CLIPScore với target prompt | `CLIP(image_edit, edit_prompt)` hoặc zero-shot label `{day, night, spring, summer, autumn, winter, sunny, rainy}` | Cao |
+| Directional change | ΔCLIP target | `CLIP(edit, target) - CLIP(source, target)` và/hoặc target-vs-source label margin | Cao |
+| Content preservation | DINO similarity / CLIP image-image similarity | So feature ảnh source vs edited để xem layout/semantic còn giữ không | Cao vừa phải |
+| Perceptual distance | LPIPS / SSIM toàn ảnh | Chỉ dùng phụ; global edit cần đổi màu/ánh sáng nên không đòi quá thấp | LPIPS không quá cao, SSIM không quá thấp |
+| Realism/artifact | MUSIQ / NIQE / human rating | Đánh giá ảnh có tự nhiên, ít artifact không | Cao |
+| Domain realism nếu có dataset | FID/KID với tập target domain | So edited set với ảnh thật ban đêm/mùa đông/mưa; cần nhiều ảnh | Thấp hơn là tốt |
+| Runtime | `runtime_s` | Vẫn đo để giữ luận điểm SwiftEdit realtime | Thấp |
+
+**Đề xuất thực tế cho môn học:** chạy 20–40 ảnh outdoor/street/landscape, 4 nhóm edit (day-night, season, rain/sun, tone), mỗi nhóm 5–10 ảnh. Báo cáo cả ảnh thành công và thất bại, kèm bảng metric và human rating 1–5 cho ba tiêu chí: đúng style, giữ content, tự nhiên.
+
+### 5.6. Hướng ứng dụng: object removal / inpainting
+
+**Tên hướng:** *SwiftEdit for Object Removal*
+
+**Bài toán:** xóa một vật thể không mong muốn khỏi ảnh, ví dụ:
+
+- Xóa xe khỏi đường.
+- Xóa người khỏi ảnh phong cảnh.
+- Xóa vật nhỏ trên bàn.
+- Xóa biển báo/cột điện/rác khỏi ảnh đường phố.
+
+**Vì sao hướng này đáng thử với SwiftEdit:**
+
+- Khác global style, đây là **local editing** nên self-guided mask/ARaM vẫn có đất diễn.
+- Prompt có thể viết theo dạng source có object, edit prompt không còn object: `"a street with a red car"` → `"an empty street"`.
+- SwiftEdit có thể tự sinh mask từ chênh lệch inverted noise; nếu có user/GT mask thì có thể ép vùng xóa rõ hơn.
+- Đây là ứng dụng thực tế dễ trình bày trong demo.
+
+**Đánh giá độ khả thi của SwiftEdit:**
+
+| Tiêu chí | Đánh giá | Lý do |
+|---|---:|---|
+| Chạy bằng checkpoint hiện tại | Cao | Chỉ cần prompt remove/delete, không train lại |
+| Object nhỏ/vừa, background đơn giản | Trung bình-cao | Mask dễ định vị, vùng cần inpaint không quá lớn |
+| Object lớn che nhiều nền | Trung bình-thấp | Cần hallucinate nền bị che; SwiftEdit không phải model inpainting chuyên dụng |
+| Nhiều object / object sát người / biên phức tạp | Trung bình-thấp | Dễ còn ghosting, viền artifact hoặc xóa nhầm |
+| So với LaMa/inpainting chuyên dụng | Rủi ro | LaMa được thiết kế riêng cho large-mask inpainting nên có thể lấp nền tốt hơn |
+| Giá trị báo cáo/demo | Cao | Có bài toán rõ, ảnh before/after dễ hiểu, metric local rõ hơn global style |
+
+**Kết luận khả thi:** hướng này **khả thi trung bình-cao** nếu giới hạn vào object nhỏ/vừa và có mask tốt. Nó phù hợp với SwiftEdit hơn global style vì vẫn là chỉnh sửa cục bộ. Điểm yếu chính là khả năng **inpaint nền phía sau object**; SwiftEdit có thể xóa được object nhưng để lại bóng/viền/texture lạ.
+
+**Cấu hình thí nghiệm đề xuất:**
+
+| Cấu hình | Ý nghĩa |
+|---|---|
+| SwiftEdit-SG | Dùng self-guided mask gốc, không cần mask ngoài |
+| SwiftEdit-UserMask / GTMask | Dùng mask object từ COCO/PIE-Bench/user vẽ để ép vùng xóa |
+| SwiftEdit-SG+Dilate | Nới rộng self-guided mask một chút để xóa viền/ghosting |
+| LaMa baseline | Baseline inpainting chuyên dụng, dùng cùng object mask |
+
+**Bộ prompt mẫu:**
+
+```text
+source: "a street with a red car"
+edit:   "an empty street, no car"
+
+source: "a landscape photo with a person standing in the middle"
+edit:   "the same landscape without the person"
+
+source: "a table with a bottle on it"
+edit:   "the same table, remove the bottle"
+
+source: "a sidewalk with a trash bin"
+edit:   "the same sidewalk without the trash bin"
+```
+
+**Metric đề xuất cho object removal:**
+
+| Nhóm metric | Độ đo | Cách dùng | Kỳ vọng |
+|---|---|---|---|
+| Removal success | Detector confidence drop | Chạy detector/zero-shot detector cho object trước và sau edit; confidence object cần giảm mạnh | Thấp sau edit |
+| Prompt fidelity | CLIPScore / CLIP margin | `CLIP(edit, "no car / empty street")` cao hơn `CLIP(edit, "street with car")` | Margin cao |
+| Background preservation | PSNR/MSE/SSIM/LPIPS ngoài mask | Đo vùng `(1 - object_mask)` giữa source và edited | PSNR/SSIM cao, LPIPS thấp |
+| Inpaint realism | LPIPS/FID/KID hoặc MUSIQ/NIQE | Nếu có target/reference thì dùng LPIPS/FID; nếu không có thì dùng IQA/human rating | Ảnh tự nhiên |
+| Boundary artifact | Human rating / local crop review | Zoom vùng biên mask, chấm ghosting/viền/méo texture | Ít artifact |
+| Mask quality | IoU/Dice self-guided mask vs object mask | Nếu có mask COCO/GT/user | Cao |
+| Runtime | `runtime_s` | So SwiftEdit-SG, SwiftEdit-GTMask, LaMa | Thấp |
+
+**Dataset / mẫu thử đề xuất:**
+
+- 20–40 ảnh tự thu thập: đường phố, phong cảnh, bàn làm việc, ảnh du lịch.
+- Nếu cần mask chuẩn: dùng ảnh có segmentation mask từ COCO hoặc subset PieBench có edit dạng remove/delete object.
+- Chia object theo kích thước: nhỏ, vừa, lớn; và background: đơn giản/phức tạp.
+
+**Lưu ý khi báo cáo:** object removal là nơi SwiftEdit có thể bị baseline chuyên dụng vượt qua. Nếu LaMa lấp nền tốt hơn, vẫn có câu chuyện hay: *SwiftEdit nhanh và text-guided, nhưng object removal thuần túy vẫn cần inpainting model chuyên dụng khi vùng xóa lớn hoặc nền phức tạp.*
+
+### 5.7. Câu hỏi nghiên cứu đề xuất (Research Questions)
 
 - **RQ1:** SwiftEdit có tái hiện được kết quả định lượng trên PieBench (PSNR, CLIP) khi chỉ dùng checkpoint pretrained không?
 - **RQ2:** Tham số ARaM ảnh hưởng thế nào đến trade-off giữa editing semantics và background preservation?
@@ -563,8 +734,14 @@ Source image + source/edit prompt
 - **RQ5:** Trên Mac M4 (MPS) và Colab T4 (CUDA), runtime và memory peak của SwiftEdit khác nhau thế nào so với paper (A100)?
 - **RQ6:** Colab có giúp tái hiện metrics PieBench (PSNR, CLIP) gần với Table 1 paper hơn Mac MPS không?
 - **RQ7:** (Tùy chọn — Colab) Fine-tune nhẹ Stage 2 trên Colab có cải thiện reconstruction trên domain-specific không?
-- **RQ8:** Thay self-guided mask bằng SAM 3 concept-guided mask có cải thiện IoU/Dice và background preservation không?
-- **RQ9:** Loại chỉnh sửa nào hưởng lợi nhiều nhất từ SAM 3 mask, và loại nào thất bại do concept/mask không xác định được vùng edit?
+- **RQ8:** Với SwiftEdit one-step, bottleneck runtime thực tế nằm ở module nào: VAE, text encoder, inverse UNet, mask, CLIP image encoder hay generation UNet?
+- **RQ9:** Các tối ưu không đổi thuật toán như vectorized mask và bỏ decode thừa giúp giảm latency bao nhiêu mà không làm đổi output?
+- **RQ10:** Cache latent/embedding trong kịch bản cùng ảnh nhiều prompt có đưa SwiftEdit gần hơn tới trải nghiệm realtime tương tác không?
+- **RQ11:** TinyVAE/TAESD và mixed precision tạo trade-off tốc độ/chất lượng ra sao trên PSNR/MSE/CLIP và ảnh trực quan?
+- **RQ12:** SwiftEdit có phù hợp với global attribute/style editing như ngày↔đêm, mùa, mưa/nắng không, khi mask và background-preservation metric không còn ý nghĩa?
+- **RQ13:** Với global edit, cấu hình self-guided mask gốc hay full-image mask giữ scene tốt hơn?
+- **RQ14:** SwiftEdit có xóa vật thể tốt ở mức nào so với baseline inpainting như LaMa, đặc biệt khi object lớn hoặc background phức tạp?
+- **RQ15:** Với object removal, self-guided mask có đủ chính xác không, hay cần user/GT mask và mask dilation để tránh ghosting?
 
 ---
 
@@ -588,24 +765,26 @@ Source image + source/edit prompt
 | C5  | **So sánh với baseline trên Colab**     | TurboEdit hoặc DDIM+P2P trên 20 mẫu chung; bảng metrics + ảnh       | Colab    |
 | C6  | **Bộ ảnh tự xây dựng**                  | Thu thập trên Mac; chạy inference Mac + Colab                       | Không    |
 | C7  | **Phân tích self-guided mask**          | IoU/Dice trên PieBench — **Colab batch**, visualize trên Mac        | Colab    |
-| C8  | **Thử nghiệm style editing**            | Khảo sát prompt chuyển phong cách                                   | Không    |
+| C8  | **Global attribute/style editing**      | Ngày↔đêm, mùa, mưa/nắng; đánh giá bằng CLIP/DINO/LPIPS/IQA/human rating thay vì mask | Không    |
 | C9  | **Demo ứng dụng**                       | Gradio trên Mac local                                               | Không    |
 | C10 | **Benchmark đa nền tảng**               | Runtime: Mac MPS vs Colab T4 vs Paper A100                          | Không    |
 | C11 | **Colab notebook tái sử dụng**          | Notebook setup + eval script lưu trên Drive, dùng lại nhiều session | Không    |
 | C12 | **Fine-tune nhẹ trên Colab (tùy chọn)** | Stage 2 vài nghìn iter; **không train trên Mac**                    | Colab    |
-| C13 | **SwiftEdit + SAM 3 mask replacement**  | SAM 3 sinh concept-guided mask; so với self-guided mask và GT mask  | Colab    |
+| C13 | **SwiftEdit-RT inference acceleration** | Profile bottleneck, bỏ overhead, cache latent/embedding, thử CUDA/TinyVAE optimization | Mac + Colab |
+| C14 | **SAM 3 mask analysis (optional)**      | Chạy SAM 3 offline để phân tích mask; không tính là pipeline realtime | Colab    |
+| C15 | **Object removal application**          | Xóa object bằng SwiftEdit-SG/UserMask, đo detector drop + background preservation, so LaMa nếu kịp | Mac + Colab |
 
 ### 6.3. Hướng mở rộng được chọn
 
-Hướng chính được chọn để đào sâu là **C13 — SwiftEdit + SAM 3: Concept-guided Mask Replacement**.
+Hướng chính được chọn để đào sâu là **C13 — SwiftEdit-RT: Realtime-Oriented Inference Acceleration**.
 
 | Lý do | Giải thích |
 |---|---|
-| Đúng điểm yếu/mở của SwiftEdit | Mask tự sinh là module độc lập tương đối, có thể thay bằng mask ngoài mà không train lại toàn bộ model |
-| Có định lượng rõ | So IoU/Dice mask với GT, rồi đo PSNR/MSE/CLIP/runtime sau edit |
-| Có tính thời sự | SAM 3 mới hơn SwiftEdit, hỗ trợ concept prompt và open-vocabulary segmentation |
-| Vừa sức đề tài | Chạy SAM 3 như preprocessing mask trên Colab, không cần train |
-| Dễ trình bày | Có pipeline before/after, ảnh mask visualization, bảng metric và failure cases |
+| Đúng tinh thần SwiftEdit | Paper nhấn mạnh tốc độ/instant editing; hướng này tiếp tục giảm latency thay vì thêm model mới |
+| Có định lượng rõ | Đo latency breakdown, speedup, peak memory, PSNR/MSE/CLIP trước-sau tối ưu |
+| Vừa sức đề tài | Bắt đầu bằng profiling và patch nhỏ; không cần train lại toàn bộ model |
+| Có giá trị kỹ thuật | Chỉ ra bottleneck sau khi số diffusion step đã giảm xuống 1+1 |
+| Dễ trình bày | Có bảng module time, biểu đồ speedup, ablation chất lượng/tốc độ |
 
 ### 6.4. Phạm vi không thực hiện (để giới hạn đề tài)
 
@@ -613,6 +792,7 @@ Hướng chính được chọn để đào sâu là **C13 — SwiftEdit + SAM 3
 - Xây dựng mô hình one-step generation mới thay SBv2.
 - Huấn luyện diffusion model đa bước làm baseline từ scratch.
 - Thay VAE encoder, SBv2 backbone hoặc IP-Adapter image encoder bằng VLM/LLM nếu không có training tương ứng.
+- Thêm SAM 3 hoặc segmentation model nặng vào đường realtime chính; chỉ dùng offline nếu cần phân tích mask.
 
 ---
 
@@ -698,40 +878,58 @@ Hướng chính được chọn để đào sâu là **C13 — SwiftEdit + SAM 3
 
 #### 4c. Style editing (tùy chọn) — **Mac hoặc Colab**
 
-- [ ] Thử prompt dạng: `"same scene in watercolor style"`, `"anime style portrait"`, …
-- [ ] Đánh giá định tính khả năng "thay đổi phong cách" so với semantic editing.
+- [ ] Tập trung global scene/style: ngày↔đêm, mùa xuân/hạ/thu/đông, mưa↔nắng, cloudy/overcast/golden hour.
+- [ ] Chọn 20–40 ảnh outdoor/street/landscape; tránh ảnh object-centric quá gần.
+- [ ] Chạy SwiftEdit-SG với prompt nhẹ và prompt mạnh.
+- [ ] Nếu patch external/full mask: chạy thêm SwiftEdit-FullMask để xem global edit có đều hơn không.
+- [ ] Đánh giá bằng CLIP target prompt, zero-shot CLIP label, DINO/CLIP image similarity, LPIPS/SSIM phụ, IQA/human rating và runtime.
+- [ ] Phân tích failure cases: under-edit, đổi không đều, mất layout, artifact ánh sáng/mưa/tuyết.
 
-#### 4d. Hướng đào sâu — SwiftEdit + SAM 3 concept-guided mask
+#### 4d. Object removal / inpainting (tùy chọn, khuyến nghị)
 
-**Mục tiêu:** thay module self-guided mask của SwiftEdit bằng mask do SAM 3 sinh từ concept prompt, sau đó đánh giá tác động lên định vị vùng edit, bảo toàn background và độ đúng prompt.
+- [ ] Chọn 20–40 ảnh có object cần xóa: người, xe, chai/lon, biển báo, rác, vật trên bàn.
+- [ ] Chuẩn bị prompt source/edit dạng `"a scene with [object]"` → `"the same scene without [object]"`.
+- [ ] Chạy SwiftEdit-SG trước để kiểm tra self-guided mask có tìm đúng object không.
+- [ ] Nếu có mask object: chạy SwiftEdit-UserMask/GTMask và SwiftEdit-SG+Dilate.
+- [ ] Nếu đủ thời gian: chạy LaMa baseline với cùng mask để so inpainting chuyên dụng.
+- [ ] Đánh giá removal success bằng detector confidence drop hoặc CLIP margin; background preservation bằng PSNR/SSIM/LPIPS ngoài mask; realism bằng crop review/human rating/IQA; runtime.
+- [ ] Ghi failure cases: còn ghost object, viền artifact, nền bị méo, xóa nhầm object khác.
+
+#### 4e. Hướng đào sâu — SwiftEdit-RT: realtime inference acceleration
+
+**Mục tiêu:** giảm latency của pipeline SwiftEdit mà không thêm model nặng mới vào đường realtime, sau đó đánh giá speedup, memory và mức giữ chất lượng ảnh.
 
 **Thiết kế thí nghiệm:**
 
-| Cấu hình | Mask dùng cho ARaM | Vai trò |
+| Cấu hình | Thay đổi | Kỳ vọng |
 |---|---|---|
-| SwiftEdit-SG | Self-guided mask gốc `|eps_source - eps_edit|` | Baseline chính |
-| SwiftEdit-GT | GT mask của PIE-Bench | Upper bound |
-| SwiftEdit-SAM3 | SAM 3 concept-guided mask | Hướng mở rộng |
-| SwiftEdit-SAM3+VLM (tùy chọn) | SAM 3 mask + concept/source prompt do VLM gợi ý | Mở rộng phụ |
+| SwiftEdit-base | Code hiện tại trước tối ưu | Baseline runtime/chất lượng |
+| SwiftEdit-no-noise-decode | Tắt decode `noise_image` không dùng | Giảm VAE decode thừa; hướng chốt đầu tiên |
+| SwiftEdit-GPU-mask | Threshold self-guided mask vectorized trên GPU | Giảm CPU-GPU sync, output gần như không đổi |
+| SwiftEdit-cache | Cache latent ảnh nguồn, image embedding, source prompt embedding | Tăng tốc kịch bản cùng ảnh nhiều prompt |
+| SwiftEdit-CUDA-opt | `fp16`, `channels_last`, `torch.compile` trên CUDA | Tăng tốc Colab/A100 nếu kernel hỗ trợ |
+| SwiftEdit-TinyVAE | Thử AutoencoderTiny/TAESD thay VAE encode/decode | Trade-off tốc độ/chất lượng |
 
 **Quy trình thực hiện:**
 
-1. Chọn 30–50 mẫu PIE-Bench có object/attribute edit rõ ràng; tránh hoặc tách riêng nhóm add object.
-2. Trích concept cần segment từ `original_prompt`/`editing_prompt`, ví dụ `"cat"`, `"shirt"`, `"car"`.
-3. Chạy SAM 3 trong env Colab riêng, xuất mask 512×512 ra `results/sam3_masks/`.
-4. Patch SwiftEdit để nhận external mask thay cho `mask12` tự sinh.
-5. Chạy 3 cấu hình SwiftEdit-SG / SwiftEdit-GT / SwiftEdit-SAM3 trên cùng sample.
-6. Tính IoU/Dice mask với GT; tính PSNR/MSE background, CLIP-Whole, CLIP-Edited và runtime.
-7. Phân tích failure cases: concept mơ hồ, nhiều instance, object bị che khuất, add/delete object, style/global edit.
+1. Profile baseline với model đã load: đo riêng `vae_encode_s`, `text_encoder_s`, `inverse_unet_s`, `mask_s`, `clip_image_encoder_s`, `generation_unet_s`, `vae_decode_s`, `runtime_total_s`.
+2. Patch mask tự sinh để threshold hoàn toàn trên GPU thay vì `.cpu().apply_()` từng pixel.
+3. Patch `IPSBV2Model.gen_img()` thêm cờ `return_noise_image=False`; mặc định không decode ảnh nhiễu nếu caller không dùng.
+4. Tạo chế độ interactive cache cho cùng ảnh nguồn: cache latent, CLIP image embedding và source prompt embedding; chạy nhiều `edit_p` khác nhau.
+5. Trên Colab CUDA, thử `fp16`, `channels_last`, `torch.compile` và ghi rõ cấu hình nào ổn/không ổn.
+6. Thử TinyVAE/TAESD như ablation nếu dependency tương thích; so sánh ảnh output với baseline.
+7. Chạy subset 20–50 mẫu PieBench hoặc custom; báo cáo speedup, memory peak và PSNR/MSE/CLIP.
 
-**Deliverable riêng cho hướng SAM 3:**
+**Deliverable riêng cho hướng SwiftEdit-RT:**
 
-- `sam3_masks/` gồm mask sinh từ SAM 3.
-- `metrics_sam3.csv` gồm các cột: `sample_id`, `concept_prompt`, `mask_type`, `mask_iou`, `mask_dice`, `psnr_unedit`, `mse_unedit`, `clip_whole`, `clip_edited`, `runtime_s`.
-- Grid ảnh: source / GT mask / self-guided mask / SAM 3 mask / kết quả edit từng cấu hình.
-- Bảng kết luận: task nào SAM 3 tốt hơn, task nào self-guided mask tốt hơn.
+- `metrics_rt.csv` gồm các cột: `sample_id`, `config`, `device`, `vae_encode_s`, `text_encoder_s`, `inverse_unet_s`, `mask_s`, `clip_image_encoder_s`, `generation_unet_s`, `vae_decode_s`, `runtime_total_s`, `peak_memory_mb`, `psnr_unedit`, `mse_unedit`, `clip_whole`, `clip_edited`.
+- Bảng speedup theo cấu hình: base / GPU-mask / no-noise-decode / cache / CUDA-opt / TinyVAE.
+- Biểu đồ latency breakdown trước-sau tối ưu.
+- Grid ảnh so sánh baseline vs optimized để chứng minh chất lượng không bị lệch đáng kể.
 
-**Deliverable chung giai đoạn 4:** Bảng so sánh model, phân tích failure cases, kết quả SAM 3 mask replacement, (nếu có) demo web.
+**SAM 3 sau khi đổi hướng:** chỉ giữ làm optional quality analysis. Nếu dùng, phải ghi rõ đây là preprocessing/offline mask analysis, không phải pipeline realtime của SwiftEdit.
+
+**Deliverable chung giai đoạn 4:** Bảng so sánh model, phân tích failure cases, kết quả SwiftEdit-RT, (nếu có) demo web.
 
 ### 7.6. Giai đoạn 5 — (Tùy chọn) Fine-tune nhẹ trên Colab
 
@@ -900,7 +1098,7 @@ Code hiện thực: [`scripts/piebench_utils.py`](./scripts/piebench_utils.py), 
 - [ ] Đã tái hiện trên **Mac M4** (demo, ablation) và **Colab** (PieBench metrics)
 - [ ] Metrics trên PieBench subset: …
 - [ ] Phát hiện chính về hyperparameter / mask / so sánh baseline: …
-- [ ] Hướng mở rộng SAM 3: so sánh self-guided mask / GT mask / SAM 3 concept-guided mask
+- [ ] Hướng mở rộng SwiftEdit-RT: latency breakdown, speedup và kiểm tra chất lượng sau tối ưu
 
 ### 10.2. Đánh giá mức độ đáp ứng mục tiêu
 
@@ -911,7 +1109,7 @@ Code hiện thực: [`scripts/piebench_utils.py`](./scripts/piebench_utils.py), 
 | Ablation hyperparameter ARaM             | <br />     | <br />  |
 | Đánh giá định lượng trên PieBench        | <br />     | <br />  |
 | So sánh với ít nhất 1 baseline           | <br />     | <br />  |
-| Đào sâu hướng SwiftEdit + SAM 3 mask     | <br />     | <br />  |
+| Đào sâu hướng SwiftEdit-RT               | <br />     | <br />  |
 
 ### 10.3. Hạn chế
 
@@ -923,13 +1121,14 @@ Code hiện thực: [`scripts/piebench_utils.py`](./scripts/piebench_utils.py), 
 
 ### 10.4. Hướng phát triển
 
-- **Đã chọn đào sâu:** thay self-guided mask bằng **SAM 3 concept-guided mask** để đánh giá khả năng định vị vùng edit và bảo toàn background.
-- Tự động trích concept/source prompt bằng Florence-2 hoặc Qwen2.5-VL, giảm phụ thuộc vào prompt viết tay.
+- **Đã chọn đào sâu:** **SwiftEdit-RT** — profile bottleneck, bỏ overhead không cần thiết, cache latent/embedding và thử tối ưu CUDA/TinyVAE để giảm latency.
+- SAM 3 concept-guided mask: giữ như hướng optional/offline để phân tích chất lượng mask, không dùng làm pipeline realtime chính.
+- Tự động trích concept/source prompt bằng Florence-2 hoặc Qwen2.5-VL, giảm phụ thuộc vào prompt viết tay; chỉ nên làm nếu chấp nhận thêm latency hoặc chạy offline.
 - Bổ sung grounded evaluation kiểu GIE-Bench để kiểm tra functional correctness thay vì chỉ CLIPScore.
 - So sánh định tính với baseline hiện đại như FLUX.1 Kontext, Qwen-Image-Edit hoặc Step1X-Edit nếu đủ tài nguyên/API.
 - Thử nghiệm trên one-step generator mới hơn (thay SBv2) — chỉ nên xem là hướng dài hạn.
 - Tích hợp prompt tiếng Việt (dịch hoặc multilingual CLIP).
-- Tối ưu inference cho Apple Silicon (Core ML, quantization) — gần với hướng on-device của SwiftEdit.
+- Tối ưu inference cho Apple Silicon (Core ML, quantization) — nối tiếp trực tiếp hướng SwiftEdit-RT/on-device.
 - Kết hợp ControlNet / reference image cho style editing mạnh hơn.
 
 ---
@@ -952,6 +1151,17 @@ Code hiện thực: [`scripts/piebench_utils.py`](./scripts/piebench_utils.py), 
 14. Black Forest Labs, et al. (2025). **FLUX.1 Kontext: Flow Matching for In-Context Image Generation and Editing in Latent Space.** [arXiv](https://arxiv.org/abs/2506.15742)
 15. Liu, Y., et al. (2025). **Step1X-Edit: A Practical Framework for General Image Editing.** [arXiv](https://arxiv.org/abs/2504.17761)
 16. Qwen Team. (2025). **Qwen-Image-Edit.** [Blog](https://qwenlm.github.io/zh/blog/qwen-image-edit/) · [Technical Report](https://arxiv.org/abs/2508.02324)
+17. Hugging Face Diffusers. **AutoencoderTiny / TAESD.** [Docs](https://huggingface.co/docs/diffusers/en/api/models/autoencoder_tiny)
+18. Hugging Face Diffusers. **Optimize inference.** [Docs](https://huggingface.co/docs/diffusers/main/optimization/fp16)
+19. PyTorch. **`torch.compile` and Diffusers.** [Developer note](https://docs.pytorch.org/devlogs/inductor/2026-05-11-torch-compile-and-diffusers/)
+20. NVIDIA. **TensorRT accelerates Stable Diffusion with 8-bit post-training quantization.** [Blog](https://developer.nvidia.com/blog/tensorrt-accelerates-stable-diffusion-nearly-2x-faster-with-8-bit-post-training-quantization/)
+21. Caron, M., et al. (2021). **Emerging Properties in Self-Supervised Vision Transformers (DINO).** ICCV 2021. [OpenAccess](https://openaccess.thecvf.com/content/ICCV2021/html/Caron_Emerging_Properties_in_Self-Supervised_Vision_Transformers_ICCV_2021_paper)
+22. Zhang, R., et al. (2018). **The Unreasonable Effectiveness of Deep Features as a Perceptual Metric (LPIPS).** CVPR 2018. [Paper](https://openaccess.thecvf.com/content_cvpr_2018/CameraReady/0299.pdf)
+23. Ke, J., et al. (2021). **MUSIQ: Multi-Scale Image Quality Transformer.** ICCV 2021. [Paper](https://mlanthology.org/iccv/2021/ke2021iccv-musiq/)
+24. Heusel, M., et al. (2017). **GANs Trained by a Two Time-Scale Update Rule...** NeurIPS 2017. [Paper](https://papers.nips.cc/paper/7240-gans-trained-by-a-two-time-scale-update-rule-converge-to-a-local-nash-equilibrium)
+25. Zhu, J.-Y., et al. (2017). **Unpaired Image-to-Image Translation using Cycle-Consistent Adversarial Networks.** [Project](https://junyanz.github.io/CycleGAN/)
+26. Suvorov, R., et al. (2022). **Resolution-Robust Large Mask Inpainting with Fourier Convolutions (LaMa).** WACV 2022. [OpenAccess](https://openaccess.thecvf.com/content/WACV2022/html/Suvorov_Resolution-Robust_Large_Mask_Inpainting_With_Fourier_Convolutions_WACV_2022_paper.html)
+27. Zhang, et al. (2024). **ReMOVE: A Reference-free Metric for Object Erasure.** [arXiv](https://arxiv.org/abs/2409.00707)
 
 ---
 

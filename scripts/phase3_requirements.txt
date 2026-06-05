@@ -1,0 +1,7 @@
+# CS2309 Giai đoạn 3 — notebook ablation / PieBench metrics (cài sau requirements chính)
+matplotlib
+pandas
+tqdm
+ipywidgets
+packaging
+torchmetrics

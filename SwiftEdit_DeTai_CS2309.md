@@ -397,9 +397,14 @@ device = "cuda"  # Colab luôn dùng cuda
 
 **Bước 6 — Tải PieBench (Colab):**
 
-```python
-!git clone https://github.com/Prompt-to-Prompt/PieBench.git {WORK_DIR}/PieBench
-# Hoặc tải subset từ Hugging Face / Drive nếu repo gốc quá lớn
+```bash
+# Dataset chính thức tải qua Google Form của PnP Inversion / PIE-Bench.
+# Sau khi tải zip, upload lên Colab hoặc Drive rồi giải nén:
+bash scripts/download_piebench.sh /path/to/PIE-Bench.zip
+
+# Test nhanh khi chưa có dataset đầy đủ:
+python scripts/create_piebench_smoke.py
+python scripts/run_piebench_eval.py --piebench-dir data/PIE-Bench-smoke --max-samples 2
 ```
 
 **Mẹo Colab:**
@@ -661,6 +666,10 @@ device = "cuda"  # Colab luôn dùng cuda
 ### 8.1. Nhật ký thực nghiệm
 
 | Ngày       | Giai đoạn           | Công việc                                                | Kết quả / Ghi chú                                                        |
+|---|---|---|---|
+| 2026-06-05 | 3c | Chuẩn hóa bộ độ đo SwiftEdit/PieBench; sửa `clip_whole` dùng `edit_prompt` | Tài liệu thống nhất PSNR/MSE vùng nền, CLIP-Whole/Edited theo edit prompt, runtime; nguồn PIE-Bench ICLR 2024 + SwiftEdit CVPR 2025 Table 1 + CLIP/CLIPScore. |
+| 2026-06-05 | 3c | Viết scripts đánh giá PIE-Bench (`piebench_utils.py`, `piebench_metrics.py`, `run_piebench_eval.py`) | Smoke eval 1 mẫu chạy OK trên Mac MPS (~50s/ảnh, CLIP-Whole=18.76, CLIP-Edited=22.64); `metrics.csv` sinh đúng; PIE-Bench đầy đủ tải qua form PnP Inversion. |
+| 2026-06-05 | 2a. Mac | Chạy preset 02.jpg dog→dog with mouth opened trên Mac MPS (cùng prompt Colab T4) | edit_image 30.1s; results/notebook/nb_dog_dog_to_dog_with_mouth_opened.png; T4 1.3s cùng preset → Mac ~23× chậm hơn T4; (Mac M4 (MPS); pyenv 3.12.10; .venv) |
 | 2026-06-04 | 2b. Colab | Chạy notebook CS2309_SwiftEdit_test trên Colab T4 (extension): preset dog→dog wi | edit_image 1.3s; output results/notebook/nb_dog_dog_to_dog_with_mouth_opened.png; so với Mac MPS ~91s (woman) và paper A (Google Colab — Tesla T4 (Colab extension)) |
 | 2026-06-04 | 2b. Colab | Patch notebook + requirements (GPU T4, HF stack mới, upload path) | Sẵn sàng chạy Colab extension; fix EncoderDecoderCache/numpy/upload; chưa log runtime T4 OK (Colab extension + Colab web) |
 | 2026-06-04 | 2a. Mac | Notebook notebooks/CS2309_SwiftEdit_test.ipynb (preset, upload ipywidgets 8, inf | Notebook chạy OK trên Mac (.venv); upload widget sửa tuple ipywidgets 8 (Mac M4 (MPS); Jupyter .venv) |
@@ -690,6 +699,8 @@ device = "cuda"  # Colab luôn dùng cuda
 | CLIP-Whole ↑  | <br />           | <br />       | 25.16        |
 | CLIP-Edited ↑ | <br />           | <br />       | 21.25        |
 | Runtime (s) ↓ | <br />           | <br />       | 0.23         |
+
+Ghi chú: `CLIP-Whole` đo toàn ảnh edited với `edit_prompt`; `CLIP-Edited` đo vùng edit mask của ảnh edited với `edit_prompt`. PSNR/MSE đo trên vùng background `(1 - mask)`.
 
 #### 8.2.3. Ablation hyperparameter
 
@@ -747,15 +758,33 @@ device = "cuda"  # Colab luôn dùng cuda
 
 ### 9.3. Metrics đánh giá
 
-| Metric                      | Ý nghĩa                             | Hướng tốt            |
-| --------------------------- | ----------------------------------- | -------------------- |
-| **PSNR**                    | Bảo toàn vùng background            | Cao ↑                |
-| **MSE**                     | Sai số pixel vùng background        | Thấp ↓               |
-| **CLIP-Whole**              | Alignment toàn ảnh với edit prompt  | Cao ↑                |
-| **CLIP-Edited**             | Alignment vùng edit với edit prompt | Cao ↑                |
-| **Runtime**                 | Thời gian suy luận                  | Thấp ↓               |
-| **IoU / Dice** (mask)       | Độ trùng mask tự sinh vs GT         | Cao ↑                |
-| **LPIPS / SSIM** (tùy chọn) | Chất lượng cảm nhận / cấu trúc      | LPIPS thấp, SSIM cao |
+Đánh giá chính dùng protocol của **PIE-Bench**: mỗi mẫu có ảnh nguồn, source prompt, edit prompt và GT mask. Mục tiêu là cân bằng hai phía: **sửa đúng yêu cầu** nhưng **không phá vùng nền**.
+
+| Metric                      | Đo cái gì / đo như thế nào                                      | Hướng tốt            |
+| --------------------------- | --------------------------------------------------------------- | -------------------- |
+| **PSNR-unedit**             | PSNR giữa ảnh nguồn và ảnh edited trên vùng background `(1 - mask)` | Cao ↑                |
+| **MSE-unedit**              | Sai số pixel giữa ảnh nguồn và ảnh edited trên vùng background `(1 - mask)` | Thấp ↓               |
+| **CLIP-Whole**              | CLIPScore giữa toàn ảnh edited và `edit_prompt`                 | Cao ↑                |
+| **CLIP-Edited**             | CLIPScore giữa vùng edit mask của ảnh edited và `edit_prompt`   | Cao ↑                |
+| **Runtime**                 | Thời gian một lần gọi `edit_image()` sau khi model đã load      | Thấp ↓               |
+| **IoU / Dice** (mask)       | Độ trùng mask tự sinh vs GT mask của PIE-Bench                  | Cao ↑                |
+| **LPIPS / SSIM** (tùy chọn) | Chất lượng cảm nhận / cấu trúc, thường đo ở vùng nền hoặc toàn ảnh tùy thí nghiệm | LPIPS thấp, SSIM cao |
+
+**Quy trình đo trong repo:**
+
+1. Đọc `mapping_file.json` của PIE-Bench, lấy `image_path`, `original_prompt`, `editing_prompt`, `mask`.
+2. Decode mask RLE về ảnh nhị phân 512×512.
+3. Chạy SwiftEdit để sinh ảnh edited.
+4. Tính PSNR/MSE trên vùng `1 - mask`; tính CLIP-Whole và CLIP-Edited với `editing_prompt`.
+5. Ghi `sample_id`, prompt, runtime và metric vào `results/piebench/metrics.csv`.
+
+Code hiện thực: [`scripts/piebench_utils.py`](./scripts/piebench_utils.py), [`scripts/piebench_metrics.py`](./scripts/piebench_metrics.py), [`scripts/run_piebench_eval.py`](./scripts/run_piebench_eval.py).
+
+**Nguồn công bố / công nhận:**
+
+- PIE-Bench được giới thiệu trong PnP Inversion / Direct Inversion, ICLR 2024: 700 ảnh, 10 loại edit, có source/edit prompt và editing mask.
+- SwiftEdit CVPR 2025 dùng các metric từ PIE-Bench trong Table 1: PSNR, MSE, CLIP-Whole, CLIP-Edited và Time.
+- CLIPScore dựa trên CLIP; CLIP được công bố tại ICML 2021, CLIPScore tại EMNLP 2021.
 
 ### 9.4. Bảng so sánh phương pháp (tham khảo từ paper)
 
@@ -812,10 +841,12 @@ device = "cuda"  # Colab luôn dùng cuda
 2. Repository: [Qualcomm-AI-research/SwiftEdit](https://github.com/Qualcomm-AI-research/SwiftEdit)
 3. Project page: [swift-edit.github.io](https://swift-edit.github.io/)
 4. Dao, T., et al. (2025). **SwiftBrush v2.** ECCV 2025. (One-step T2I backbone)
-5. Ju, X., et al. (2024). **PnP Inversion / PieBench.** ICLR 2024. (Benchmark)
+5. Ju, X., Zeng, A., Bian, Y., Liu, S., & Xu, Q. (2024). **PnP Inversion / Direct Inversion and PIE-Bench.** ICLR 2024. [Repo](https://github.com/cure-lab/PnPInversion) · [Project page](https://cure-lab.github.io/PnPInversion/)
 6. Mokady, R., et al. (2023). **Null-text Inversion.** CVPR 2023.
 7. Deutch, G., et al. (2024). **TurboEdit.** SIGGRAPH Asia 2024.
 8. Ye, H., et al. (2023). **IP-Adapter.** (Image prompt adapter)
+9. Radford, A., et al. (2021). **Learning Transferable Visual Models From Natural Language Supervision (CLIP).** ICML 2021. [PMLR](https://proceedings.mlr.press/v139/radford21a)
+10. Hessel, J., et al. (2021). **CLIPScore: A Reference-free Evaluation Metric for Image Captioning.** EMNLP 2021. [arXiv](https://arxiv.org/abs/2104.08718)
 
 ---
 

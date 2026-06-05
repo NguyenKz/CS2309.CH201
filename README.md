@@ -35,6 +35,8 @@ Tài liệu: [`SwiftEdit_Overview.md`](./SwiftEdit_Overview.md) · [`SwiftEdit_D
 | Demo, ablation, viết báo cáo | PieBench batch, so sánh baseline |
 | Gradio demo | Lưu weights + metrics trên Drive |
 
+**Đánh giá chính:** dùng PIE-Bench/PnP Inversion với PSNR/MSE trên vùng background `(1 - mask)`, CLIP-Whole/CLIP-Edited theo `edit_prompt`, và runtime mỗi lần gọi `edit_image()`. Chi tiết xem [Đề tài §9.3](./SwiftEdit_DeTai_CS2309.md#93-metrics-đánh-giá) và [Q&A §5](./QA.md#5-đánh-giá--piebench).
+
 ---
 
 ## Cấu trúc repo
@@ -175,7 +177,7 @@ Chi tiết: [Mục 4.2 đề tài](./SwiftEdit_DeTai_CS2309.md#42-google-colab--
 ## Checklist tổng thể
 
 > Đánh dấu `[x]` khi hoàn thành. Cập nhật file này trong quá trình làm đề tài.
-> Cập nhật tiến độ lần cuối: 2026-06-04 — 11/64 task bắt buộc
+> Cập nhật tiến độ lần cuối: 2026-06-05 — 12/64 task bắt buộc
 
 ### Trạng thái nhanh
 
@@ -184,8 +186,10 @@ Chi tiết: [Mục 4.2 đề tài](./SwiftEdit_DeTai_CS2309.md#42-google-colab--
 | 1. Lý thuyết | ⬜ Chưa bắt đầu |
 | 2. Setup Mac + Colab | 🔄 Đang làm (11/17) |
 | 3. Thực nghiệm cơ bản | ⬜ Chưa bắt đầu |
-| 4. So sánh & mở rộng | ⬜ Chưa bắt đầu |
+| 4. So sánh & mở rộng | 🔄 Đang làm (1/6) |
 | 5. Báo cáo & nộp | ⬜ Chưa bắt đầu |
+
+
 
 
 
@@ -257,7 +261,7 @@ Chi tiết: [Mục 4.2 đề tài](./SwiftEdit_DeTai_CS2309.md#42-google-colab--
 
 - [ ] Colab: chạy **50–100 mẫu** PieBench
 - [ ] Tính PSNR, MSE (background)
-- [ ] Tính CLIP-Whole, CLIP-Edited
+- [ ] Tính CLIP-Whole, CLIP-Edited với `edit_prompt`
 - [ ] Tính runtime trung bình / ảnh
 - [ ] Lưu `results/piebench/metrics.csv`
 - [ ] Lưu ảnh edited → `results/piebench/edited_images/`
@@ -275,7 +279,7 @@ Chi tiết: [Mục 4.2 đề tài](./SwiftEdit_DeTai_CS2309.md#42-google-colab--
 - [ ] Chạy TurboEdit (hoặc 1 multi-step method) trên 20 mẫu
 - [ ] Lập bảng metrics + runtime
 - [ ] Mac: side-by-side 5 mẫu để minh họa báo cáo
-- [ ] Bảng runtime 3 cột: **Mac MPS | Colab T4 | Paper A100**
+- [x] Bảng runtime 3 cột: **Mac MPS | Colab T4 | Paper A100**
 
 ### 4b. Bộ ảnh tự thu thập (tùy chọn, khuyến nghị)
 
@@ -374,8 +378,9 @@ Chi tiết: [Mục 4.2 đề tài](./SwiftEdit_DeTai_CS2309.md#42-google-colab--
 1. [SwiftEdit Paper (CVPR 2025)](https://openaccess.thecvf.com/content/CVPR2025/papers/Nguyen_SwiftEdit_Lightning_Fast_Text-Guided_Image_Editing_via_One-Step_Diffusion_CVPR_2025_paper.pdf)
 2. [GitHub — Qualcomm-AI-research/SwiftEdit](https://github.com/Qualcomm-AI-research/SwiftEdit)
 3. [Project page](https://swift-edit.github.io/)
-4. [PieBench](https://github.com/Prompt-to-Prompt/PieBench)
-5. [TurboEdit](https://github.com/GaMaLielD/TurboEdit) *(baseline, nếu so sánh)*
+4. [PIE-Bench / PnP Inversion](https://github.com/cure-lab/PnPInversion)
+5. [CLIP](https://proceedings.mlr.press/v139/radford21a) · [CLIPScore](https://arxiv.org/abs/2104.08718)
+6. [TurboEdit](https://github.com/GaMaLielD/TurboEdit) *(baseline, nếu so sánh)*
 
 ---
 
@@ -383,6 +388,7 @@ Chi tiết: [Mục 4.2 đề tài](./SwiftEdit_DeTai_CS2309.md#42-google-colab--
 
 - **Không training nặng** — dùng checkpoint pretrained; fine-tune chỉ trên Colab nếu cần.
 - Ghi rõ trong báo cáo metric nào đo trên **Mac**, **Colab**, hay lấy từ **paper**.
+- `CLIP-Whole` và `CLIP-Edited` đều đo ảnh edited với **edit prompt**; không dùng source prompt.
 - Cập nhật checklist và bảng "Trạng thái nhanh" khi hoàn thành từng giai đoạn.
 - Skill Cursor: `.cursor/skills/update-readme-progress/` — cập nhật **README checklist** + **NHAT_KY.md** (nhật ký làm việc).
 - Chạy thủ công:

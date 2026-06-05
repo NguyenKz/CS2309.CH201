@@ -1,0 +1,26 @@
+{
+  "smoke_dog_001": {
+    "image_path": "0_random_140/smoke_dog.jpg",
+    "original_prompt": "dog",
+    "editing_prompt": "dog with mouth opened",
+    "editing_instruction": "Open the dog's mouth",
+    "editing_type_id": "0",
+    "blended_word": "dog dog",
+    "mask": [
+      0,
+      262144
+    ]
+  },
+  "smoke_woman_001": {
+    "image_path": "0_random_140/smoke_woman.jpg",
+    "original_prompt": "woman",
+    "editing_prompt": "Taylor Swift",
+    "editing_instruction": "Change woman to Taylor Swift",
+    "editing_type_id": "0",
+    "blended_word": "woman woman",
+    "mask": [
+      0,
+      262144
+    ]
+  }
+}

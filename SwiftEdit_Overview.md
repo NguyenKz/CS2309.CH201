@@ -235,16 +235,16 @@ SwiftEdit mạnh ở **semantic editing cục bộ** (đổi đối tượng, th
 
 ## 9. Đánh giá (metrics)
 
-| Metric | Ý nghĩa | Hướng tốt |
+| Metric | Ý nghĩa / cách đo | Hướng tốt |
 |---|---|---|
-| **PSNR** | Bảo toàn vùng background | Cao ↑ |
-| **MSE** | Sai số pixel vùng nền | Thấp ↓ |
-| **CLIP-Whole** | Ảnh edited khớp edit prompt | Cao ↑ |
-| **CLIP-Edited** | Vùng edit khớp prompt | Cao ↑ |
-| **Runtime** | Thời gian suy luận | Thấp ↓ |
-| **IoU / Dice** | Mask tự sinh vs GT | Cao ↑ |
+| **PSNR-unedit** | PSNR giữa ảnh nguồn và ảnh edited trên background `(1 - mask)` | Cao ↑ |
+| **MSE-unedit** | Sai số pixel trên background `(1 - mask)` | Thấp ↓ |
+| **CLIP-Whole** | CLIPScore giữa toàn ảnh edited và `edit_prompt` | Cao ↑ |
+| **CLIP-Edited** | CLIPScore giữa vùng edit mask và `edit_prompt` | Cao ↑ |
+| **Runtime** | Thời gian một lần gọi `edit_image()` sau khi model đã load | Thấp ↓ |
+| **IoU / Dice** | Mask tự sinh vs GT mask của PIE-Bench | Cao ↑ |
 
-Dataset chuẩn: [PieBench](https://github.com/Prompt-to-Prompt/PieBench) — 700 cặp (ảnh, source/edit prompt, GT mask).
+Dataset chuẩn: [PIE-Bench / PnP Inversion](https://github.com/cure-lab/PnPInversion) — 700 ảnh, 10 loại edit, có source/edit prompt và GT mask. SwiftEdit CVPR 2025 dùng các metric này trong Table 1; CLIP-Whole/Edited dựa trên CLIP/CLIPScore để đo độ khớp ảnh-văn bản.
 
 ---
 
@@ -312,7 +312,8 @@ Dataset chuẩn: [PieBench](https://github.com/Prompt-to-Prompt/PieBench) — 70
 **Đọc thêm:**
 
 - [SwiftBrush v2 (ECCV 2025)](https://github.com/) — backbone one-step T2I
-- [PieBench / PnP Inversion (ICLR 2024)](https://github.com/Prompt-to-Prompt/PieBench)
+- [PIE-Bench / PnP Inversion (ICLR 2024)](https://github.com/cure-lab/PnPInversion)
+- [CLIP (ICML 2021)](https://proceedings.mlr.press/v139/radford21a) · [CLIPScore (EMNLP 2021)](https://arxiv.org/abs/2104.08718)
 - [IP-Adapter](https://github.com/tencent-ailab/IP-Adapter)
 - [TurboEdit](https://github.com/GaMaLielD/TurboEdit) — baseline few-step
 

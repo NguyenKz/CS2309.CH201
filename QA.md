@@ -38,7 +38,7 @@ Tài liệu liên quan: [Overview](./SwiftEdit_Overview.md) · [Đề tài](./Sw
 | 2 | [SwiftEdit & Pipeline](#2-swiftedit--pipeline) | 3 |
 | 3 | [Inversion & Noise](#3-inversion--noise) | 0 |
 | 4 | [Mask & ARaM](#4-mask--aram) | 0 |
-| 5 | [Đánh giá & PieBench](#5-đánh-giá--piebench) | 0 |
+| 5 | [Đánh giá & PieBench](#5-đánh-giá--piebench) | 1 |
 | 6 | [Triển khai Mac / Colab](#6-triển-khai-mac--colab) | 3 |
 | 7 | [Chỉnh sửa & Style](#7-chỉnh-sửa--style) | 0 |
 | 8 | [Chưa phân loại](#8-chưa-phân-loại) | 1 |
@@ -146,8 +146,23 @@ Tài liệu liên quan: [Overview](./SwiftEdit_Overview.md) · [Đề tài](./Sw
 *PSNR, MSE, CLIP-Whole, CLIP-Edited, IoU/Dice, 10 loại editing, …*
 
 <!-- qa:insert -->
+### Q: Đánh giá SwiftEdit dùng độ đo nào, đo thế nào, công nhận ở đâu?
 
-*(Chưa có câu hỏi.)*
+**Ngày:** 2026-06-05  
+**Chủ đề:** #piebench #metrics #psnr #clip #mse
+
+**Trả lời (tóm tắt):**
+- Benchmark chuẩn: PIE-Bench (700 ảnh, 10 loại edit, có GT mask) — từ PnP Inversion (ICLR 2024).
+- PSNR + MSE: đo trên vùng KHÔNG sửa (1 - mask) → bảo toàn background. PSNR cao↑, MSE thấp↓.
+- CLIP-Whole: CLIPScore(ảnh edited, edit prompt) trên toàn ảnh → độ trung thành chỉnh sửa. Cao↑.
+- CLIP-Edited: CLIPScore(vùng mask của ảnh edited, edit prompt) → sửa đúng vùng + đúng prompt. Cao↑.
+- Runtime: thời gian 1 lần `edit_image()` sau khi model đã load — điểm mạnh SwiftEdit (~0.23s A100, ~1.3s T4, ~30-50s Mac MPS).
+- Bổ sung: LPIPS, SSIM, structure distance (DINO) trong paper; IoU/Dice cho mask tự sinh vs GT.
+- Trong repo: `scripts/piebench_metrics.py` dùng `torchmetrics` với CLIP ViT-L/14, PSNR và MSE; `CLIP-Whole` đã được chuẩn hóa để dùng `edit_prompt`, khớp metric `clip_similarity_target_image` của PIE-Bench.
+- Công nhận: [PnP Inversion / PIE-Bench ICLR 2024](https://github.com/cure-lab/PnPInversion) (định nghĩa benchmark + `evaluation/evaluate.py`); [SwiftEdit CVPR 2025](https://openaccess.thecvf.com/content/CVPR2025/papers/Nguyen_SwiftEdit_Lightning_Fast_Text-Guided_Image_Editing_via_One-Step_Diffusion_CVPR_2025_paper.pdf) (Table 1); [CLIP ICML 2021](https://proceedings.mlr.press/v139/radford21a) và [CLIPScore EMNLP 2021](https://arxiv.org/abs/2104.08718).
+
+
+
 
 ---
 

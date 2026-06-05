@@ -9,6 +9,9 @@
 
 | Ngày | Giai đoạn | Công việc | Kết quả / Ghi chú | Môi trường |
 |---|---|---|---|---|
+| 2026-06-05 | 3c | Chuẩn hóa tài liệu đánh giá SwiftEdit/PieBench và sửa `CLIP-Whole` trong metric code | Ghi rõ PSNR/MSE vùng nền, CLIP-Whole/Edited theo edit prompt, runtime; nguồn: PIE-Bench/PnP Inversion ICLR 2024, SwiftEdit CVPR 2025, CLIP/CLIPScore. `piebench_metrics.py` đã sửa `clip_whole` dùng `edit_prompt`; compileall OK. | Mac M4 (MPS); .venv |
+| 2026-06-05 | 3c | Viết scripts đánh giá PIE-Bench (`piebench_utils.py`, `piebench_metrics.py`, `run_piebench_eval.py`) | Smoke eval 1 mẫu chạy OK trên Mac MPS (~50s/ảnh, CLIP-Whole=18.76, CLIP-Edited=22.64); `metrics.csv` sinh đúng; PIE-Bench đầy đủ tải qua form PnP Inversion. | Mac M4 (MPS); .venv; torchmetrics 1.9.0 |
+| 2026-06-05 | 2a. Mac | Chạy preset 02.jpg dog→dog with mouth opened trên Mac MPS (cùng prompt Colab T4) | edit_image 30.1s; results/notebook/nb_dog_dog_to_dog_with_mouth_opened.png; T4 1.3s cùng preset → Mac ~23× chậm hơn T4; | Mac M4 (MPS); pyenv 3.12.10; .venv |
 | 2026-06-04 | 2b. Colab | Chạy notebook CS2309_SwiftEdit_test trên Colab T4 (extension): preset dog→dog wi | edit_image 1.3s; output results/notebook/nb_dog_dog_to_dog_with_mouth_opened.png; so với Mac MPS ~91s (woman) và paper A | Google Colab — Tesla T4 (Colab extension) |
 | 2026-06-04 | 2b. Colab | Patch notebook + requirements (GPU T4, HF stack mới, upload path) | Sẵn sàng chạy Colab extension; fix EncoderDecoderCache/numpy/upload; chưa log runtime T4 OK | Colab extension + Colab web |
 | 2026-06-04 | 2a. Mac | Notebook notebooks/CS2309_SwiftEdit_test.ipynb (preset, upload ipywidgets 8, inf | Notebook chạy OK trên Mac (.venv); upload widget sửa tuple ipywidgets 8 | Mac M4 (MPS); Jupyter .venv |
@@ -20,6 +23,74 @@
 ## Chi tiết theo phiên làm việc
 
 *(Các entry chi tiết xuất hiện bên dưới, mới nhất ở trên cùng.)*
+
+### 2026-06-05 — [3c] Chốt bộ độ đo đánh giá SwiftEdit/PieBench
+
+**Môi trường:** Mac M4 (MPS); .venv
+
+**Công việc đã làm:**
+- Ghi rõ bộ metric chính: PSNR/MSE trên vùng không edit `(1 - mask)`, CLIP-Whole và CLIP-Edited theo `edit_prompt`, runtime theo thời gian gọi `edit_image()`.
+- Cập nhật `QA.md`, `SwiftEdit_Overview.md`, `SwiftEdit_DeTai_CS2309.md`, `README.md` để thống nhất nguồn công bố/công nhận: PIE-Bench/PnP Inversion ICLR 2024; SwiftEdit CVPR 2025 Table 1; CLIP/CLIPScore.
+- Sửa `scripts/piebench_metrics.py`: `clip_whole` dùng `edit_prompt` thay vì `src_prompt`, khớp metric `clip_similarity_target_image` của PIE-Bench.
+
+**Kết quả:**
+- Định nghĩa metric trong tài liệu khớp pipeline hiện tại: background preservation = PSNR/MSE vùng nền; edit fidelity = CLIP toàn ảnh/vùng edit với target prompt.
+- `source .venv/bin/activate && python -m compileall -q scripts/piebench_metrics.py` chạy OK.
+
+**Bước tiếp theo:**
+- Chạy lại smoke eval hoặc subset PIE-Bench sau khi có dữ liệu đầy đủ để cập nhật lại `metrics.csv` theo định nghĩa `CLIP-Whole` mới.
+
+---
+
+### 2026-06-05 — [3c] Xây pipeline đánh giá PieBench (metrics + eval)
+
+**Môi trường:** Mac M4 (MPS); .venv; torchmetrics 1.9.0
+
+**Công việc đã làm:**
+- Viết scripts/piebench_utils.py (đọc mapping_file.json, RLE mask decode, chọn subset), piebench_metrics.py (PSNR/MSE vùng background, CLIP-Whole/Edited qua torchmetrics CLIP ViT-L/14), run_piebench_eval.py (loop edit_image + ghi metrics.csv, có resume). Thêm download_piebench.sh + create_piebench_smoke.py (2 ảnh demo test pipeline khi chưa tải form). Thêm cell 3b/3d vào notebook phase3. Ghi QA.md mục 5 về bộ độ đo.
+
+**Kết quả:**
+- Smoke eval 1 mẫu chạy OK trên Mac MPS (~50s/ảnh, CLIP-Whole=18.76, CLIP-Edited=22.64); metrics.csv sinh đúng. PieBench đầy đủ tải qua form PnP Inversion (không có trên git). Độ đo theo chuẩn ICLR 2024 (PIE-Bench) + SwiftEdit CVPR 2025 Table 1.
+
+**Task README đã đánh [x]:**
+- *(không đánh task README)*
+
+**Vấn đề / cách xử lý:**
+Thiếu torchmetrics trong venv cũ → cài + script báo lỗi sớm trước khi load model. Bug permute tensor→PIL và mask broadcast 512×512 → fix bằng resize + Image.open.
+
+**Bước tiếp theo:**
+- Tải PieBench đầy đủ qua form; chạy 50-100 mẫu trên Colab T4; so sánh Table 1 paper
+
+---
+
+### 2026-06-05 — [2a. Mac] Runtime cùng preset dog — Mac MPS 30.1s vs T4 1.3s
+
+**Môi trường:** Mac M4 (MPS); pyenv 3.12.10; .venv
+
+**Công việc đã làm:**
+- Chạy preset 02.jpg dog→dog with mouth opened trên Mac MPS (cùng prompt Colab T4)
+
+**Kết quả:**
+- `Edit 'dog' -> 'dog with mouth opened' in 30.1s` (inference-only, model đã load)
+- Lưu: `results/notebook/nb_dog_dog_to_dog_with_mouth_opened.png`
+- Cùng ảnh/prompt với Colab T4 (2026-06-04)
+
+**Bảng runtime (preset `02.jpg`, 512×512, inference-only):**
+
+| | Paper A100 | Colab T4 | Mac M4 MPS |
+|---|---:|---:|---:|
+| `edit_image` | ~0.23 s | **1.3 s** | **30.1 s** |
+| Tốc độ tương đối | 1× (ref.) | ~5.7× chậm hơn A100 | ~131× chậm hơn A100; ~23× chậm hơn T4 |
+
+*Ghi chú báo cáo:* Mac MPS dùng được cho demo/ablation nhỏ; benchmark lớn (PieBench) → Colab T4.
+
+**Task README đã đánh [x]:**
+- Bảng runtime 3 cột: **Mac MPS | Colab T4 | Paper A100**
+
+**Bước tiếp theo:**
+- PieBench 50 mẫu Colab; ablation hyperparameter Mac
+
+---
 
 ### 2026-06-04 — [2b. Colab] Inference Colab T4 — dog preset 1.3s
 
@@ -165,4 +236,3 @@ ip_adapter.bin load CUDA → map_location=cpu
 Clone SwiftEdit; cài env Mac MPS
 
 ---
-

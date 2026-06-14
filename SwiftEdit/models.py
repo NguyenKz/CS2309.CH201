@@ -271,24 +271,40 @@ class IPSBV2Model(torch.nn.Module):
         scale=1.0,
         return_noise_image=False,
         timer=None,
+        embed_cache=None,
     ):
         timer = timer or _NullTimer()
+        # embed_cache: dict tùy chọn để tái dùng embed phụ thuộc ảnh/source prompt
+        # giữa nhiều edit trên cùng ảnh. None -> không cache (dict tạm, bị bỏ).
+        cache = embed_cache if embed_cache is not None else {}
 
         self.set_scale(scale)
         if prompts is None:
             prompts = ["best quality, high quality"]
         num_samples = len(prompts)
 
-        # Prepare prompt + image embeds
+        # CLIP image embed — chỉ phụ thuộc ảnh nguồn -> cache được
         with timer.stage("gen_image_embeds"):
-            image_prompt_embeds = self.get_image_embeds(pil_image=pil_image)
+            if "image_prompt_embeds" in cache:
+                image_prompt_embeds = cache["image_prompt_embeds"]
+            else:
+                image_prompt_embeds = self.get_image_embeds(pil_image=pil_image)
+                cache["image_prompt_embeds"] = image_prompt_embeds
             bs_embed, seq_len, _ = image_prompt_embeds.shape
             image_prompt_embeds = image_prompt_embeds.repeat(1, num_samples, 1)
             image_prompt_embeds = image_prompt_embeds.view(bs_embed * num_samples, seq_len, -1)
 
         with timer.stage("gen_text_encode"):
-            input_id = tokenize_captions(self.aux_model.tokenizer, prompts).to(self.device)
-            prompt_embeds_ = self.aux_model.text_encoder(input_id)[0]
+            # Source prompt embed (hàng 0) cache được; chỉ encode lại edit prompt.
+            if "src_text_embed" in cache and num_samples == 2:
+                edit_id = tokenize_captions(self.aux_model.tokenizer, [prompts[1]]).to(self.device)
+                edit_embed = self.aux_model.text_encoder(edit_id)[0]
+                prompt_embeds_ = torch.cat([cache["src_text_embed"], edit_embed], dim=0)
+            else:
+                input_id = tokenize_captions(self.aux_model.tokenizer, prompts).to(self.device)
+                prompt_embeds_ = self.aux_model.text_encoder(input_id)[0]
+                if num_samples == 2:
+                    cache["src_text_embed"] = prompt_embeds_[0:1]
             prompt_embeds = torch.cat([prompt_embeds_, image_prompt_embeds], dim=1)
 
         # Feed inverted noise to ip-unet generation

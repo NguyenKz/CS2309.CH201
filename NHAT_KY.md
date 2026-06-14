@@ -9,6 +9,7 @@
 
 | Ngày | Giai đoạn | Công việc | Kết quả / Ghi chú | Môi trường |
 |---|---|---|---|---|
+| 2026-06-14 | 4a | Cache latent + CLIP image embed + source prompt embed (EditCache + embed_cache) | Tiết kiệm ~9.93s/edit ở stage phụ thuộc ảnh/source (gen_image_embeds −11.5s, vae_encode −0.95s); embed deterministic (allclose); callers cũ không đổi | Mac M4 (MPS); .venv |
 | 2026-06-14 | 4d | Vectorized self-guided mask trên GPU (bỏ .cpu().apply_) | mask_estimate 12.2ms→4.6ms (~2.6×, tiết kiệm ~7.6ms/ảnh); mask giống hệt baseline; chỉ ~0.02% tổng pipeline (~72s/ảnh) nên runtime end-to-end ~không đổi | Mac M4 (MPS); .venv |
 | 2026-06-14 | 3c | Đo timing từng công đoạn (StageTimer) + eval PIE-Bench subset 20 mẫu | 20 mẫu/Apple M4 MPS: TB 69.0s/ảnh (steady 73.6s); UNet x2 ~43%, IP embeds ~24%, VAE decode ~23%; CLIP-Whole 23.02, CLIP-Edited 21.46, PSNR nền 14.01 (9/20); lưu experimental_data/piebench_subset20_2026-06-14/ | Mac M4 (MPS); .venv; torch 2.12.0 |
 | 2026-06-05 | 4d | Đề xuất hướng ứng dụng xóa vật thể / inpainting | Cập nhật đề tài/README/Overview/QA: dùng SwiftEdit để xóa object bằng prompt + self/user mask; đánh giá khả thi trung bình-cao với object nhỏ/vừa; metric detector confidence drop, CLIP margin, PSNR/SSIM/LPIPS ngoài mask, realism/human rating; so LaMa nếu kịp. | Mac M4; tài liệu |
@@ -30,6 +31,27 @@
 ## Chi tiết theo phiên làm việc
 
 *(Các entry chi tiết xuất hiện bên dưới, mới nhất ở trên cùng.)*
+
+### 2026-06-14 — [4a] SwiftEdit-RT: cache latent + CLIP image embed + source prompt embed
+
+**Môi trường:** Mac M4 (MPS); .venv
+
+**Công việc đã làm:**
+- Thêm EditCache (infer.py) + tham số embed_cache (gen_img); split text-encode để cache riêng source prompt; benchmark interleave khử nhiễu nhiệt (scripts/bench_cache.py)
+
+**Kết quả:**
+- Cache tiết kiệm ~9.93s/edit ở stage phụ thuộc ảnh/source (gen_image_embeds -11.5s, vae_encode -0.95s); embed deterministic (allclose=True); wall-clock 56.1->43.7s (nhiễu thermal); callers cũ không đổi hành vi
+
+**Task README đã đánh [x]:**
+- *(không đánh task README)*
+
+**Vấn đề / cách xử lý:**
+Wall-clock end-to-end bị thermal throttling che lấp -> chuyển sang đo per-stage; gen_text_encode hiện số âm do nhiễu MPS op nhỏ
+
+**Bước tiếp theo:**
+- Cache trong Gradio/realtime demo; gộp 2 lần UNet (inverse+gen) hoặc batch; thử fp16 cho CLIP image encoder
+
+---
 
 ### 2026-06-14 — [4d] SwiftEdit-RT: vectorized self-guided mask trên GPU
 

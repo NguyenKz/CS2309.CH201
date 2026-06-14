@@ -32,6 +32,34 @@ def to_binary(pix, threshold=0.5):
         return 0.0
 
 
+class EditCache:
+    """Cache các tensor chỉ phụ thuộc ảnh nguồn / source prompt.
+
+    Dùng cho kịch bản realtime: cùng 1 ảnh + source prompt, đổi nhiều edit prompt.
+    Tự invalidate khi đổi ảnh (latent + CLIP image embed) hoặc đổi source prompt
+    (source text embed của inverse model + generation model).
+    """
+
+    def __init__(self, enabled: bool = True):
+        self.enabled = enabled
+        self._img_path = None
+        self._src_p = None
+        self.latents = None              # VAE encode ảnh nguồn (image-only)
+        self.src_inv_embed = None        # source prompt embed — inverse model
+        self.gen_embed_cache: dict = {}  # cho gen_img: image_prompt_embeds + src_text_embed
+
+    def ensure(self, img_path, src_p) -> None:
+        """Invalidate phần cache không còn hợp lệ khi đổi ảnh / source prompt."""
+        if img_path != self._img_path:
+            self._img_path = img_path
+            self.latents = None
+            self.gen_embed_cache.pop("image_prompt_embeds", None)
+        if src_p != self._src_p:
+            self._src_p = src_p
+            self.src_inv_embed = None
+            self.gen_embed_cache.pop("src_text_embed", None)
+
+
 @torch.no_grad()
 def edit_image(
     img_path,
@@ -45,36 +73,57 @@ def edit_image(
     scale_non_edit=1,
     clamp_rate=3.0,
     mask_threshold=0.5,
+    cache=None,
 ):
     """
         Save keysteps to file.
             + img_path: path to the source image.
             + src_p: Source Prompt that describes source image (could leave it empty).
             + edit_p: Edit Prompt that describes your desired changes.
+            + cache: EditCache tùy chọn — tái dùng latent/embedding khi cùng ảnh+source prompt.
     """
     device = inverse_model.device
     timer = StageTimer(device, label=f"{src_p}->{edit_p}")
     mid_timestep = torch.ones((1,), dtype=torch.int64, device=device) * 500
     final_timestep = torch.ones((1,), dtype=torch.int64, device=device) * 999
 
+    if cache is not None:
+        cache.ensure(img_path, src_p)
+
     # Input Image
     pil_img_cond = Image.open(img_path).resize((512, 512))
 
     processed_image = to_tensor(pil_img_cond).unsqueeze(0).to(device) * 2 - 1
 
-    # Predict inverted noise
+    # Predict inverted noise — latent VAE chỉ phụ thuộc ảnh nguồn -> cache được
     with timer.stage("vae_encode"):
-        latents = inverse_model.vae.encode(
-            processed_image.to(inverse_model.weight_dtype)
-        ).latent_dist.sample()
-        latents = latents * inverse_model.vae.config.scaling_factor
+        if cache is not None and cache.latents is not None:
+            latents = cache.latents
+        else:
+            latents = inverse_model.vae.encode(
+                processed_image.to(inverse_model.weight_dtype)
+            ).latent_dist.sample()
+            latents = latents * inverse_model.vae.config.scaling_factor
+            if cache is not None:
+                cache.latents = latents
         dub_latents = torch.cat([latents] * 2, dim=0)
 
     with timer.stage("inv_text_encode"):
-        input_id = tokenize_captions(inverse_model.tokenizer, [src_p, edit_p]).to(device)
-        encoder_hidden_state = inverse_model.text_encoder(input_id)[0].to(
-            dtype=inverse_model.weight_dtype
-        )
+        if cache is not None:
+            # Source prompt embed cache được; chỉ encode lại edit prompt.
+            if cache.src_inv_embed is None:
+                src_id = tokenize_captions(inverse_model.tokenizer, [src_p]).to(device)
+                cache.src_inv_embed = inverse_model.text_encoder(src_id)[0]
+            edit_id = tokenize_captions(inverse_model.tokenizer, [edit_p]).to(device)
+            edit_embed = inverse_model.text_encoder(edit_id)[0]
+            encoder_hidden_state = torch.cat([cache.src_inv_embed, edit_embed], dim=0).to(
+                dtype=inverse_model.weight_dtype
+            )
+        else:
+            input_id = tokenize_captions(inverse_model.tokenizer, [src_p, edit_p]).to(device)
+            encoder_hidden_state = inverse_model.text_encoder(input_id)[0].to(
+                dtype=inverse_model.weight_dtype
+            )
 
     with timer.stage("unet_inverse"):
         predict_inverted_code = inverse_model.unet_inverse(
@@ -102,6 +151,7 @@ def edit_image(
         noise=input_sb,
         return_noise_image=False,
         timer=timer,
+        embed_cache=(cache.gen_embed_cache if cache is not None else None),
     )
 
     timer.dump(extra={"img_path": img_path})

@@ -65,7 +65,7 @@ Tối ưu tốc độ suy luận của SwiftEdit mà không train lại và khô
 2. Đo baseline trên Mac MPS và Colab CUDA với model đã load sẵn.
 3. Giữ patch đã làm: bỏ decode `noise_image` khi caller không dùng.
 4. ~~Patch self-guided mask threshold vectorized trên GPU, tránh `.cpu().apply_()`.~~ ✅ Done 2026-06-14
-5. Thêm cache latent ảnh nguồn, CLIP image embedding, source prompt embedding cho demo cùng ảnh nhiều prompt.
+5. ~~Thêm cache latent ảnh nguồn, CLIP image embedding, source prompt embedding cho demo cùng ảnh nhiều prompt.~~ ✅ Done 2026-06-14
 6. Thử `channels_last`, `fp16`/`bf16`, `torch.compile` trên CUDA.
 7. Thử TinyVAE/TAESD như ablation riêng vì có rủi ro đổi output.
 8. Lập bảng latency breakdown + speedup + quality metrics.
@@ -81,7 +81,7 @@ Tối ưu tốc độ suy luận của SwiftEdit mà không train lại và khô
 | 0 | Bỏ decode `noise_image` không dùng | Rất cao | Không | Đã implement; cần đo speedup |
 | 1 | Vectorized self-guided mask trên GPU | Rất cao | Không/rất thấp | ✅ 2026-06-14: 12.2→4.6 ms (~2.6×, −7.6 ms/ảnh); mask giống hệt baseline; chỉ ~0.02% tổng pipeline (~72s) nên runtime ~không đổi |
 | 2 | Profiler latency theo module | Cao | Không | Bắt buộc để chứng minh |
-| 3 | Cache latent/image/source embedding | Cao | Không nếu cache đúng | Rất hợp demo realtime |
+| 3 | Cache latent/image/source embedding | Cao | Không nếu cache đúng | ✅ 2026-06-14: cùng ảnh+src, tiết kiệm ~9.93s/edit (gen_image_embeds −11.5s, vae_encode −0.95s); embed deterministic; `EditCache` trong infer.py |
 | 4 | `channels_last` + fp16/bf16 | Trung bình | Thấp | Thử trên Colab CUDA |
 | 5 | `torch.compile` | Trung bình | Thấp | Có warmup/compile overhead |
 | 6 | TinyVAE/TAESD | Trung bình | Trung bình | Có thể nhanh hơn nhưng đổi màu/chi tiết |
@@ -93,6 +93,9 @@ Tối ưu tốc độ suy luận của SwiftEdit mà không train lại và khô
 |---|---:|---:|---:|---:|---:|---|
 | Bỏ decode `noise_image` | — | — | — | ~0.0001 s | ~0% | Không đáng kể (caller đã không dùng) |
 | Vectorized GPU mask | 12.2 ms | 4.6 ms | ~2.6× | ~7.6 ms/ảnh | ~0.02% | ~Không đổi (~72 s/ảnh); lợi ích tăng theo độ phân giải |
+| Cache latent + CLIP image + source embed¹ | 16.1 s | 6.1 s | ~2.6× (phần cacheable) | ~9.93 s/edit | ~14% | Chỉ khi **cùng ảnh + source prompt, đổi edit prompt**; embed deterministic |
+
+> ¹ Đo per-stage (interleave để khử thermal throttling). Đóng góp chính: `gen_image_embeds` (CLIP image encoder) −11.5 s, `vae_encode` −0.95 s. Edit đầu tiên vẫn trả phí đầy đủ (nạp cache); các edit sau hưởng lợi. Chi tiết: `experimental_data/cache_benchmark_2026-06-14/`.
 
 **Phân bố thời gian (run 20 mẫu, để biết nên tối ưu tiếp ở đâu):**
 

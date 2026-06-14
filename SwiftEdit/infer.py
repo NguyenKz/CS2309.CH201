@@ -101,7 +101,7 @@ def edit_image(
             latents = cache.latents
         else:
             latents = inverse_model.vae.encode(
-                processed_image.to(inverse_model.weight_dtype)
+                processed_image.to(inverse_model.vae.dtype)
             ).latent_dist.sample()
             latents = latents * inverse_model.vae.config.scaling_factor
             if cache is not None:
@@ -126,9 +126,10 @@ def edit_image(
             )
 
     with timer.stage("unet_inverse"):
+        unet_inv_dtype = inverse_model.unet_inverse.dtype
         predict_inverted_code = inverse_model.unet_inverse(
-            dub_latents, mid_timestep, encoder_hidden_state
-        ).sample.to(device, dtype=inverse_model.weight_dtype)
+            dub_latents.to(unet_inv_dtype), mid_timestep, encoder_hidden_state.to(unet_inv_dtype)
+        ).sample.float()  # về fp32 cho mask + input_sb (alpha_t/sigma_t fp32) ổn định
 
     # Estimate editing mask
     with timer.stage("mask_estimate"):

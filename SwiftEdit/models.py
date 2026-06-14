@@ -26,6 +26,23 @@ class _NullTimer:
         yield
 
 
+def resolve_dtype(dtype):
+    """Chuẩn hóa 'fp16'/'bf16'/'fp32' (hoặc torch.dtype) về torch.dtype."""
+    if isinstance(dtype, torch.dtype):
+        return dtype
+    return {
+        "fp16": torch.float16,
+        "float16": torch.float16,
+        "bf16": torch.bfloat16,
+        "bfloat16": torch.bfloat16,
+    }.get(dtype, torch.float32)
+
+
+def module_dtype(module):
+    """dtype của tham số đầu tiên trong module (cho module không có .dtype)."""
+    return next(module.parameters()).dtype
+
+
 def tokenize_captions(tokenizer, captions):
     inputs = tokenizer(
         captions,
@@ -68,18 +85,15 @@ class InverseModel:
         pretrained_model_name_path, 
         model_name="stabilityai/sd-turbo",
         dtype="fp32",
-        device="cuda"
+        device="cuda",
+        channels_last=False,
     ):
-        if dtype == "fp16":
-            self.weight_dtype = torch.float16
-        elif dtype == "bf16":
-            self.weight_dtype = torch.bfloat16
-        else:
-            self.weight_dtype = torch.float32
+        self.weight_dtype = resolve_dtype(dtype)
 
         self.device = device
         self.model_name = model_name
         self.noise_scheduler = DDPMScheduler.from_pretrained(self.model_name, subfolder="scheduler")
+        # VAE giữ fp32: SD VAE fp16 dễ ra NaN/ảnh đen.
         self.vae = AutoencoderKL.from_pretrained(self.model_name, subfolder="vae").to(
             self.device, dtype=torch.float32
         )
@@ -87,6 +101,8 @@ class InverseModel:
         self.unet_inverse = UNet2DConditionModel.from_pretrained(
             pretrained_model_name_path, subfolder="unet_ema"
         ).to(self.device, dtype=self.weight_dtype)
+        if channels_last:
+            self.unet_inverse = self.unet_inverse.to(memory_format=torch.channels_last)
 
         self.unet_inverse.eval()
         self.tokenizer = AutoTokenizer.from_pretrained(self.model_name, subfolder="tokenizer")
@@ -113,19 +129,22 @@ class AuxiliaryModel:
         model_name="Manojb/stable-diffusion-2-1-base",
         image_encoder_path="h94/IP-Adapter",
         device="cuda",
+        dtype="fp32",
     ):
         self.device = device
+        self.weight_dtype = resolve_dtype(dtype)
         self.noise_scheduler = DDPMScheduler.from_pretrained(model_name, subfolder="scheduler")
+        # VAE giữ fp32 (decode ổn định, tránh NaN/ảnh đen ở fp16).
         self.vae = AutoencoderKL.from_pretrained(model_name, subfolder="vae").to(self.device)
 
         self.tokenizer = AutoTokenizer.from_pretrained(model_name, subfolder="tokenizer")
         self.text_encoder = CLIPTextModel.from_pretrained(model_name, subfolder="text_encoder").to(
-            self.device, dtype=torch.float32
+            self.device, dtype=self.weight_dtype
         )
 
         self.image_encoder = CLIPVisionModelWithProjection.from_pretrained(
             image_encoder_path, subfolder="models/image_encoder"
-        ).to(device, dtype=torch.float32)
+        ).to(device, dtype=self.weight_dtype)
         self.image_encoder.requires_grad_(False)
 
         self.clip_image_processor = CLIPImageProcessor()
@@ -142,9 +161,13 @@ class IPSBV2Model(torch.nn.Module):
         aux_model,
         device="cuda",
         with_ip_mask_controller=False,
+        dtype="fp32",
+        channels_last=False,
     ):
         super().__init__()
         self.device = device
+        self.weight_dtype = resolve_dtype(dtype)
+        self.channels_last = channels_last
         self.unet = UNet2DConditionModel.from_pretrained(
             pretrained_model_name_path
         ).to(self.device)
@@ -212,6 +235,14 @@ class IPSBV2Model(torch.nn.Module):
         )
         # self.load_ip_adapter(path_ckpt_ip)
 
+        # Áp dtype/memory-format SAU khi load weight (fp32) để chỉ ép kiểu 1 lần.
+        # alpha_t/sigma_t là tensor thuộc tính (không phải param) -> giữ fp32 cho math ổn định.
+        if self.weight_dtype != torch.float32:
+            self.unet = self.unet.to(dtype=self.weight_dtype)
+            self.image_proj_model = self.image_proj_model.to(dtype=self.weight_dtype)
+        if self.channels_last:
+            self.unet = self.unet.to(memory_format=torch.channels_last)
+
     def load_ip_adapter(self, path_ckpt_ip):
 
         sd = torch.load(path_ckpt_ip, map_location="cpu")
@@ -230,6 +261,8 @@ class IPSBV2Model(torch.nn.Module):
 
     @torch.inference_mode()
     def get_image_embeds(self, pil_image=None, clip_image_embeds=None):
+        enc_dtype = self.aux_model.image_encoder.dtype
+        proj_dtype = module_dtype(self.image_proj_model)
         if pil_image is not None:
             if isinstance(pil_image, Image.Image):
                 pil_image = [pil_image]
@@ -237,11 +270,11 @@ class IPSBV2Model(torch.nn.Module):
                 images=pil_image, return_tensors="pt"
             ).pixel_values
             clip_image_embeds = self.aux_model.image_encoder(
-                clip_image.to(self.device, dtype=torch.float32)
+                clip_image.to(self.device, dtype=enc_dtype)
             ).image_embeds
         else:
-            clip_image_embeds = clip_image_embeds.to(self.device, dtype=torch.float32)
-        image_prompt_embeds = self.image_proj_model(clip_image_embeds)
+            clip_image_embeds = clip_image_embeds.to(self.device, dtype=enc_dtype)
+        image_prompt_embeds = self.image_proj_model(clip_image_embeds.to(proj_dtype))
         return image_prompt_embeds
 
     def set_scale(self, scale):
@@ -309,12 +342,17 @@ class IPSBV2Model(torch.nn.Module):
 
         # Feed inverted noise to ip-unet generation
         with timer.stage("gen_unet"):
-            noise = torch.cat([noise] * num_samples, dim=0)
-            model_pred = self.unet(noise, self.timestep, prompt_embeds).sample
+            noise = torch.cat([noise] * num_samples, dim=0).float()
+            unet_dtype = self.unet.dtype
+            model_pred = self.unet(
+                noise.to(unet_dtype), self.timestep, prompt_embeds.to(unet_dtype)
+            ).sample
 
             if model_pred.shape[1] == noise.shape[1] * 2:
                 model_pred, _ = torch.split(model_pred, noise.shape[1], dim=1)
 
+            # Hậu xử lý ở fp32 (alpha_t/sigma_t fp32) để ổn định số học, tránh NaN fp16.
+            model_pred = model_pred.float()
             pred_original_sample = (noise - self.sigma_t * model_pred) / self.alpha_t
 
             if self.aux_model.noise_scheduler.config.thresholding:

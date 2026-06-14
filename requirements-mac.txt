@@ -21,3 +21,6 @@ jupyter
 ipywidgets
 matplotlib
 packaging
+# Demo UI (giữ <6 để không kéo huggingface-hub lên 1.x phá transformers)
+gradio>=5,<6
+pandas

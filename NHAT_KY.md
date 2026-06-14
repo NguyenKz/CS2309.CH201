@@ -9,6 +9,8 @@
 
 | Ngày | Giai đoạn | Công việc | Kết quả / Ghi chú | Môi trường |
 |---|---|---|---|---|
+| 2026-06-14 | 4f | Demo UI Gradio (`app_gradio.py`) tích hợp fp16 + channels_last + EditCache | Self-test OK (ảnh edit đúng, ~7.8s edit đầu gồm compile); hiện runtime + dtype + trạng thái cache; chạy local 127.0.0.1:7860 | Mac M4 (MPS); .venv; gradio 5.50 |
+| 2026-06-14 | 4a | fp16 + channels_last (VAE giữ fp32) cho SwiftEdit | fp16 nhanh ~3.3× (máy nguội) → ~7× (chạy liên tục, fp32 throttle); PSNR ~45dB vs fp32, không NaN/đen; tác động end-to-end lớn nhất | Mac M4 (MPS); .venv |
 | 2026-06-14 | 4a | Cache latent + CLIP image embed + source prompt embed (EditCache + embed_cache) | Tiết kiệm ~9.93s/edit ở stage phụ thuộc ảnh/source (gen_image_embeds −11.5s, vae_encode −0.95s); embed deterministic (allclose); callers cũ không đổi | Mac M4 (MPS); .venv |
 | 2026-06-14 | 4d | Vectorized self-guided mask trên GPU (bỏ .cpu().apply_) | mask_estimate 12.2ms→4.6ms (~2.6×, tiết kiệm ~7.6ms/ảnh); mask giống hệt baseline; chỉ ~0.02% tổng pipeline (~72s/ảnh) nên runtime end-to-end ~không đổi | Mac M4 (MPS); .venv |
 | 2026-06-14 | 3c | Đo timing từng công đoạn (StageTimer) + eval PIE-Bench subset 20 mẫu | 20 mẫu/Apple M4 MPS: TB 69.0s/ảnh (steady 73.6s); UNet x2 ~43%, IP embeds ~24%, VAE decode ~23%; CLIP-Whole 23.02, CLIP-Edited 21.46, PSNR nền 14.01 (9/20); lưu experimental_data/piebench_subset20_2026-06-14/ | Mac M4 (MPS); .venv; torch 2.12.0 |
@@ -31,6 +33,63 @@
 ## Chi tiết theo phiên làm việc
 
 *(Các entry chi tiết xuất hiện bên dưới, mới nhất ở trên cùng.)*
+
+### 2026-06-14 — [4f] Demo UI Gradio cho SwiftEdit-RT
+
+**Môi trường:** Mac M4 (MPS); .venv; gradio 5.50
+
+**Công việc đã làm:**
+- Viết `scripts/app_gradio.py`: upload ảnh + source/edit prompt, slider scale_edit/scale_non_edit/mask_threshold, checkbox cache.
+- Tích hợp fp16 + channels_last + EditCache; hiển thị ảnh kết quả + runtime + dtype + trạng thái cache.
+- Thêm `gradio>=5,<6` + `pandas` vào `requirements-mac.txt`; thêm chế độ `--selftest` để kiểm thử không cần mở server.
+
+**Kết quả:**
+- Self-test OK: ảnh edit đúng (rusty bicycle), ~7.8s cho edit đầu (gồm compile MPS); các edit sau nhanh hơn nhờ cache.
+- Demo chạy local `http://127.0.0.1:7860`; có ví dụ prompt sẵn.
+
+**Task README đã đánh [x]:**
+- 4f: Gradio upload ảnh + prompt; hiện output + runtime; chạy local Mac.
+
+**Vấn đề / cách xử lý:**
+- gradio 6 kéo `huggingface-hub` lên 1.x phá transformers 4.57 → ghim `gradio>=5,<6` + `hf-hub<1.0`.
+- `edit_image` trả batch 2 ảnh (source recon + edit) → demo lấy ảnh edit (index cuối); cũng giải thích vì sao ảnh benchmark trước hiện cạnh nhau (do `save_image` ghép grid).
+- Sandbox không bind được localhost để test UI → dùng `--selftest` chạy đúng code path.
+
+**Bước tiếp theo:**
+- Lưu output demo vào folder riêng cho slide; thêm nút so sánh fp16 vs fp32 ngay trong UI.
+
+---
+
+### 2026-06-14 — [4a] SwiftEdit-RT: fp16 + channels_last (VAE giữ fp32)
+
+**Môi trường:** Mac M4 (MPS); .venv
+
+**Công việc đã làm:**
+- Thêm tham số `dtype`/`channels_last` cho 3 model class (InverseModel, AuxiliaryModel, IPSBV2Model) + helper `resolve_dtype`/`module_dtype`.
+- Cast ranh giới dtype trong `gen_img` / `edit_image` / `mask_ip_controller` để chạy fp16; VAE luôn fp32.
+- Viết `scripts/bench_dtype.py` đo per-stage + chất lượng (PSNR/MSE vs fp32, phát hiện NaN/ảnh đen).
+
+**Kết quả:**
+- fp16 nhanh **~3.3×** (máy nguội, 1 edit) → **~7×** (chạy liên tục: fp32 bị throttle 35→53s, fp16 ổn định ~5.5s).
+- PSNR **~45 dB** so với fp32, MSE ~0, **không NaN/ảnh đen** → chất lượng gần như không đổi.
+- channels_last thêm ~5% và làm thời gian phẳng hơn.
+- Bằng chứng throttling: stage VAE (fp32 ở mọi config) chạy chậm ~3.9× ở fp32 dù cùng dtype.
+- Đây là tối ưu **tác động end-to-end lớn nhất** (tăng tốc toàn bộ UNet inverse+gen + text/image encoder).
+- Lưu `experimental_data/fp16_benchmark_2026-06-14/` (report + log + ảnh mẫu fp32/fp16/fp16_cl).
+
+**Task README đã đánh [x]:**
+- 4e: Thử fp16 + channels_last.
+
+**Vấn đề / cách xử lý:**
+- fp16 ban đầu vỡ ở mask controller (mask fp32 trộn query/value fp16) → cast mask theo dtype runtime.
+- VAE giữ fp32 để tránh NaN/ảnh đen (SD VAE fp16 không ổn định).
+- Phát hiện bug sẵn: `vae.encode` ép input theo `weight_dtype` → sửa dùng `vae.dtype`.
+- Wall-clock nhiễu thermal throttling → dùng median nhiều edit + per-stage; báo cáo cả mức bảo thủ (nguội) và sustained.
+
+**Bước tiếp theo:**
+- `torch.compile` trên CUDA; gắn fp16 + cache vào Gradio demo; đo lại 20 mẫu PIE-Bench với fp16 để xác nhận chất lượng diện rộng.
+
+---
 
 ### 2026-06-14 — [4a] SwiftEdit-RT: cache latent + CLIP image embed + source prompt embed
 

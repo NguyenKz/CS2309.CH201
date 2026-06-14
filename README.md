@@ -179,7 +179,7 @@ Chi tiết: [Mục 4.2 đề tài](./SwiftEdit_DeTai_CS2309.md#42-google-colab--
 ## Checklist tổng thể
 
 > Đánh dấu `[x]` khi hoàn thành. Cập nhật file này trong quá trình làm đề tài.
-> Cập nhật tiến độ lần cuối: 2026-06-14 — 25/78 task bắt buộc
+> Cập nhật tiến độ lần cuối: 2026-06-14 — 26/79 task bắt buộc
 
 ### Trạng thái nhanh
 
@@ -188,8 +188,10 @@ Chi tiết: [Mục 4.2 đề tài](./SwiftEdit_DeTai_CS2309.md#42-google-colab--
 | 1. Lý thuyết | 🔄 Đang làm (1/6) |
 | 2. Setup Mac + Colab | 🔄 Đang làm (11/17) |
 | 3. Thực nghiệm cơ bản | 🔄 Đang làm (6/19) |
-| 4. So sánh & mở rộng | 🔄 Đang làm (7/17) |
+| 4. So sánh & mở rộng | 🔄 Đang làm (8/18) |
 | 5. Báo cáo & nộp | ⬜ Chưa bắt đầu |
+
+
 
 
 
@@ -277,6 +279,8 @@ Chi tiết: [Mục 4.2 đề tài](./SwiftEdit_DeTai_CS2309.md#42-google-colab--
 > **Dữ liệu thực nghiệm 2026-06-14:** [`experimental_data/piebench_subset20_2026-06-14/`](./experimental_data/piebench_subset20_2026-06-14/) — 20 ảnh kết quả, `metrics.csv` (runtime + timing + chất lượng), báo cáo timing từng công đoạn (`timing_report.md`).
 >
 > **Cache embedding 2026-06-14:** [`experimental_data/cache_benchmark_2026-06-14/`](./experimental_data/cache_benchmark_2026-06-14/) — benchmark cache latent + CLIP image embed + source prompt embed: tiết kiệm ~9.93s/edit khi cùng ảnh + source prompt (`bench_cache.py`).
+>
+> **fp16 / channels_last 2026-06-14:** [`experimental_data/fp16_benchmark_2026-06-14/`](./experimental_data/fp16_benchmark_2026-06-14/) — fp16 tăng tốc ~3.3×–7× trên Mac M4/MPS, PSNR ~45dB vs fp32, không NaN/đen (`bench_dtype.py`).
 
 ---
 
@@ -325,15 +329,18 @@ Chi tiết: [Mục 4.2 đề tài](./SwiftEdit_DeTai_CS2309.md#42-google-colab--
 - [x] Patch self-guided mask threshold chạy vectorized trên GPU, tránh CPU round-trip
 - [x] Profile baseline theo module: VAE encode/decode, text encoder, inverse UNet, mask, CLIP image encoder, generation UNet
 - [x] Thêm chế độ cache latent ảnh nguồn, image embedding IP-Adapter và source prompt embedding cho demo cùng ảnh nhiều prompt — `EditCache` (infer.py); tiết kiệm ~9.93s/edit khi cùng ảnh+source prompt
-- [ ] Thử `fp16`, `channels_last`, `torch.compile` trên Colab CUDA
+- [x] Thử `fp16` + `channels_last` (Mac M4/MPS): ~3.3× (nguội) → ~7× (chạy liên tục); PSNR ~45dB vs fp32, không NaN/đen; VAE giữ fp32
+- [ ] Thử `torch.compile` trên Colab CUDA
 - [ ] Thử TinyVAE/TAESD như ablation tốc độ/chất lượng cho VAE encode/decode
 - [ ] Lập bảng latency breakdown, speedup, peak memory và metric PSNR/MSE/CLIP so với baseline
 
 ### 4f. Demo Gradio (tùy chọn)
 
-- [ ] Gradio: upload ảnh + nhập prompt
-- [ ] Hiển thị ảnh output + thời gian suy luận
-- [ ] Chạy local trên Mac
+- [x] Gradio: upload ảnh + nhập prompt — `scripts/app_gradio.py`
+- [x] Hiển thị ảnh output + thời gian suy luận (kèm dtype + trạng thái cache)
+- [x] Chạy local trên Mac (fp16 + channels_last + EditCache); self-test OK ~7.8s edit đầu
+
+> **Chạy demo:** `python scripts/app_gradio.py` (mặc định fp16 trên MPS), mở `http://127.0.0.1:7860`. Dùng cùng 1 ảnh + source prompt rồi đổi edit prompt để thấy cache tăng tốc.
 
 ### 4g. SAM 3 mask quality analysis (optional, không phải hướng chính)
 

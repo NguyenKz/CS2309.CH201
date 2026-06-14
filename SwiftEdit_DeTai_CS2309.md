@@ -958,6 +958,8 @@ Hướng chính được chọn để đào sâu là **C13 — SwiftEdit-RT: Rea
 
 | Ngày       | Giai đoạn           | Công việc                                                | Kết quả / Ghi chú                                                        |
 |---|---|---|---|
+| 2026-06-14 | 4f | Demo UI Gradio (`app_gradio.py`) tích hợp fp16 + channels_last + EditCache | Self-test OK (ảnh edit đúng, ~7.8s edit đầu gồm compile); hiện runtime + dtype + trạng thái cache; chạy local 127.0.0.1:7860 (Mac M4 (MPS); .venv; gradio 5.50) |
+| 2026-06-14 | 4a | fp16 + channels_last (VAE giữ fp32) cho SwiftEdit | fp16 nhanh ~3.3× (máy nguội) → ~7× (chạy liên tục, fp32 throttle); PSNR ~45dB vs fp32, không NaN/đen; tác động end-to-end lớn nhất (Mac M4 (MPS); .venv) |
 | 2026-06-14 | 4a | Cache latent + CLIP image embed + source prompt embed (EditCache + embed_cache) | Tiết kiệm ~9.93s/edit ở stage phụ thuộc ảnh/source (gen_image_embeds −11.5s, vae_encode −0.95s); embed deterministic (allclose); callers cũ không đổi (Mac M4 (MPS); .venv) |
 | 2026-06-14 | 4d | Vectorized self-guided mask trên GPU (bỏ .cpu().apply_) | mask_estimate 12.2ms→4.6ms (~2.6×, tiết kiệm ~7.6ms/ảnh); mask giống hệt baseline; chỉ ~0.02% tổng pipeline (~72s/ảnh) nên runtime end-to-end ~không đổi (Mac M4 (MPS); .venv) |
 | 2026-06-14 | 3c | Đo timing từng công đoạn (StageTimer) + eval PIE-Bench subset 20 mẫu | 20 mẫu/Apple M4 MPS: TB 69.0s/ảnh (steady 73.6s); UNet x2 ~43%, IP embeds ~24%, VAE decode ~23%; CLIP-Whole 23.02, CLIP-Edited 21.46, PSNR nền 14.01 (9/20); lưu experimental_data/piebench_subset20_2026-06-14/ (Mac M4 (MPS); .venv; torch 2.12.0) |

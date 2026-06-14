@@ -37,6 +37,7 @@ class MaskController:
             mask = self.mask_s.unsqueeze(0).unsqueeze(0)
             mask = F.interpolate(mask, (H, W)).flatten(0).unsqueeze(0)
             mask = mask.flatten().unsqueeze(0).unsqueeze(-1)
+            mask = mask.to(sim.dtype)  # khớp dtype để chạy fp16
 
             # background
             sim_bg = sim + mask.masked_fill(mask == 0, torch.finfo(sim.dtype).min)
@@ -63,7 +64,7 @@ class MaskController:
             )
 
             mask = F.interpolate(self.mask_s.unsqueeze(0).unsqueeze(0), (H, W))
-            mask = mask.reshape(-1, 1)  # (hw, 1)
+            mask = mask.reshape(-1, 1).to(out_source.dtype)  # (hw, 1), khớp dtype fp16
 
             out_target = self.attn_batch(
                 q[-num_heads:],
@@ -84,7 +85,7 @@ class MaskController:
             )
 
             mask = F.interpolate(self.mask_s.unsqueeze(0).unsqueeze(0), (H, W))
-            mask = mask.reshape(-1, 1)  # (hw, 1)
+            mask = mask.reshape(-1, 1).to(out_source.dtype)  # (hw, 1), khớp dtype fp16
 
             out_target1 = self.attn_batch(
                 q[num_heads : (2 * num_heads) :],
@@ -136,7 +137,7 @@ class MaskController:
             out_target_fg, out_target_bg = out_target.chunk(2, 0)
 
             mask = F.interpolate(self.mask_s.unsqueeze(0).unsqueeze(0), (H, W))
-            mask = mask.reshape(-1, 1)  # (hw, 1)
+            mask = mask.reshape(-1, 1).to(out_source.dtype)  # (hw, 1), khớp dtype fp16
             out_target = self.scale_ip_fg * out_target_fg * mask + self.scale_ip_bg * out_source * (
                 1 - mask
             )
@@ -169,7 +170,7 @@ class MaskController:
             out_target_fg2, out_target_bg2 = out_target2.chunk(2, 0)
 
             mask = F.interpolate(self.mask_s.unsqueeze(0).unsqueeze(0), (H, W))
-            mask = mask.reshape(-1, 1)  # (hw, 1)
+            mask = mask.reshape(-1, 1).to(out_source.dtype)  # (hw, 1), khớp dtype fp16
 
             out_target1 = self.scale_ip_fg * (
                 (out_target_fg1 + out_target_fg2) / 2

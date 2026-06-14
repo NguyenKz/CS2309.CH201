@@ -21,7 +21,7 @@ File này gom các hướng phát triển đã bàn cho đề tài SwiftEdit. M�
 | 11 | **ControlNet / reference-guided style editing** | Thêm điều kiện edge/depth/reference để giữ layout/style tốt hơn | Custom style set | **Trung bình-thấp** | Nghiên cứu dài hạn |
 | 12 | **Fine-tune nhẹ Stage 2** | Fine-tune checkpoint trên domain nhỏ bằng Colab | Custom domain set, CommonCanvas nếu có | **Thấp-trung bình** | Nghiên cứu optional |
 | 13 | **Thay one-step generator/backbone** | Thay SBv2 bằng generator mới hơn | PIE-Bench sau khi train/tích hợp lại | **Thấp** | Nghiên cứu dài hạn |
-| 14 | **Gradio realtime demo** | Làm UI upload ảnh, nhập prompt, hiện output và runtime | Không cần benchmark học thuật | **Cao** | Ứng dụng/demo |
+| 14 | **Gradio realtime demo** | Làm UI upload ảnh, nhập prompt, hiện output và runtime | Không cần benchmark học thuật | **Cao** | ✅ 2026-06-14: `scripts/app_gradio.py` (fp16 + channels_last + EditCache) |
 
 ## 2. Khuyến nghị chọn hướng
 
@@ -66,7 +66,7 @@ Tối ưu tốc độ suy luận của SwiftEdit mà không train lại và khô
 3. Giữ patch đã làm: bỏ decode `noise_image` khi caller không dùng.
 4. ~~Patch self-guided mask threshold vectorized trên GPU, tránh `.cpu().apply_()`.~~ ✅ Done 2026-06-14
 5. ~~Thêm cache latent ảnh nguồn, CLIP image embedding, source prompt embedding cho demo cùng ảnh nhiều prompt.~~ ✅ Done 2026-06-14
-6. Thử `channels_last`, `fp16`/`bf16`, `torch.compile` trên CUDA.
+6. ~~Thử `channels_last`, `fp16`/`bf16` (VAE giữ fp32).~~ ✅ Done 2026-06-14; `torch.compile` còn lại.
 7. Thử TinyVAE/TAESD như ablation riêng vì có rủi ro đổi output.
 8. Lập bảng latency breakdown + speedup + quality metrics.
 
@@ -82,8 +82,8 @@ Tối ưu tốc độ suy luận của SwiftEdit mà không train lại và khô
 | 1 | Vectorized self-guided mask trên GPU | Rất cao | Không/rất thấp | ✅ 2026-06-14: 12.2→4.6 ms (~2.6×, −7.6 ms/ảnh); mask giống hệt baseline; chỉ ~0.02% tổng pipeline (~72s) nên runtime ~không đổi |
 | 2 | Profiler latency theo module | Cao | Không | Bắt buộc để chứng minh |
 | 3 | Cache latent/image/source embedding | Cao | Không nếu cache đúng | ✅ 2026-06-14: cùng ảnh+src, tiết kiệm ~9.93s/edit (gen_image_embeds −11.5s, vae_encode −0.95s); embed deterministic; `EditCache` trong infer.py |
-| 4 | `channels_last` + fp16/bf16 | Trung bình | Thấp | Thử trên Colab CUDA |
-| 5 | `torch.compile` | Trung bình | Thấp | Có warmup/compile overhead |
+| 4 | `channels_last` + fp16/bf16 | Trung bình | Thấp | ✅ 2026-06-14 (Mac M4/MPS): fp16 ~3.3× (nguội) → ~7× (chạy liên tục, fp32 bị throttle); PSNR ~45dB vs fp32, không NaN/đen; VAE giữ fp32; channels_last +~5% |
+| 5 | `torch.compile` | Trung bình | Thấp | Có warmup/compile overhead — bước tiếp theo |
 | 6 | TinyVAE/TAESD | Trung bình | Trung bình | Có thể nhanh hơn nhưng đổi màu/chi tiết |
 | 7 | TensorRT/Core ML/quantization | Thấp-trung bình | Thấp-trung bình | Hướng dài hơn |
 
@@ -94,8 +94,12 @@ Tối ưu tốc độ suy luận của SwiftEdit mà không train lại và khô
 | Bỏ decode `noise_image` | — | — | — | ~0.0001 s | ~0% | Không đáng kể (caller đã không dùng) |
 | Vectorized GPU mask | 12.2 ms | 4.6 ms | ~2.6× | ~7.6 ms/ảnh | ~0.02% | ~Không đổi (~72 s/ảnh); lợi ích tăng theo độ phân giải |
 | Cache latent + CLIP image + source embed¹ | 16.1 s | 6.1 s | ~2.6× (phần cacheable) | ~9.93 s/edit | ~14% | Chỉ khi **cùng ảnh + source prompt, đổi edit prompt**; embed deterministic |
+| **fp16 (VAE giữ fp32)²** | 39.9 s | 5.9 s | **~3.3×–7×** | ~14–34 s/edit | **toàn pipeline** | ✅ Tác động lớn nhất; PSNR ~45dB vs fp32, không NaN/đen |
+| fp16 + channels_last² | 39.9 s | 5.5 s | ~7.3× (biểu kiến) | — | toàn pipeline | +~5% so fp16; thời gian ổn định hơn |
 
 > ¹ Đo per-stage (interleave để khử thermal throttling). Đóng góp chính: `gen_image_embeds` (CLIP image encoder) −11.5 s, `vae_encode` −0.95 s. Edit đầu tiên vẫn trả phí đầy đủ (nạp cache); các edit sau hưởng lợi. Chi tiết: `experimental_data/cache_benchmark_2026-06-14/`.
+>
+> ² fp16 tăng tốc **toàn bộ** UNet (inverse + gen) + text/image encoder. Trên máy nguội đo 1 edit ~3.3×; khi chạy liên tục baseline fp32 bị thermal throttling (35→53s) còn fp16 ổn định ~5.5s nên speedup biểu kiến ~7×. Stage VAE (fp32 ở mọi config) chạy chậm ~3.9× ở fp32 → bằng chứng throttling. Chi tiết: `experimental_data/fp16_benchmark_2026-06-14/`.
 
 **Phân bố thời gian (run 20 mẫu, để biết nên tối ưu tiếp ở đâu):**
 
@@ -465,10 +469,10 @@ Làm giao diện demo: upload ảnh, nhập source/edit prompt, hiện output, m
 
 **Các bước implement:**
 
-1. Tạo Gradio app upload ảnh + source prompt + edit prompt.
-2. Hiện edited image, optional self-guided mask và runtime.
-3. Thêm mode cache cùng ảnh nhiều prompt nếu đã làm SwiftEdit-RT.
-4. Lưu output demo vào folder riêng để đưa vào slide.
+1. ~~Tạo Gradio app upload ảnh + source prompt + edit prompt.~~ ✅ `scripts/app_gradio.py`
+2. ~~Hiện edited image + runtime.~~ ✅ (kèm dtype + trạng thái cache)
+3. ~~Thêm mode cache cùng ảnh nhiều prompt.~~ ✅ EditCache + fp16/channels_last
+4. Lưu output demo vào folder riêng để đưa vào slide. (còn lại)
 
 **Độ khả thi:** **Cao**. Tốt để trình bày, nhưng không thay thế được phần benchmark/nghiên cứu.
 

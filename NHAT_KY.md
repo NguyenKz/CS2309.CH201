@@ -9,6 +9,7 @@
 
 | Ngày | Giai đoạn | Công việc | Kết quả / Ghi chú | Môi trường |
 |---|---|---|---|---|
+| 2026-06-14 | 4d | Thay mask12.detach().cpu().apply_(to_binary) bằng (mask12 > threshold) vectorize | Kiểm thử 5 ảnh PIE-Bench subset: mask_estimate steady ~4.6ms vs ~12.2ms (speedup ~2.6x); mask giống hệt baseline; tác độ | Mac M4 (MPS); .venv |
 | 2026-06-14 | 3c | Đo timing từng công đoạn (StageTimer) + eval PIE-Bench subset 20 mẫu | 20 mẫu/Apple M4 MPS: TB 69.0s/ảnh (steady 73.6s); UNet x2 ~43%, IP embeds ~24%, VAE decode ~23%; CLIP-Whole 23.02, CLIP-Edited 21.46, PSNR nền 14.01 (9/20); lưu experimental_data/piebench_subset20_2026-06-14/ | Mac M4 (MPS); .venv; torch 2.12.0 |
 | 2026-06-05 | 4d | Đề xuất hướng ứng dụng xóa vật thể / inpainting | Cập nhật đề tài/README/Overview/QA: dùng SwiftEdit để xóa object bằng prompt + self/user mask; đánh giá khả thi trung bình-cao với object nhỏ/vừa; metric detector confidence drop, CLIP margin, PSNR/SSIM/LPIPS ngoài mask, realism/human rating; so LaMa nếu kịp. | Mac M4; tài liệu |
 | 2026-06-05 | 4c | Đề xuất hướng ứng dụng global style/weather edit | Cập nhật đề tài/README/Overview/QA: dùng SwiftEdit cho ngày↔đêm, mùa, mưa↔nắng; đánh giá khả thi trung bình; bỏ mask metric, dùng CLIP target, zero-shot CLIP label, DINO/CLIP image similarity, LPIPS/SSIM phụ, IQA/human rating, FID/KID nếu có target domain. | Mac M4; tài liệu |
@@ -29,6 +30,24 @@
 ## Chi tiết theo phiên làm việc
 
 *(Các entry chi tiết xuất hiện bên dưới, mới nhất ở trên cùng.)*
+
+### 2026-06-14 — [4d] SwiftEdit-RT: vectorized self-guided mask trên GPU
+
+**Môi trường:** Mac M4 (MPS); .venv
+
+**Công việc đã làm:**
+- Thay mask12.detach().cpu().apply_(to_binary) bằng (mask12 > threshold) vectorized trên MPS/CUDA trong infer.py
+
+**Kết quả:**
+- Kiểm thử 5 ảnh PIE-Bench subset: mask_estimate steady ~4.6ms vs ~12.2ms (speedup ~2.6x); mask giống hệt baseline; tác động tổng thời gian nhỏ (~0.02% pipeline) nhưng bỏ CPU sync
+
+**Task README đã đánh [x]:**
+- *(không đánh task README)*
+
+**Bước tiếp theo:**
+- Cache latent/image embedding (SwiftEdit-RT priority 3)
+
+---
 
 ### 2026-06-14 — [3c] Đo timing từng công đoạn + eval PIE-Bench subset 20 mẫu (Mac M4)
 

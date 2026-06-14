@@ -1,6 +1,6 @@
 # Tổng hợp hướng phát triển SwiftEdit
 
-Cập nhật: 2026-06-05
+Cập nhật: 2026-06-14
 
 File này gom các hướng phát triển đã bàn cho đề tài SwiftEdit. Mỗi hướng được tóm tắt theo 6 ý: mô tả ngắn, benchmark nếu có, độ đo benchmark, các bước implement, độ khả thi, và phân loại ứng dụng/nghiên cứu.
 
@@ -64,7 +64,7 @@ Tối ưu tốc độ suy luận của SwiftEdit mà không train lại và khô
 1. Thêm profiler theo module trong `edit_image()` và `gen_img()`.
 2. Đo baseline trên Mac MPS và Colab CUDA với model đã load sẵn.
 3. Giữ patch đã làm: bỏ decode `noise_image` khi caller không dùng.
-4. Patch self-guided mask threshold vectorized trên GPU, tránh `.cpu().apply_()`.
+4. ~~Patch self-guided mask threshold vectorized trên GPU, tránh `.cpu().apply_()`.~~ ✅ Done 2026-06-14
 5. Thêm cache latent ảnh nguồn, CLIP image embedding, source prompt embedding cho demo cùng ảnh nhiều prompt.
 6. Thử `channels_last`, `fp16`/`bf16`, `torch.compile` trên CUDA.
 7. Thử TinyVAE/TAESD như ablation riêng vì có rủi ro đổi output.
@@ -79,7 +79,7 @@ Tối ưu tốc độ suy luận của SwiftEdit mà không train lại và khô
 | Ưu tiên | Tối ưu | Khả thi | Rủi ro chất lượng | Ghi chú |
 |---:|---|---:|---:|---|
 | 0 | Bỏ decode `noise_image` không dùng | Rất cao | Không | Đã implement; cần đo speedup |
-| 1 | Vectorized self-guided mask trên GPU | Rất cao | Không/rất thấp | Làm tiếp theo |
+| 1 | Vectorized self-guided mask trên GPU | Rất cao | Không/rất thấp | ✅ 2026-06-14: steady ~2.6× nhanh hơn (4.6 vs 12.2 ms); mask giống hệt baseline |
 | 2 | Profiler latency theo module | Cao | Không | Bắt buộc để chứng minh |
 | 3 | Cache latent/image/source embedding | Cao | Không nếu cache đúng | Rất hợp demo realtime |
 | 4 | `channels_last` + fp16/bf16 | Trung bình | Thấp | Thử trên Colab CUDA |

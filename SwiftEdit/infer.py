@@ -87,7 +87,8 @@ def edit_image(
         subed = (inverted_noise_1 - inverted_noise_2).abs_().mean(dim=[0, 1])
         max_v = (subed.mean() * clamp_rate).item()
         mask12 = subed.clamp(0, max_v) / max_v
-        mask12 = mask12.detach().cpu().apply_(lambda pix: to_binary(pix, mask_threshold)).to(device)
+        # Nhị phân hóa vectorized ngay trên device (thay .cpu().apply_() — vòng lặp Python từng pixel)
+        mask12 = (mask12 > mask_threshold).to(dtype=subed.dtype)
 
     # Edit images
     input_sb = ip_sb_model.alpha_t * latents + ip_sb_model.sigma_t * inverted_noise_1

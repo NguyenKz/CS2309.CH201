@@ -79,13 +79,33 @@ Tối ưu tốc độ suy luận của SwiftEdit mà không train lại và khô
 | Ưu tiên | Tối ưu | Khả thi | Rủi ro chất lượng | Ghi chú |
 |---:|---|---:|---:|---|
 | 0 | Bỏ decode `noise_image` không dùng | Rất cao | Không | Đã implement; cần đo speedup |
-| 1 | Vectorized self-guided mask trên GPU | Rất cao | Không/rất thấp | ✅ 2026-06-14: steady ~2.6× nhanh hơn (4.6 vs 12.2 ms); mask giống hệt baseline |
+| 1 | Vectorized self-guided mask trên GPU | Rất cao | Không/rất thấp | ✅ 2026-06-14: 12.2→4.6 ms (~2.6×, −7.6 ms/ảnh); mask giống hệt baseline; chỉ ~0.02% tổng pipeline (~72s) nên runtime ~không đổi |
 | 2 | Profiler latency theo module | Cao | Không | Bắt buộc để chứng minh |
 | 3 | Cache latent/image/source embedding | Cao | Không nếu cache đúng | Rất hợp demo realtime |
 | 4 | `channels_last` + fp16/bf16 | Trung bình | Thấp | Thử trên Colab CUDA |
 | 5 | `torch.compile` | Trung bình | Thấp | Có warmup/compile overhead |
 | 6 | TinyVAE/TAESD | Trung bình | Trung bình | Có thể nhanh hơn nhưng đổi màu/chi tiết |
 | 7 | TensorRT/Core ML/quantization | Thấp-trung bình | Thấp-trung bình | Hướng dài hơn |
+
+**Kết quả tối ưu đã đo (Mac M4 / MPS, steady-state):**
+
+| Tối ưu | Trước | Sau | Speedup stage | Tiết kiệm tuyệt đối | % tổng pipeline | Tác động end-to-end |
+|---|---:|---:|---:|---:|---:|---|
+| Bỏ decode `noise_image` | — | — | — | ~0.0001 s | ~0% | Không đáng kể (caller đã không dùng) |
+| Vectorized GPU mask | 12.2 ms | 4.6 ms | ~2.6× | ~7.6 ms/ảnh | ~0.02% | ~Không đổi (~72 s/ảnh); lợi ích tăng theo độ phân giải |
+
+**Phân bố thời gian (run 20 mẫu, để biết nên tối ưu tiếp ở đâu):**
+
+| Stage | % tổng |
+|---|---:|
+| gen_image_embeds (IP-Adapter) | ~23.5% |
+| gen_vae_decode | ~23.2% |
+| gen_unet (sinh ảnh) | ~21.7% |
+| unet_inverse | ~21.5% |
+| inv_text_encode | ~7.5% |
+| mask_estimate | ~0.02% |
+
+> Nhận định: các tối ưu mask/noise-decode đúng về kỹ thuật nhưng tác động end-to-end rất nhỏ. Muốn giảm runtime thật sự phải nhắm vào **UNet (2 lần) + IP image embeds + VAE decode** — ưu tiên cache embedding (bước 3), rồi fp16/channels_last/compile (bước 4–5).
 
 ### 3.2. Object removal / inpainting
 

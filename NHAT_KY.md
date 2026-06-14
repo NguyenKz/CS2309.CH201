@@ -9,7 +9,7 @@
 
 | Ngày | Giai đoạn | Công việc | Kết quả / Ghi chú | Môi trường |
 |---|---|---|---|---|
-| 2026-06-14 | 4d | Thay mask12.detach().cpu().apply_(to_binary) bằng (mask12 > threshold) vectorize | Kiểm thử 5 ảnh PIE-Bench subset: mask_estimate steady ~4.6ms vs ~12.2ms (speedup ~2.6x); mask giống hệt baseline; tác độ | Mac M4 (MPS); .venv |
+| 2026-06-14 | 4d | Vectorized self-guided mask trên GPU (bỏ .cpu().apply_) | mask_estimate 12.2ms→4.6ms (~2.6×, tiết kiệm ~7.6ms/ảnh); mask giống hệt baseline; chỉ ~0.02% tổng pipeline (~72s/ảnh) nên runtime end-to-end ~không đổi | Mac M4 (MPS); .venv |
 | 2026-06-14 | 3c | Đo timing từng công đoạn (StageTimer) + eval PIE-Bench subset 20 mẫu | 20 mẫu/Apple M4 MPS: TB 69.0s/ảnh (steady 73.6s); UNet x2 ~43%, IP embeds ~24%, VAE decode ~23%; CLIP-Whole 23.02, CLIP-Edited 21.46, PSNR nền 14.01 (9/20); lưu experimental_data/piebench_subset20_2026-06-14/ | Mac M4 (MPS); .venv; torch 2.12.0 |
 | 2026-06-05 | 4d | Đề xuất hướng ứng dụng xóa vật thể / inpainting | Cập nhật đề tài/README/Overview/QA: dùng SwiftEdit để xóa object bằng prompt + self/user mask; đánh giá khả thi trung bình-cao với object nhỏ/vừa; metric detector confidence drop, CLIP margin, PSNR/SSIM/LPIPS ngoài mask, realism/human rating; so LaMa nếu kịp. | Mac M4; tài liệu |
 | 2026-06-05 | 4c | Đề xuất hướng ứng dụng global style/weather edit | Cập nhật đề tài/README/Overview/QA: dùng SwiftEdit cho ngày↔đêm, mùa, mưa↔nắng; đánh giá khả thi trung bình; bỏ mask metric, dùng CLIP target, zero-shot CLIP label, DINO/CLIP image similarity, LPIPS/SSIM phụ, IQA/human rating, FID/KID nếu có target domain. | Mac M4; tài liệu |
@@ -39,7 +39,12 @@
 - Thay mask12.detach().cpu().apply_(to_binary) bằng (mask12 > threshold) vectorized trên MPS/CUDA trong infer.py
 
 **Kết quả:**
-- Kiểm thử 5 ảnh PIE-Bench subset: mask_estimate steady ~4.6ms vs ~12.2ms (speedup ~2.6x); mask giống hệt baseline; tác động tổng thời gian nhỏ (~0.02% pipeline) nhưng bỏ CPU sync
+- Kiểm thử 5 ảnh PIE-Bench subset (Mac M4/MPS, steady-state):
+  - Stage `mask_estimate`: **12.2 ms → 4.6 ms** (speedup **~2.6×**, tiết kiệm tuyệt đối **~7.6 ms/ảnh ≈ 0.008s**).
+  - Mask output **giống hệt** baseline (kiểm chứng bằng `torch.equal` ở nhiều threshold → 0 pixel khác).
+  - Stage này chỉ chiếm **~0.02%** tổng pipeline (mask 12.2 ms / total ~71.8 s/ảnh) → tối ưu mask **không** giảm runtime end-to-end rõ rệt (≈0.01%).
+  - Lợi ích thật: bỏ vòng lặp Python từng pixel + đồng bộ GPU→CPU→GPU; lợi ích tăng theo độ phân giải.
+- So với bottleneck thật cùng run 20 mẫu: gen_image_embeds ~23.5%, gen_vae_decode ~23.2%, gen_unet ~21.7%, unet_inverse ~21.5%.
 
 **Task README đã đánh [x]:**
 - *(không đánh task README)*

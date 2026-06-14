@@ -9,6 +9,7 @@ from torchvision.transforms.functional import to_tensor
 from torchvision.utils import save_image
 
 from models import *
+from timing import StageTimer
 
 #
 # Configure this path to where you have stored the local copy of the weights:
@@ -52,6 +53,7 @@ def edit_image(
             + edit_p: Edit Prompt that describes your desired changes.
     """
     device = inverse_model.device
+    timer = StageTimer(device, label=f"{src_p}->{edit_p}")
     mid_timestep = torch.ones((1,), dtype=torch.int64, device=device) * 500
     final_timestep = torch.ones((1,), dtype=torch.int64, device=device) * 999
 
@@ -61,27 +63,31 @@ def edit_image(
     processed_image = to_tensor(pil_img_cond).unsqueeze(0).to(device) * 2 - 1
 
     # Predict inverted noise
-    latents = inverse_model.vae.encode(
-        processed_image.to(inverse_model.weight_dtype)
-    ).latent_dist.sample()
-    latents = latents * inverse_model.vae.config.scaling_factor
-    dub_latents = torch.cat([latents] * 2, dim=0)
+    with timer.stage("vae_encode"):
+        latents = inverse_model.vae.encode(
+            processed_image.to(inverse_model.weight_dtype)
+        ).latent_dist.sample()
+        latents = latents * inverse_model.vae.config.scaling_factor
+        dub_latents = torch.cat([latents] * 2, dim=0)
 
-    input_id = tokenize_captions(inverse_model.tokenizer, [src_p, edit_p]).to(device)
-    encoder_hidden_state = inverse_model.text_encoder(input_id)[0].to(
-        dtype=inverse_model.weight_dtype
-    )
+    with timer.stage("inv_text_encode"):
+        input_id = tokenize_captions(inverse_model.tokenizer, [src_p, edit_p]).to(device)
+        encoder_hidden_state = inverse_model.text_encoder(input_id)[0].to(
+            dtype=inverse_model.weight_dtype
+        )
 
-    predict_inverted_code = inverse_model.unet_inverse(
-        dub_latents, mid_timestep, encoder_hidden_state
-    ).sample.to(device, dtype=inverse_model.weight_dtype)
+    with timer.stage("unet_inverse"):
+        predict_inverted_code = inverse_model.unet_inverse(
+            dub_latents, mid_timestep, encoder_hidden_state
+        ).sample.to(device, dtype=inverse_model.weight_dtype)
 
     # Estimate editing mask
-    inverted_noise_1, inverted_noise_2 = predict_inverted_code.chunk(2)
-    subed = (inverted_noise_1 - inverted_noise_2).abs_().mean(dim=[0, 1])
-    max_v = (subed.mean() * clamp_rate).item()
-    mask12 = subed.clamp(0, max_v) / max_v
-    mask12 = mask12.detach().cpu().apply_(lambda pix: to_binary(pix, mask_threshold)).to(device)
+    with timer.stage("mask_estimate"):
+        inverted_noise_1, inverted_noise_2 = predict_inverted_code.chunk(2)
+        subed = (inverted_noise_1 - inverted_noise_2).abs_().mean(dim=[0, 1])
+        max_v = (subed.mean() * clamp_rate).item()
+        mask12 = subed.clamp(0, max_v) / max_v
+        mask12 = mask12.detach().cpu().apply_(lambda pix: to_binary(pix, mask_threshold)).to(device)
 
     # Edit images
     input_sb = ip_sb_model.alpha_t * latents + ip_sb_model.sigma_t * inverted_noise_1
@@ -94,7 +100,10 @@ def edit_image(
         prompts=[src_p, edit_p],
         noise=input_sb,
         return_noise_image=False,
+        timer=timer,
     )
+
+    timer.dump(extra={"img_path": img_path})
 
     return res_gen_img
 

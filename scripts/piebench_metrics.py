@@ -88,6 +88,8 @@ class PieBenchMetrics:
         size = (512, 512)
         src_image = src_image.convert("RGB").resize(size)
         tgt_image = tgt_image.convert("RGB").resize(size)
+        if edit_mask.ndim == 3:
+            edit_mask = edit_mask[:, :, 0]
         if edit_mask.shape[:2] != size[::-1]:
             from PIL import Image as PILImage
 

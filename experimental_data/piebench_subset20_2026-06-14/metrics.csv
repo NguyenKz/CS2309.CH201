@@ -1,0 +1,21 @@
+sample_id,editing_type_id,src_p,edit_p,device,runtime_s,unet_inverse_ms,gen_unet_ms,gen_vae_decode_ms,psnr_unedit,mse_unedit,clip_whole,clip_edited,image_path
+000000000000,0,a slanted mountain bicycle on the road in front of a building,a slanted rusty mountain motorcycle in front of a fence,mps,15.792,7138.85,1311.09,4077.4,,,20.0611,20.0611,0_random_140/000000000000.jpg
+000000000001,0,a round cake with orange frosting on a wooden plate,a square cake with strawberry frosting on a plastic plate,mps,39.079,5754.43,12951.12,10248.17,,,17.263,17.263,0_random_140/000000000001.jpg
+111000000000,1,fishes and kelp in the ocean,sharks and flowers in the ocean,mps,67.26,14004.1,14889.65,19340.5,,,18.9889,18.9889,1_change_object_80/111000000000.jpg
+111000000001,1,a cat wearing a pink hat,a tiger wearing a pink scarf,mps,75.818,22973.05,14320.61,12902.14,,,20.1395,20.1395,1_change_object_80/111000000001.jpg
+211000000000,2,a dog wearing space suit,a dog wearing space suit and scarf with flowers in mouth,mps,75.093,15941.74,16485.41,17010.75,,,27.9454,27.9454,2_add_object_80/211000000000.jpg
+211000000001,2,a cat,a cat with a gold chain and a star on its head,mps,82.918,16457.42,19875.71,20386.72,8.5842,0.1385,22.5263,14.6263,2_add_object_80/211000000001.jpg
+311000000000,3,a wathet bird sitting on a branch of yellow flowers,a wathet bird sitting on a branch,mps,79.411,17126.83,17442.4,14742.31,17.5635,0.0175,18.4604,14.6052,3_delete_object_80/311000000000.jpg
+311000000001,3,a cat wearing headphones on a gray background,a cat on a gray background,mps,81.604,15342.39,16854.85,20300.63,14.3881,0.0364,24.1556,12.654,3_delete_object_80/311000000001.jpg
+411000000000,4,a cartoon painting of a fox with big eyes in a car,a cartoon painting of a fox with small eyes in a big car,mps,74.75,13961.68,14147.48,17431.03,,,26.0344,26.0344,4_change_attribute_content_40/411000000000.jpg
+411000000001,4,a colorful parrot with its wings spread out,a colorful parrot with its wings fold in,mps,76.379,16174.07,15358.43,15123.74,12.32,0.0586,24.9301,26.7546,4_change_attribute_content_40/411000000001.jpg
+511000000000,5,a cartoon dog laying down on the ground,a cartoon dog with tail down jumping on the ground,mps,67.05,14485.8,16817.43,13220.66,19.4474,0.0114,22.6242,23.725,5_change_attribute_pose_40/511000000000.jpg
+511000000001,5,a standing pixel robot dog,a sitting and tilting its head pixel robot dog wagging its tail,mps,75.636,18244.55,15188.77,18402.14,,,31.615,31.615,5_change_attribute_pose_40/511000000001.jpg
+611000000000,6,a black raven with red eyes sits on a tree stump in the rain,a white raven with green eyes sits on a tree stump in the rain,mps,75.774,15052.3,15485.34,20561.71,,,22.4146,22.4146,6_change_attribute_color_40/611000000000.jpg
+611000000001,6,otter in the water with pink hearts,white otter in the water with green hearts,mps,74.415,14076.31,15500.22,15948.8,,,32.6019,32.6019,6_change_attribute_color_40/611000000001.jpg
+711000000000,7,a drawing of a brown bear sitting down,a drawing of a knitted brown bear toy sitting down,mps,79.149,16904.51,16363.19,20679.27,9.8688,0.1031,21.8951,17.1711,7_change_attribute_material_40/711000000000.jpg
+711000000001,7,a colorful bird sitting on a branch with a green background,a colorful wooden bird toy sitting on a branch with a green background,mps,68.497,15283.26,15531.18,12872.79,12.7194,0.0535,17.3254,19.8133,7_change_attribute_material_40/711000000001.jpg
+811000000000,8,a little carton sheep in a white background,a little carton sheep in a forest background,mps,68.349,14282.89,14140.93,18037.89,20.171,0.0096,16.4749,11.7304,8_change_background_80/811000000000.jpg
+811000000001,8,watercolor painting of a deer with flowers on its head standing in white background,watercolor painting of a deer with flowers on its head standing in dark background,mps,60.364,15146.77,11882.98,12351.53,11.0592,0.0784,25.6367,21.7651,8_change_background_80/811000000001.jpg
+911000000000,9,a cat and a bunny,a realism style cat and a expressionism style bunny,mps,65.64,14160.34,16296.03,14697.42,,,28.1826,28.1826,9_change_style_80/911000000000.jpg
+911000000001,9,a bird standing on tree branch,a realism style painting of bird standing on tree branch,mps,77.563,14470.99,18324.29,21463.72,,,21.1577,21.1577,9_change_style_80/911000000001.jpg

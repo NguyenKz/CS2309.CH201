@@ -1,6 +1,8 @@
 # Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
 # SPDX-License-Identifier: BSD-3-Clause-Clear
 
+from contextlib import contextmanager
+
 import torch
 from diffusers import AutoencoderKL, DDPMScheduler, UNet2DConditionModel
 from PIL import Image
@@ -15,6 +17,14 @@ from src.mask_ip_controller import *
 from src.attention_processor import AttnProcessor2_0 as AttnProcessor
 from src.attention_processor import IPAttnProcessor2_0 as IPAttnProcessor
 from src.mask_attention_processor import IPAttnProcessor2_0WithIPMaskController
+
+class _NullTimer:
+    """Timer giả: dùng khi gen_img được gọi mà không truyền StageTimer."""
+
+    @contextmanager
+    def stage(self, name):
+        yield
+
 
 def tokenize_captions(tokenizer, captions):
     inputs = tokenizer(
@@ -260,7 +270,9 @@ class IPSBV2Model(torch.nn.Module):
         noise=None,
         scale=1.0,
         return_noise_image=False,
+        timer=None,
     ):
+        timer = timer or _NullTimer()
 
         self.set_scale(scale)
         if prompts is None:
@@ -268,43 +280,47 @@ class IPSBV2Model(torch.nn.Module):
         num_samples = len(prompts)
 
         # Prepare prompt + image embeds
-        image_prompt_embeds = self.get_image_embeds(pil_image=pil_image)
-        bs_embed, seq_len, _ = image_prompt_embeds.shape
-        image_prompt_embeds = image_prompt_embeds.repeat(1, num_samples, 1)
-        image_prompt_embeds = image_prompt_embeds.view(bs_embed * num_samples, seq_len, -1)
+        with timer.stage("gen_image_embeds"):
+            image_prompt_embeds = self.get_image_embeds(pil_image=pil_image)
+            bs_embed, seq_len, _ = image_prompt_embeds.shape
+            image_prompt_embeds = image_prompt_embeds.repeat(1, num_samples, 1)
+            image_prompt_embeds = image_prompt_embeds.view(bs_embed * num_samples, seq_len, -1)
 
-        input_id = tokenize_captions(self.aux_model.tokenizer, prompts).to(self.device)
-        prompt_embeds_ = self.aux_model.text_encoder(input_id)[0]
-        prompt_embeds = torch.cat([prompt_embeds_, image_prompt_embeds], dim=1)
+        with timer.stage("gen_text_encode"):
+            input_id = tokenize_captions(self.aux_model.tokenizer, prompts).to(self.device)
+            prompt_embeds_ = self.aux_model.text_encoder(input_id)[0]
+            prompt_embeds = torch.cat([prompt_embeds_, image_prompt_embeds], dim=1)
 
         # Feed inverted noise to ip-unet generation
-        noise = torch.cat([noise] * num_samples, dim=0)
-        model_pred = self.unet(noise, self.timestep, prompt_embeds).sample
+        with timer.stage("gen_unet"):
+            noise = torch.cat([noise] * num_samples, dim=0)
+            model_pred = self.unet(noise, self.timestep, prompt_embeds).sample
 
-        if model_pred.shape[1] == noise.shape[1] * 2:
-            model_pred, _ = torch.split(model_pred, noise.shape[1], dim=1)
+            if model_pred.shape[1] == noise.shape[1] * 2:
+                model_pred, _ = torch.split(model_pred, noise.shape[1], dim=1)
 
-        pred_original_sample = (noise - self.sigma_t * model_pred) / self.alpha_t
+            pred_original_sample = (noise - self.sigma_t * model_pred) / self.alpha_t
 
-        if self.aux_model.noise_scheduler.config.thresholding:
-            pred_original_sample = self.aux_model.noise_scheduler._threshold_sample(
-                pred_original_sample
-            )
-        elif self.aux_model.noise_scheduler.config.clip_sample:
-            clip_sample_range = self.aux_model.noise_scheduler.config.clip_sample_range
-            pred_original_sample = pred_original_sample.clamp(-clip_sample_range, clip_sample_range)
+            if self.aux_model.noise_scheduler.config.thresholding:
+                pred_original_sample = self.aux_model.noise_scheduler._threshold_sample(
+                    pred_original_sample
+                )
+            elif self.aux_model.noise_scheduler.config.clip_sample:
+                clip_sample_range = self.aux_model.noise_scheduler.config.clip_sample_range
+                pred_original_sample = pred_original_sample.clamp(-clip_sample_range, clip_sample_range)
 
-        pred_original_sample = pred_original_sample / self.aux_model.vae.config.scaling_factor
-        image = (
-            self.aux_model.vae.decode(pred_original_sample.to(dtype=torch.float32)).sample.float() + 1
-        ) / 2
+        with timer.stage("gen_vae_decode"):
+            pred_original_sample = pred_original_sample / self.aux_model.vae.config.scaling_factor
+            image = (
+                self.aux_model.vae.decode(pred_original_sample.to(dtype=torch.float32)).sample.float() + 1
+            ) / 2
 
         noise_image = None
         if return_noise_image:
-            noise_image = noise / self.aux_model.vae.config.scaling_factor
-            noise_image = (
-                self.aux_model.vae.decode(noise_image.to(dtype=self.aux_model.vae.dtype)).sample.float()
-                + 1
-            ) / 2
-
+            with timer.stage("gen_vae_decode_noise"):
+                noise_image = noise / self.aux_model.vae.config.scaling_factor
+                noise_image = (
+                    self.aux_model.vae.decode(noise_image.to(dtype=self.aux_model.vae.dtype)).sample.float()
+                    + 1
+                ) / 2
         return image, noise_image

@@ -12,6 +12,16 @@
 
 Tài liệu: [`SwiftEdit_Overview.md`](./SwiftEdit_Overview.md) · [`SwiftEdit_DeTai_CS2309.md`](./SwiftEdit_DeTai_CS2309.md) · [`QA.md`](./QA.md) · [`NHAT_KY.md`](./NHAT_KY.md)
 
+### Mở notebook trên Google Colab
+
+| Notebook | Mở |
+|----------|-----|
+| Benchmark tốc độ & chất lượng (fp32 vs fp16+cache) | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/NguyenKz/CS2309.CH201/blob/main/notebooks/CS2309_SwiftEdit_quality_speed_bench.ipynb) |
+| Thực nghiệm giai đoạn 3 (ablation + PIE-Bench) | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/NguyenKz/CS2309.CH201/blob/main/notebooks/CS2309_SwiftEdit_phase3.ipynb) |
+| Test nhanh pipeline | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/NguyenKz/CS2309.CH201/blob/main/notebooks/CS2309_SwiftEdit_test.ipynb) |
+
+> Mở badge → Colab → Runtime **T4 GPU** → chạy tuần tự. Repo private cần thêm `GITHUB_TOKEN` trong Colab Secrets (xem cell setup).
+
 ---
 
 ## Tổng quan

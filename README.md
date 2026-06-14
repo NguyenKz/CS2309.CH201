@@ -281,6 +281,8 @@ Chi tiết: [Mục 4.2 đề tài](./SwiftEdit_DeTai_CS2309.md#42-google-colab--
 > **Cache embedding 2026-06-14:** [`experimental_data/cache_benchmark_2026-06-14/`](./experimental_data/cache_benchmark_2026-06-14/) — benchmark cache latent + CLIP image embed + source prompt embed: tiết kiệm ~9.93s/edit khi cùng ảnh + source prompt (`bench_cache.py`).
 >
 > **fp16 / channels_last 2026-06-14:** [`experimental_data/fp16_benchmark_2026-06-14/`](./experimental_data/fp16_benchmark_2026-06-14/) — fp16 tăng tốc ~3.3×–7× trên Mac M4/MPS, PSNR ~45dB vs fp32, không NaN/đen (`bench_dtype.py`).
+>
+> **Demo Gradio 2026-06-14:** [`experimental_data/gradio_demo_2026-06-14/`](./experimental_data/gradio_demo_2026-06-14/) — UI web chỉnh sửa ảnh bằng prompt, tích hợp fp16 + channels_last + cache (`scripts/app_gradio.py`).
 
 ---
 

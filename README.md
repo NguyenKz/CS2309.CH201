@@ -283,6 +283,8 @@ Chi tiết: [Mục 4.2 đề tài](./SwiftEdit_DeTai_CS2309.md#42-google-colab--
 > **fp16 / channels_last 2026-06-14:** [`experimental_data/fp16_benchmark_2026-06-14/`](./experimental_data/fp16_benchmark_2026-06-14/) — fp16 tăng tốc ~3.3×–7× trên Mac M4/MPS, PSNR ~45dB vs fp32, không NaN/đen (`bench_dtype.py`).
 >
 > **Demo Gradio 2026-06-14:** [`experimental_data/gradio_demo_2026-06-14/`](./experimental_data/gradio_demo_2026-06-14/) — UI web chỉnh sửa ảnh bằng prompt, tích hợp fp16 + channels_last + cache (`scripts/app_gradio.py`).
+>
+> **Xóa vật thể (khoanh vùng) 2026-06-14:** [`experimental_data/object_removal_2026-06-14/`](./experimental_data/object_removal_2026-06-14/) — vẽ mask để xóa vật thể (`user_mask` + tab "Xóa vật thể"); xóa OK vật nhỏ/vừa, vật rất lớn còn sót. **Kế hoạch kiểm tra tiếp:** [`KE_HOACH_KIEM_TRA.md`](./experimental_data/object_removal_2026-06-14/KE_HOACH_KIEM_TRA.md).
 
 ---
 
@@ -316,13 +318,17 @@ Chi tiết: [Mục 4.2 đề tài](./SwiftEdit_DeTai_CS2309.md#42-google-colab--
 
 ### 4d. Object removal / inpainting (tùy chọn, khuyến nghị)
 
+- [x] Cho phép người dùng **khoanh vùng** vật thể cần xóa: `user_mask` trong `edit_image` ghi đè self-guided mask; UI tab "Xóa vật thể" (`scripts/app_gradio.py`)
+- [x] Viết prompt `"a scene with [object]"` → `"the same scene without [object]"`
+- [x] Chạy SwiftEdit-UserMask: xóa OK vật nhỏ/vừa (headphones), kiểm chứng mask khoanh đúng vùng (test tường gạch nửa trái)
 - [ ] Chọn 20–40 ảnh có object cần xóa: người, xe, chai/lon, biển báo, rác, vật trên bàn
-- [ ] Viết prompt `"a scene with [object]"` → `"the same scene without [object]"`
-- [ ] Chạy SwiftEdit-SG và visualize self-guided mask
-- [ ] Nếu có object mask: chạy SwiftEdit-UserMask/GTMask và SwiftEdit-SG+Dilate
+- [ ] Nếu có object mask GT: chạy SwiftEdit-GTMask và SwiftEdit-SG+Dilate
 - [ ] Nếu đủ thời gian: chạy LaMa baseline với cùng mask
 - [ ] Đánh giá detector confidence drop / CLIP margin, PSNR/SSIM/LPIPS ngoài mask, realism human rating/IQA và runtime
-- [ ] Ghi failure cases: ghost object, viền artifact, nền méo, xóa nhầm
+- [x] Ghi failure cases: vật rất lớn (xe đạp ~39% khung) còn sót — SwiftEdit không phải inpainting chuyên dụng
+
+> **Dữ liệu thực nghiệm:** `experimental_data/object_removal_2026-06-14/` (report + ảnh source/mask/result cho ca thành công và ca giới hạn).
+> **Chạy:** tab "Xóa vật thể (khoanh vùng)" trong `python scripts/app_gradio.py`, hoặc self-test `python scripts/app_gradio.py --selftest-removal <ảnh>`.
 
 ### 4e. SwiftEdit-RT inference acceleration (hướng đào sâu)
 
@@ -379,7 +385,7 @@ Chi tiết: [Mục 4.2 đề tài](./SwiftEdit_DeTai_CS2309.md#42-google-colab--
 - [ ] Có ablation ≥1 hyperparameter (grid ảnh)
 - [ ] Có phân tích SwiftEdit-RT: latency breakdown + ít nhất 2 tối ưu inference
 - [ ] Có phân tích global style/weather edit: metric không dùng mask + failure cases
-- [ ] Có phân tích object removal: removal success + background preservation + failure cases
+- [x] Có phân tích object removal: removal success (vật nhỏ/vừa) + failure case (vật lớn) — `experimental_data/object_removal_2026-06-14/`
 - [ ] Có so sánh baseline (Colab) **hoặc** phân tích failure cases chi tiết
 - [ ] Bảng runtime: Mac / Colab / Paper
 - [ ] Slide trình bày (pipeline + kết quả + demo)

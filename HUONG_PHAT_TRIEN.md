@@ -9,7 +9,7 @@ File này gom các hướng phát triển đã bàn cho đề tài SwiftEdit. M�
 | Ưu tiên | Hướng | Mô tả ngắn | Benchmark nếu có | Độ khả thi | Loại |
 |---:|---|---|---|---:|---|
 | 1 | **SwiftEdit-RT: realtime inference acceleration** | Giảm latency pipeline hiện tại, không thêm model nặng, không train lại | PIE-Bench subset, custom latency benchmark | **Cao** | Nghiên cứu + engineering |
-| 2 | **Object removal / inpainting** | Xóa vật thể bằng prompt + self/user mask | Custom 20-40 ảnh, COCO mask, PIE-Bench remove/delete nếu có, LaMa baseline | **Trung bình-cao** | Ứng dụng + nghiên cứu |
+| 2 | **Object removal / inpainting** | Xóa vật thể bằng prompt + self/user mask | Custom 20-40 ảnh, COCO mask, PIE-Bench remove/delete nếu có, LaMa baseline | **Trung bình-cao** | ✅ 2026-06-14: `user_mask` trong `edit_image` + tab "Xóa vật thể" (khoanh vùng). Xóa OK vật nhỏ/vừa (headphones), vật rất lớn còn sót |
 | 3 | **Global scene/style/weather editing** | Đổi ngày/đêm, mùa, mưa/nắng, tone toàn ảnh | Custom 20-40 ảnh; target-domain set nếu có | **Trung bình** | Ứng dụng + phân tích giới hạn |
 | 4 | **Self-guided mask analysis** | Đo self-guided mask có định vị đúng vùng edit không | PIE-Bench có GT mask | **Cao** | Nghiên cứu/đánh giá |
 | 5 | **SAM 3 / GroundingDINO+SAM mask analysis** | Dùng segmentation model sinh mask offline để so với self-guided mask | PIE-Bench GT mask, custom object masks | **Trung bình** | Nghiên cứu optional |
@@ -150,6 +150,13 @@ Dùng SwiftEdit để xóa vật thể: prompt source có object, prompt edit kh
 8. Làm bảng failure cases: ghost object, nền méo, xóa nhầm, biên mask xấu.
 
 **Độ khả thi:** **Trung bình-cao**. Tốt với object nhỏ/vừa và background đơn giản. Thấp hơn với object lớn vì SwiftEdit không phải inpainting model chuyên dụng.
+
+**Trạng thái implement (2026-06-14):** ✅ `user_mask` + tab Gradio "Xóa vật thể (khoanh vùng)". Mẫu thành công (headphones) + giới hạn (xe đạp, chữ banner) trong `experimental_data/object_removal_2026-06-14/`.
+
+**Kế hoạch kiểm tra tiếp (chờ user):** [`experimental_data/object_removal_2026-06-14/KE_HOACH_KIEM_TRA.md`](./experimental_data/object_removal_2026-06-14/KE_HOACH_KIEM_TRA.md)
+
+- **Hướng A:** Test thủ công trên ảnh phù hợp (vật rời nhỏ/vừa), lưu thêm ví dụ thành công.
+- **Hướng B:** Tích hợp LaMa baseline khi cần xóa chữ/vật sạch — so sánh RQ14.
 
 **Loại:** **Ứng dụng + nghiên cứu**. Rất hợp làm hướng ứng dụng phụ để báo cáo.
 

@@ -9,6 +9,7 @@
 
 | Ngày | Giai đoạn | Công việc | Kết quả / Ghi chú | Môi trường |
 |---|---|---|---|---|
+| 2026-06-14 | 4d | Xóa vật thể bằng khoanh vùng (`user_mask` + tab "Xóa vật thể") | `user_mask` ghi đè self-guided mask trong `edit_image`; UI `gr.ImageEditor` vẽ cọ; xóa OK headphones (vật nhỏ/vừa, ~6s), kiểm chứng mask khoanh đúng vùng; vật rất lớn (xe đạp ~39% khung) còn sót — SwiftEdit không phải inpainting chuyên dụng; lưu experimental_data/object_removal_2026-06-14/ | Mac M4 (MPS); .venv |
 | 2026-06-14 | 4f | Demo UI Gradio (`app_gradio.py`) tích hợp fp16 + channels_last + EditCache | Self-test OK (ảnh edit đúng, ~7.8s edit đầu gồm compile); hiện runtime + dtype + trạng thái cache; chạy local 127.0.0.1:7860 | Mac M4 (MPS); .venv; gradio 5.50 |
 | 2026-06-14 | 4a | fp16 + channels_last (VAE giữ fp32) cho SwiftEdit | fp16 nhanh ~3.3× (máy nguội) → ~7× (chạy liên tục, fp32 throttle); PSNR ~45dB vs fp32, không NaN/đen; tác động end-to-end lớn nhất | Mac M4 (MPS); .venv |
 | 2026-06-14 | 4a | Cache latent + CLIP image embed + source prompt embed (EditCache + embed_cache) | Tiết kiệm ~9.93s/edit ở stage phụ thuộc ảnh/source (gen_image_embeds −11.5s, vae_encode −0.95s); embed deterministic (allclose); callers cũ không đổi | Mac M4 (MPS); .venv |
@@ -33,6 +34,33 @@
 ## Chi tiết theo phiên làm việc
 
 *(Các entry chi tiết xuất hiện bên dưới, mới nhất ở trên cùng.)*
+
+### 2026-06-14 — [4d] Xóa vật thể bằng khoanh vùng (user mask)
+
+**Môi trường:** Mac M4 (MPS); .venv
+
+**Công việc đã làm:**
+- Thêm `prepare_user_mask()` + tham số `user_mask` cho `edit_image` (SwiftEdit/infer.py): mask người dùng vẽ được resize về latent 64×64 và **ghi đè self-guided mask** trong stage `mask_estimate`.
+- Thêm tab "Xóa vật thể (khoanh vùng)" vào `scripts/app_gradio.py`: `gr.ImageEditor` cọ vẽ, `extract_editor_mask()` lấy alpha layer thành mask, `run_removal()` chạy edit với `scale_edit≈0` + `scale_non_edit≈1.2`; thêm chế độ `--selftest-removal`.
+
+**Kết quả:**
+- Xóa **headphones** khỏi mèo (vật nhỏ/vừa, mask ~18%): earcup 2 bên + vành trên biến mất, ~6s/lần.
+- Kiểm chứng mask khoanh đúng vùng: tô nửa trái + "a brick wall" → chỉ nửa trái đổi, nửa phải giữ nguyên.
+- Ca giới hạn: xóa **xe đạp** (vật rất lớn ~39% khung) còn sót — SwiftEdit là editor ngữ nghĩa one-step, không phải inpainting chuyên dụng; thiếu ngữ cảnh nền để tái sinh.
+- Lưu `experimental_data/object_removal_2026-06-14/` (report + ảnh source/mask/result hai ca).
+
+**Task README đã đánh [x]:**
+- 4d: cho khoanh vùng (user_mask) + tab UI; chạy SwiftEdit-UserMask; ghi failure case vật lớn.
+
+**Vấn đề / cách xử lý:**
+- `scale_edit=0` để bỏ giữ vật thể gốc ở vùng tô; mask resize bilinear rồi nhị phân theo `mask_threshold`.
+- `edit_image` cần đường dẫn file → lưu ảnh nền từ editor ra temp PNG trước khi gọi.
+
+**Bước tiếp theo:**
+- Thêm mask dilation chống ghosting; nếu kịp so LaMa baseline cho vật lớn.
+- **Kế hoạch kiểm tra (chờ user):** [`experimental_data/object_removal_2026-06-14/KE_HOACH_KIEM_TRA.md`](./experimental_data/object_removal_2026-06-14/KE_HOACH_KIEM_TRA.md) — hướng A (test ảnh phù hợp) / hướng B (LaMa).
+
+---
 
 ### 2026-06-14 — [4f] Demo UI Gradio cho SwiftEdit-RT
 

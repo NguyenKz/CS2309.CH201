@@ -3,13 +3,30 @@
 
 import os, time
 
+import numpy as np
 import torch
+import torch.nn.functional as F
 from PIL import Image
 from torchvision.transforms.functional import to_tensor
 from torchvision.utils import save_image
 
 from models import *
 from timing import StageTimer
+
+
+def prepare_user_mask(user_mask, out_hw, device, threshold=0.5):
+    """Chuẩn bị mask người dùng vẽ thành tensor nhị phân [H,W] ở độ phân giải latent.
+
+    user_mask: ndarray/tensor 2D (H,W) hoặc 3D (H,W,C) giá trị {0..255} hoặc [0,1].
+    Vùng được vẽ (giá trị > threshold) = 1 = vùng sẽ chỉnh sửa/xóa.
+    """
+    m = torch.as_tensor(np.asarray(user_mask), device=device, dtype=torch.float32)
+    if m.dim() == 3:
+        m = m[..., -1] if m.shape[-1] in (1, 2, 4) else m.mean(dim=-1)  # alpha nếu RGBA
+    if m.max() > 1.0:
+        m = m / 255.0
+    m = F.interpolate(m[None, None], size=out_hw, mode="bilinear", align_corners=False)[0, 0]
+    return (m > threshold).to(torch.float32)
 
 #
 # Configure this path to where you have stored the local copy of the weights:
@@ -74,6 +91,7 @@ def edit_image(
     clamp_rate=3.0,
     mask_threshold=0.5,
     cache=None,
+    user_mask=None,
 ):
     """
         Save keysteps to file.
@@ -81,6 +99,8 @@ def edit_image(
             + src_p: Source Prompt that describes source image (could leave it empty).
             + edit_p: Edit Prompt that describes your desired changes.
             + cache: EditCache tùy chọn — tái dùng latent/embedding khi cùng ảnh+source prompt.
+            + user_mask: mask người dùng vẽ (2D/3D). Nếu có, ghi đè self-guided mask —
+              dùng cho xóa/chỉnh vật thể theo vùng khoanh tay.
     """
     device = inverse_model.device
     timer = StageTimer(device, label=f"{src_p}->{edit_p}")
@@ -139,6 +159,11 @@ def edit_image(
         mask12 = subed.clamp(0, max_v) / max_v
         # Nhị phân hóa vectorized ngay trên device (thay .cpu().apply_() — vòng lặp Python từng pixel)
         mask12 = (mask12 > mask_threshold).to(dtype=subed.dtype)
+        # Ghi đè bằng mask người dùng khoanh (xóa/chỉnh vật thể theo vùng) nếu có.
+        if user_mask is not None:
+            mask12 = prepare_user_mask(
+                user_mask, mask12.shape, device, mask_threshold
+            ).to(dtype=subed.dtype)
 
     # Edit images
     input_sb = ip_sb_model.alpha_t * latents + ip_sb_model.sigma_t * inverted_noise_1

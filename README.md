@@ -179,17 +179,19 @@ Chi tiết: [Mục 4.2 đề tài](./SwiftEdit_DeTai_CS2309.md#42-google-colab--
 ## Checklist tổng thể
 
 > Đánh dấu `[x]` khi hoàn thành. Cập nhật file này trong quá trình làm đề tài.
-> Cập nhật tiến độ lần cuối: 2026-06-05 — hướng mở rộng đổi sang SwiftEdit-RT
+> Cập nhật tiến độ lần cuối: 2026-06-14 — 22/78 task bắt buộc
 
 ### Trạng thái nhanh
 
 | Giai đoạn | Tiến độ |
 |---|---|
-| 1. Lý thuyết | ⬜ Chưa bắt đầu |
+| 1. Lý thuyết | 🔄 Đang làm (1/6) |
 | 2. Setup Mac + Colab | 🔄 Đang làm (11/17) |
-| 3. Thực nghiệm cơ bản | ⬜ Chưa bắt đầu |
-| 4. So sánh & mở rộng | 🔄 Đang làm — đổi hướng sang SwiftEdit-RT |
+| 3. Thực nghiệm cơ bản | 🔄 Đang làm (6/19) |
+| 4. So sánh & mở rộng | 🔄 Đang làm (4/17) |
 | 5. Báo cáo & nộp | ⬜ Chưa bắt đầu |
+
+
 
 
 
@@ -206,7 +208,7 @@ Chi tiết: [Mục 4.2 đề tài](./SwiftEdit_DeTai_CS2309.md#42-google-colab--
 
 - [ ] Đọc paper SwiftEdit (Abstract, Sec. 3–5)
 - [ ] Tìm hiểu SwiftBrushv2, DDIM inversion, IP-Adapter
-- [ ] Tìm hiểu PieBench benchmark
+- [x] Tìm hiểu PieBench benchmark
 - [ ] Vẽ/tóm tắt pipeline inversion → mask → ARaM
 - [ ] So sánh SwiftEdit vs P2P, NT-Inv, TurboEdit, ICD (bảng related work)
 - [ ] Viết phần Overview + Related Work trong báo cáo
@@ -262,13 +264,15 @@ Chi tiết: [Mục 4.2 đề tài](./SwiftEdit_DeTai_CS2309.md#42-google-colab--
 ### 3c. Đánh giá PieBench — Colab (+ Mac xác nhận)
 
 - [ ] Colab: chạy **50–100 mẫu** PieBench
-- [ ] Tính PSNR, MSE (background)
-- [ ] Tính CLIP-Whole, CLIP-Edited với `edit_prompt`
-- [ ] Tính runtime trung bình / ảnh
-- [ ] Lưu `results/piebench/metrics.csv`
-- [ ] Lưu ảnh edited → `results/piebench/edited_images/`
-- [ ] Mac: chạy **10–15 mẫu** trùng subset — xác nhận metrics gần khớp Colab
+- [x] Tính PSNR, MSE (background)
+- [x] Tính CLIP-Whole, CLIP-Edited với `edit_prompt`
+- [x] Tính runtime trung bình / ảnh
+- [x] Lưu `results/piebench/metrics.csv`
+- [x] Lưu ảnh edited → `experimental_data/piebench_subset20_2026-06-14/edited_images/`
+- [x] Mac: chạy **20 mẫu** subset (2/loại × 10 loại) — TB 69.0s/ảnh; CLIP-Whole 23.02
 - [ ] So sánh với Table 1 paper (reference A100)
+
+> **Dữ liệu thực nghiệm 2026-06-14:** [`experimental_data/piebench_subset20_2026-06-14/`](./experimental_data/piebench_subset20_2026-06-14/) — 20 ảnh kết quả, `metrics.csv` (runtime + timing + chất lượng), báo cáo timing từng công đoạn (`timing_report.md`).
 
 ---
 
@@ -276,8 +280,8 @@ Chi tiết: [Mục 4.2 đề tài](./SwiftEdit_DeTai_CS2309.md#42-google-colab--
 
 ### 4a. So sánh baseline — Colab
 
-- [ ] Chọn 20 mẫu chung (PieBench)
-- [ ] Chạy SwiftEdit trên 20 mẫu
+- [x] Chọn 20 mẫu chung (PieBench)
+- [x] Chạy SwiftEdit trên 20 mẫu
 - [ ] Chạy TurboEdit (hoặc 1 multi-step method) trên 20 mẫu
 - [ ] Lập bảng metrics + runtime
 - [ ] Mac: side-by-side 5 mẫu để minh họa báo cáo

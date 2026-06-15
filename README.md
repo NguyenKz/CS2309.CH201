@@ -296,7 +296,7 @@ Chi tiết: [Mục 4.2 đề tài](./SwiftEdit_DeTai_CS2309.md#42-google-colab--
 >
 > **Xóa vật thể (khoanh vùng) 2026-06-14:** [`experimental_data/object_removal_2026-06-14/`](./experimental_data/object_removal_2026-06-14/) — vẽ mask để xóa vật thể (`user_mask` + tab "Xóa vật thể"); xóa OK vật nhỏ/vừa, vật rất lớn còn sót. **Kế hoạch kiểm tra tiếp:** [`KE_HOACH_KIEM_TRA.md`](./experimental_data/object_removal_2026-06-14/KE_HOACH_KIEM_TRA.md).
 >
-> **Tốc độ & chất lượng quy mô lớn 2026-06-14 (Colab T4):** [`experimental_data/quality_speed_bench_2026-06-14/`](./experimental_data/quality_speed_bench_2026-06-14/) — **200 ảnh × 3 prompt = 600 edit/config** so fp32 (ground truth) vs fp16+cache: nhanh **1.70×–1.82×**, **giảm 42.1% VRAM** (14.6→8.5GB), chất lượng **PSNR 48.5dB / SSIM 0.998 / LPIPS 0.0008** (notebook `CS2309_SwiftEdit_quality_speed_bench.ipynb`). Tách đóng góp: **fp16 đơn thuần 1.50×**, **cache cộng thêm 1.21×**.
+> **Tốc độ & chất lượng quy mô lớn 2026-06-14 (Colab T4):** [`experimental_data/quality_speed_bench_2026-06-14/`](./experimental_data/quality_speed_bench_2026-06-14/) — **200 ảnh × 3 prompt = 600 edit/config** so fp32 (ground truth) vs fp16+cache: nhanh **1.70×–1.82×**, **giảm 42.1% VRAM** (14.6→8.5GB), chất lượng **PSNR 48.5dB / SSIM 0.998 / LPIPS 0.0008** (notebook `CS2309_SwiftEdit_quality_speed_bench.ipynb`). Tách 2 tầng: **fp16 1.50× vs fp32**; **cache 1.21× vs fp16 không cache** (phụ thuộc tầng fp16, không so thẳng với fp32).
 
 ---
 

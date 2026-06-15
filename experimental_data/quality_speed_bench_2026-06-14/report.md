@@ -25,19 +25,26 @@
 
 ### 1b. Tách riêng đóng góp của fp16 vs cache
 
-Để tách **lợi ích của cache** khỏi **lợi ích của fp16**, dùng ngay 200 mẫu này: với mỗi ảnh,
-**prompt đầu tiên luôn là cache-miss** (chưa có gì trong cache) ⇒ chính là *fp16 không cache*;
-2 prompt sau là cache-hit (tái dùng latent + image embed + source-prompt embed).
+Hai tối ưu được **xếp tầng**, không độc lập:
 
-| So sánh | Latency/edit | Speedup vs fp32 | Ý nghĩa | N |
-|---------|-------------:|----------------:|---------|--:|
-| fp32 (gốc) | 2.54 s | 1.00× | mốc tham chiếu | 600 |
-| **fp16 không cache** (cache-miss, prompt đầu) | **1.69 s** | **1.50×** | **lợi ích riêng của fp16 + channels_last** | 200 |
-| fp16 + cache (cache-hit) | 1.40 s | 1.82× | fp16 + tái dùng cache | 400 |
+1. **fp32 → fp16** (`channels_last`): bước tối ưu đầu tiên — so với bản gốc fp32.
+2. **Cache**: bước thứ hai, **phụ thuộc** vào bước 1 — pipeline đã chạy fp16 rồi mới bật cache.
 
-- **fp16 đơn thuần** đem lại **1.50×** (2.54s → 1.69s) — đây là phần do tính nửa độ chính xác + `channels_last`, áp dụng cho **mọi** edit kể cả ảnh mới.
-- **Cache cộng thêm 1.21×** (1.69s → 1.40s, **−17.3%**, tiết kiệm **0.29s/edit**) — chỉ phát huy khi **cùng ảnh + cùng source prompt**, đổi edit prompt (kịch bản demo nhiều biến thể).
-- **Gộp lại: 1.82×** khi cache-hit. ⇒ Tăng tốc chủ yếu đến từ **fp16**; cache là phần thưởng cộng thêm cho luồng cùng-ảnh-nhiều-prompt.
+⇒ **Lợi ích của cache phải đánh giá trên nền fp16 đã optimize** (cache-miss vs cache-hit), **không** so thẳng cache với fp32 gốc. Con số 1.21× của cache là *cộng thêm trên fp16*, không phải thay thế cho 1.50× của fp16.
+
+Để tách hai tầng, dùng ngay 200 mẫu này: với mỗi ảnh, **prompt đầu tiên luôn là cache-miss**
+(chưa có gì trong cache) ⇒ chính là *fp16 không cache*; 2 prompt sau là cache-hit
+(tái dùng latent + image embed + source-prompt embed).
+
+| So sánh | Latency/edit | Speedup vs fp32 | Speedup vs fp16 (no cache) | Ý nghĩa | N |
+|---------|-------------:|----------------:|---------------------------:|---------|--:|
+| fp32 (gốc) | 2.54 s | 1.00× | — | mốc tham chiếu | 600 |
+| **fp16 không cache** (cache-miss, prompt đầu) | **1.69 s** | **1.50×** | 1.00× | lợi ích **tầng 1**: fp32→fp16 + `channels_last` | 200 |
+| fp16 + cache (cache-hit) | 1.40 s | 1.82× | **1.21×** | lợi ích **tầng 2**: cache trên nền fp16 | 400 |
+
+- **Tầng 1 — fp16:** **1.50×** (2.54s → 1.69s) — do tính nửa độ chính xác + `channels_last`, áp dụng cho **mọi** edit kể cả ảnh mới.
+- **Tầng 2 — cache (phụ thuộc fp16):** **1.21× so với fp16 không cache** (1.69s → 1.40s, **−17.3%**, tiết kiệm **0.29s/edit**) — chỉ phát huy khi **cùng ảnh + cùng source prompt**, đổi edit prompt (kịch bản demo nhiều biến thể). Cache không tồn tại trên pipeline fp32 trong benchmark này.
+- **Gộp hai tầng:** 1.50× × 1.21× ≈ **1.82×** vs fp32 khi cache-hit. ⇒ Tăng tốc chủ yếu đến từ **fp16**; cache là phần thưởng cộng thêm *trên phiên bản đã giảm xuống fp16*.
 
 ## 2. VRAM per-edit (bộ nhớ GPU, MB)
 
@@ -68,7 +75,7 @@
 
 **Kết luận sơ bộ:** bản cải thiện `improved_fp16_cache` nhanh hơn **1.70×** (overall) / **1.82×** (khi cache-hit), **giảm ~42.1% VRAM** (max 8455MB vs 14606MB), trong khi so với ground truth đạt PSNR **48.53 dB**, SSIM **0.9976**, LPIPS **0.0008**. ⇒ tốc độ tăng mạnh + tiết kiệm VRAM mà chất lượng gần như không đổi.
 
-**Tách đóng góp:** fp16 đơn thuần (không cache) đã cho **1.50×** vs fp32 và áp dụng cho mọi edit; cache cộng thêm **1.21×** (−17.3%, 0.29s/edit) cho luồng cùng-ảnh-nhiều-prompt ⇒ tổng **1.82×**.
+**Tách đóng góp (2 tầng):** tầng 1 — fp16 đơn thuần **1.50×** vs fp32 (áp dụng mọi edit); tầng 2 — cache **1.21× vs fp16 không cache** (phụ thuộc tầng 1, −17.3%, 0.29s/edit) ⇒ gộp **1.82×** vs fp32 khi cache-hit.
 
 > Cache là **lossless** (tái dùng latent/embedding y hệt) nên khác biệt chất lượng (nếu có) đến từ **fp16**, không phải cache. Wall-clock có thể nhiễu do thermal throttling trên Mac; per-image median ổn định hơn.
 

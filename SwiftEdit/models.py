@@ -43,6 +43,64 @@ def module_dtype(module):
     return next(module.parameters()).dtype
 
 
+def quantize_unet(unet, quant, device, compute_dtype):
+    """Lượng tử hóa (weight-only) các lớp Linear của UNet để giảm VRAM.
+
+    Áp dụng SAU khi đã nạp trọng số (khớp luồng IP-adapter: trọng số UNet được nạp
+    sau `from_pretrained` nên không dùng được quantization_config lúc load).
+
+    quant:
+        None / "" / "none" -> không lượng tử hóa (trả nguyên).
+        "fp8"  -> torchao Float8WeightOnlyConfig (e4m3). Cần GPU hỗ trợ; trên Turing/T4
+                  có thể không có kernel fp8 -> raise (caller bắt và bỏ qua config).
+        "fp4"  -> bitsandbytes Linear4bit quant_type="fp4" (chạy được trên Turing/T4).
+
+    Chỉ áp cho `nn.Linear` (Conv giữ nguyên — weight-only quant không đụng Conv).
+    VAE luôn fp32 và được xử lý bên ngoài, không truyền vào đây.
+    """
+    if not quant or quant == "none":
+        return unet
+
+    if quant == "fp8":
+        from torchao.quantization import Float8WeightOnlyConfig, quantize_
+
+        quantize_(unet, Float8WeightOnlyConfig())
+        return unet
+
+    if quant == "fp4":
+        import bitsandbytes as bnb
+
+        def _swap(mod):
+            for name, child in list(mod.named_children()):
+                if isinstance(child, torch.nn.Linear):
+                    new = bnb.nn.Linear4bit(
+                        child.in_features,
+                        child.out_features,
+                        bias=child.bias is not None,
+                        compute_dtype=compute_dtype,
+                        quant_type="fp4",
+                    )
+                    # Params4bit nhận trọng số fp16/fp32 trên CPU; .to(cuda) sẽ nén thật.
+                    new.weight = bnb.nn.Params4bit(
+                        child.weight.data.detach().to("cpu", dtype=compute_dtype),
+                        requires_grad=False,
+                        quant_type="fp4",
+                    )
+                    if child.bias is not None:
+                        new.bias = torch.nn.Parameter(
+                            child.bias.data.detach().to("cpu", dtype=compute_dtype)
+                        )
+                    setattr(mod, name, new)
+                else:
+                    _swap(child)
+
+        _swap(unet)
+        unet.to(device)  # kích hoạt nén 4-bit của bitsandbytes
+        return unet
+
+    raise ValueError(f"quant không hỗ trợ: {quant!r} (chỉ nhận None/'fp8'/'fp4')")
+
+
 def tokenize_captions(tokenizer, captions):
     inputs = tokenizer(
         captions,
@@ -87,6 +145,7 @@ class InverseModel:
         dtype="fp32",
         device="cuda",
         channels_last=False,
+        quant=None,
     ):
         self.weight_dtype = resolve_dtype(dtype)
 
@@ -103,6 +162,13 @@ class InverseModel:
         ).to(self.device, dtype=self.weight_dtype)
         if channels_last:
             self.unet_inverse = self.unet_inverse.to(memory_format=torch.channels_last)
+
+        # dtype tính toán của unet (sau nén 4-bit, .dtype không còn đúng -> lưu rõ ràng).
+        self.compute_dtype = self.weight_dtype
+        # Lượng tử hóa weight-only (fp8/fp4) SAU khi đã nạp + ép dtype/format.
+        self.unet_inverse = quantize_unet(
+            self.unet_inverse, quant, self.device, self.compute_dtype
+        )
 
         self.unet_inverse.eval()
         self.tokenizer = AutoTokenizer.from_pretrained(self.model_name, subfolder="tokenizer")
@@ -163,6 +229,7 @@ class IPSBV2Model(torch.nn.Module):
         with_ip_mask_controller=False,
         dtype="fp32",
         channels_last=False,
+        quant=None,
     ):
         super().__init__()
         self.device = device
@@ -242,6 +309,12 @@ class IPSBV2Model(torch.nn.Module):
             self.image_proj_model = self.image_proj_model.to(dtype=self.weight_dtype)
         if self.channels_last:
             self.unet = self.unet.to(memory_format=torch.channels_last)
+
+        # dtype dùng cho input UNet khi chạy. Sau khi nén 4-bit, self.unet.dtype không còn
+        # phản ánh đúng dtype tính toán (param thành uint8) -> lưu rõ ràng để gen_img dùng.
+        self.compute_dtype = self.weight_dtype
+        # Lượng tử hóa weight-only (fp8/fp4) SAU khi đã nạp IP-adapter + ép dtype/format.
+        self.unet = quantize_unet(self.unet, quant, self.device, self.compute_dtype)
 
     def load_ip_adapter(self, path_ckpt_ip):
 
@@ -343,7 +416,8 @@ class IPSBV2Model(torch.nn.Module):
         # Feed inverted noise to ip-unet generation
         with timer.stage("gen_unet"):
             noise = torch.cat([noise] * num_samples, dim=0).float()
-            unet_dtype = self.unet.dtype
+            # compute_dtype thay cho self.unet.dtype (sai sau khi nén 4-bit).
+            unet_dtype = getattr(self, "compute_dtype", None) or self.unet.dtype
             model_pred = self.unet(
                 noise.to(unet_dtype), self.timestep, prompt_embeds.to(unet_dtype)
             ).sample

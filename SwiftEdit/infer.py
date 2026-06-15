@@ -146,7 +146,8 @@ def edit_image(
             )
 
     with timer.stage("unet_inverse"):
-        unet_inv_dtype = inverse_model.unet_inverse.dtype
+        # compute_dtype thay cho .dtype (sai sau khi nén 4-bit weight-only).
+        unet_inv_dtype = getattr(inverse_model, "compute_dtype", None) or inverse_model.unet_inverse.dtype
         predict_inverted_code = inverse_model.unet_inverse(
             dub_latents.to(unet_inv_dtype), mid_timestep, encoder_hidden_state.to(unet_inv_dtype)
         ).sample.float()  # về fp32 cho mask + input_sb (alpha_t/sigma_t fp32) ổn định

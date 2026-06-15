@@ -14,7 +14,7 @@
 - **Lib:** diffusers 0.35.2 · transformers 4.57.6 · torchmetrics 1.9.0 · Python 3.12.13 · git `6549980`
 - **Dataset:** PIE-Bench-auto200 (trích từ HuggingFace PIE_Bench_pp)
 - **Quy mô:** 200 ảnh × 3 prompt = 600 edit/config (warmup 2 edit/config, không tính giờ)
-- **Ground truth:** `baseline_fp32` (ảnh do bản gốc tạo ra)
+- **Ground truth:** `baseline_fp32` (ảnh do bản gốc tạo ra) — đã kiểm chứng tương đương SwiftEdit gốc, xem [`fp32_baseline_verification.md`](./fp32_baseline_verification.md) + [`upstream_diff.md`](./upstream_diff.md)
 
 ## 1. Tốc độ (wall-clock / edit)
 

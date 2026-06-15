@@ -48,6 +48,7 @@
 **Kết quả (200 ảnh × 3 prompt = 600 edit/config):**
 - Tốc độ: fp16+cache **2.54s → 1.50s** (overall **1.70×**); cache-hit **1.40s** (**1.82×**), cache-miss 1.69s.
 - Tách đóng góp (2 tầng, dùng prompt đầu = cache-miss của 200 mẫu): **tầng 1 fp16 → 1.50× vs fp32** (2.54→1.69s); **tầng 2 cache → 1.21× vs fp16 không cache** (1.69→1.40s, phụ thuộc fp16, −17.3%, 0.29s/edit) ⇒ gộp **1.82×** vs fp32.
+- Kiểm chứng baseline: clone SwiftEdit gốc (Qualcomm-AI-research) và diff → baseline fp32 tương đương số học bản gốc (nhánh tối ưu đều tắt/no-op ở fp32); thay đổi thực chất duy nhất là dùng mirror SD2.1-base `Manojb/...` (trùng trọng số, do repo stabilityai bị gỡ). Bằng chứng: `fp32_baseline_verification.md` + `upstream_diff.md`.
 - VRAM: **14.6GB → 8.5GB** (giảm **42.1%**) — đây là lý do fp32 từng sát ngưỡng OOM trên T4 (15GB) còn fp16 dư thoải mái.
 - Chất lượng vs fp32: PSNR **48.5dB** (min 34.2), SSIM **0.998** (min 0.987), LPIPS **0.0008** (max 0.0099), MSE 2e-5 trên cả **600** ảnh → khác biệt không thấy được bằng mắt.
 

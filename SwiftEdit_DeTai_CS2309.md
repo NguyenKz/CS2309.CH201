@@ -958,6 +958,7 @@ Hướng chính được chọn để đào sâu là **C13 — SwiftEdit-RT: Rea
 
 | Ngày       | Giai đoạn           | Công việc                                                | Kết quả / Ghi chú                                                        |
 |---|---|---|---|
+| 2026-06-14 | 4e | Benchmark tốc độ + VRAM + chất lượng quy mô lớn (fp32 vs fp16+cache) | 200 ảnh × 3 prompt = 600 edit/config trên Tesla T4: fp16+cache nhanh 1.70× (overall)/1.82× (cache-hit), giảm 42.1% VRAM (14.6→8.5GB), PSNR 48.5dB / SSIM 0.998 / LPIPS 0.0008 vs fp32 → tăng tốc + tiết kiệm bộ nhớ gần như không mất chất lượng; experimental_data/quality_speed_bench_2026-06-14/ (Colab Tesla T4 (CUDA); torch 2.11) |
 | 2026-06-14 | 4d | Xóa vật thể bằng khoanh vùng (`user_mask` + tab "Xóa vật thể") | `user_mask` ghi đè self-guided mask trong `edit_image`; UI `gr.ImageEditor` vẽ cọ; xóa OK headphones (vật nhỏ/vừa, ~6s), kiểm chứng mask đúng vùng; vật rất lớn (xe đạp ~39% khung) còn sót — SwiftEdit không phải inpainting chuyên dụng; lưu experimental_data/object_removal_2026-06-14/ (Mac M4 (MPS); .venv) |
 | 2026-06-14 | 4f | Demo UI Gradio (`app_gradio.py`) tích hợp fp16 + channels_last + EditCache | Self-test OK (ảnh edit đúng, ~7.8s edit đầu gồm compile); hiện runtime + dtype + trạng thái cache; chạy local 127.0.0.1:7860 (Mac M4 (MPS); .venv; gradio 5.50) |
 | 2026-06-14 | 4a | fp16 + channels_last (VAE giữ fp32) cho SwiftEdit | fp16 nhanh ~3.3× (máy nguội) → ~7× (chạy liên tục, fp32 throttle); PSNR ~45dB vs fp32, không NaN/đen; tác động end-to-end lớn nhất (Mac M4 (MPS); .venv) |

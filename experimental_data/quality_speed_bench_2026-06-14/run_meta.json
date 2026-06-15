@@ -1,0 +1,88 @@
+{
+  "run_id": "20260614-1644-fa0711",
+  "timestamp_utc": "2026-06-14T17:31:32.888260+00:00",
+  "in_colab": true,
+  "device": "cuda",
+  "gpu_name": "Tesla T4",
+  "platform": "Linux-6.6.122+-x86_64-with-glibc2.35",
+  "python": "3.12.13",
+  "git_commit": "6549980",
+  "versions": {
+    "torch": "2.11.0+cu128",
+    "diffusers": "0.35.2",
+    "transformers": "4.57.6",
+    "torchmetrics": "1.9.0"
+  },
+  "config": {
+    "N_IMAGES": 200,
+    "PROMPTS_PER_IMAGE": 3,
+    "WARMUP_EDITS": 2,
+    "n_jobs_actual": 200,
+    "n_edits_per_config": 600,
+    "dataset": "PIE-Bench-auto200",
+    "reference": "baseline_fp32",
+    "configs": {
+      "baseline_fp32": {
+        "dtype": "fp32",
+        "channels_last": false,
+        "use_cache": false
+      },
+      "improved_fp16_cache": {
+        "dtype": "fp16",
+        "channels_last": true,
+        "use_cache": true
+      }
+    },
+    "edit_templates": [
+      "{edit}",
+      "{src} at night, dark lighting",
+      "{src} in winter, covered in snow"
+    ]
+  },
+  "results": {
+    "speed": {
+      "baseline_fp32": {
+        "mean": 2.5377818333333333,
+        "median": 2.53625,
+        "cache_miss_mean": null,
+        "cache_hit_mean": null,
+        "speedup_overall": 1.0,
+        "speedup_steady": null
+      },
+      "improved_fp16_cache": {
+        "mean": 1.495382166666667,
+        "median": 1.4032,
+        "cache_miss_mean": 1.6908655,
+        "cache_hit_mean": 1.3976405,
+        "speedup_overall": 1.6970791078713097,
+        "speedup_steady": 1.8157615161648029
+      }
+    },
+    "quality_vs_ref": {
+      "improved_fp16_cache": {
+        "psnr_mean": 48.53399765650431,
+        "psnr_min": 34.248268127441406,
+        "ssim_mean": 0.9975963013370832,
+        "ssim_min": 0.9870125651359558,
+        "mse_mean": 2.011428338391852e-05,
+        "lpips_mean": 0.000838325890423827,
+        "lpips_max": 0.009896108880639076,
+        "n": 600
+      }
+    },
+    "vram": {
+      "baseline_fp32": {
+        "max": 14605.6,
+        "min": 14605.6,
+        "mean": 14605.6,
+        "model_mb": 12986.577408
+      },
+      "improved_fp16_cache": {
+        "max": 8455.4,
+        "min": 8455.0,
+        "mean": 8455.266666666666,
+        "model_mb": 10360.439808
+      }
+    }
+  }
+}

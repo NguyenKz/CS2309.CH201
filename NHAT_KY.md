@@ -9,6 +9,7 @@
 
 | Ngày | Giai đoạn | Công việc | Kết quả / Ghi chú | Môi trường |
 |---|---|---|---|---|
+| 2026-06-14 | 4e | Benchmark tốc độ + VRAM + chất lượng quy mô lớn (fp32 vs fp16+cache) | 200 ảnh × 3 prompt = 600 edit/config trên Tesla T4: fp16+cache nhanh 1.70× (overall)/1.82× (cache-hit), giảm 42.1% VRAM (14.6→8.5GB), PSNR 48.5dB / SSIM 0.998 / LPIPS 0.0008 vs fp32 (600 ảnh) → tăng tốc + tiết kiệm bộ nhớ gần như không mất chất lượng; notebook + RUN_ID + zip bằng chứng; experimental_data/quality_speed_bench_2026-06-14/ | Colab Tesla T4 (CUDA); torch 2.11 |
 | 2026-06-14 | 4d | Xóa vật thể bằng khoanh vùng (`user_mask` + tab "Xóa vật thể") | `user_mask` ghi đè self-guided mask trong `edit_image`; UI `gr.ImageEditor` vẽ cọ; xóa OK headphones (vật nhỏ/vừa, ~6s), kiểm chứng mask khoanh đúng vùng; vật rất lớn (xe đạp ~39% khung) còn sót — SwiftEdit không phải inpainting chuyên dụng; lưu experimental_data/object_removal_2026-06-14/ | Mac M4 (MPS); .venv |
 | 2026-06-14 | 4f | Demo UI Gradio (`app_gradio.py`) tích hợp fp16 + channels_last + EditCache | Self-test OK (ảnh edit đúng, ~7.8s edit đầu gồm compile); hiện runtime + dtype + trạng thái cache; chạy local 127.0.0.1:7860 | Mac M4 (MPS); .venv; gradio 5.50 |
 | 2026-06-14 | 4a | fp16 + channels_last (VAE giữ fp32) cho SwiftEdit | fp16 nhanh ~3.3× (máy nguội) → ~7× (chạy liên tục, fp32 throttle); PSNR ~45dB vs fp32, không NaN/đen; tác động end-to-end lớn nhất | Mac M4 (MPS); .venv |
@@ -34,6 +35,35 @@
 ## Chi tiết theo phiên làm việc
 
 *(Các entry chi tiết xuất hiện bên dưới, mới nhất ở trên cùng.)*
+
+### 2026-06-14 — [4e] Benchmark tốc độ + VRAM + chất lượng (fp32 vs fp16+cache, Colab T4)
+
+**Môi trường:** Google Colab — Tesla T4 (CUDA); torch 2.11.0+cu128; diffusers 0.35.2; transformers 4.57.6
+
+**Công việc đã làm:**
+- Viết notebook `CS2309_SwiftEdit_quality_speed_bench.ipynb` (chạy được Mac + Colab): so bản gốc `fp32` (ground truth) vs cải thiện `fp16 + cache`, N ảnh cấu hình được, mỗi ảnh 3 prompt, chạy tuần tự.
+- Đo: tốc độ (tách cache-miss/hit), **VRAM per-edit** (max/min/mean), chất lượng PSNR/SSIM/LPIPS/MSE (fp32 = ground truth).
+- Tự dựng dataset PIE-Bench từ parquet HuggingFace (~68MB) theo N (cap 700); RUN_ID/UUID mỗi phiên; đóng gói zip bằng chứng (report + run_meta.json + CSV + ảnh in/out + notebook đã chạy).
+
+**Kết quả (200 ảnh × 3 prompt = 600 edit/config):**
+- Tốc độ: fp16+cache **2.54s → 1.50s** (overall **1.70×**); cache-hit **1.40s** (**1.82×**), cache-miss 1.69s.
+- Tách đóng góp (dùng prompt đầu = cache-miss của 200 mẫu): **fp16 đơn thuần 1.50×** (2.54→1.69s, áp dụng mọi edit); **cache cộng thêm 1.21×** (1.69→1.40s, −17.3%, 0.29s/edit) → tổng 1.82×.
+- VRAM: **14.6GB → 8.5GB** (giảm **42.1%**) — đây là lý do fp32 từng sát ngưỡng OOM trên T4 (15GB) còn fp16 dư thoải mái.
+- Chất lượng vs fp32: PSNR **48.5dB** (min 34.2), SSIM **0.998** (min 0.987), LPIPS **0.0008** (max 0.0099), MSE 2e-5 trên cả **600** ảnh → khác biệt không thấy được bằng mắt.
+
+**Kết luận:** cải thiện cho **3 lợi ích đồng thời** — nhanh hơn ~1.7×, giảm ~42% VRAM, chất lượng gần như không đổi. (Cache lossless nên chênh lệch chất lượng nếu có là do fp16.)
+
+**Task README đã đánh [x]:**
+- 4e: benchmark quy mô lớn Colab; lập bảng latency breakdown + speedup + peak memory + PSNR/SSIM/LPIPS/MSE.
+
+**Dữ liệu:**
+- Bản nhẹ (commit): `experimental_data/quality_speed_bench_2026-06-14/` (report + run_meta + CSV + grid + 4 ảnh mẫu).
+- Bản đầy đủ (~503MB, không commit): `results/quality_speed_bench_2026-06-14_20260614-1644-fa0711/` (1200 ảnh output + 200 nguồn + notebook đã chạy).
+
+**Bước tiếp theo:**
+- Thử `torch.compile` / TinyVAE trên CUDA để tách thêm bottleneck VAE/UNet.
+
+---
 
 ### 2026-06-14 — [4d] Xóa vật thể bằng khoanh vùng (user mask)
 

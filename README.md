@@ -295,6 +295,8 @@ Chi tiết: [Mục 4.2 đề tài](./SwiftEdit_DeTai_CS2309.md#42-google-colab--
 > **Demo Gradio 2026-06-14:** [`experimental_data/gradio_demo_2026-06-14/`](./experimental_data/gradio_demo_2026-06-14/) — UI web chỉnh sửa ảnh bằng prompt, tích hợp fp16 + channels_last + cache (`scripts/app_gradio.py`).
 >
 > **Xóa vật thể (khoanh vùng) 2026-06-14:** [`experimental_data/object_removal_2026-06-14/`](./experimental_data/object_removal_2026-06-14/) — vẽ mask để xóa vật thể (`user_mask` + tab "Xóa vật thể"); xóa OK vật nhỏ/vừa, vật rất lớn còn sót. **Kế hoạch kiểm tra tiếp:** [`KE_HOACH_KIEM_TRA.md`](./experimental_data/object_removal_2026-06-14/KE_HOACH_KIEM_TRA.md).
+>
+> **Tốc độ & chất lượng quy mô lớn 2026-06-14 (Colab T4):** [`experimental_data/quality_speed_bench_2026-06-14/`](./experimental_data/quality_speed_bench_2026-06-14/) — **200 ảnh × 3 prompt = 600 edit/config** so fp32 (ground truth) vs fp16+cache: nhanh **1.70×–1.82×**, **giảm 42.1% VRAM** (14.6→8.5GB), chất lượng **PSNR 48.5dB / SSIM 0.998 / LPIPS 0.0008** (notebook `CS2309_SwiftEdit_quality_speed_bench.ipynb`). Tách đóng góp: **fp16 đơn thuần 1.50×**, **cache cộng thêm 1.21×**.
 
 ---
 
@@ -348,9 +350,10 @@ Chi tiết: [Mục 4.2 đề tài](./SwiftEdit_DeTai_CS2309.md#42-google-colab--
 - [x] Profile baseline theo module: VAE encode/decode, text encoder, inverse UNet, mask, CLIP image encoder, generation UNet
 - [x] Thêm chế độ cache latent ảnh nguồn, image embedding IP-Adapter và source prompt embedding cho demo cùng ảnh nhiều prompt — `EditCache` (infer.py); tiết kiệm ~9.93s/edit khi cùng ảnh+source prompt
 - [x] Thử `fp16` + `channels_last` (Mac M4/MPS): ~3.3× (nguội) → ~7× (chạy liên tục); PSNR ~45dB vs fp32, không NaN/đen; VAE giữ fp32
+- [x] **Benchmark quy mô lớn trên Colab T4** (200 ảnh × 3 prompt = 600 edit/config): fp16+cache nhanh **1.70×–1.82×**, **giảm 42.1% VRAM** (14.6→8.5GB), PSNR **48.5dB** / SSIM **0.998** / LPIPS **0.0008** vs fp32 — `experimental_data/quality_speed_bench_2026-06-14/`
 - [ ] Thử `torch.compile` trên Colab CUDA
 - [ ] Thử TinyVAE/TAESD như ablation tốc độ/chất lượng cho VAE encode/decode
-- [ ] Lập bảng latency breakdown, speedup, peak memory và metric PSNR/MSE/CLIP so với baseline
+- [x] Lập bảng latency breakdown, speedup, peak memory (VRAM) và metric PSNR/SSIM/LPIPS/MSE so với baseline — notebook `CS2309_SwiftEdit_quality_speed_bench.ipynb`
 
 ### 4f. Demo Gradio (tùy chọn)
 
@@ -390,14 +393,14 @@ Chi tiết: [Mục 4.2 đề tài](./SwiftEdit_DeTai_CS2309.md#42-google-colab--
 
 ### Checklist nộp
 
-- [ ] Mac: ≥5 ví dụ chỉnh sửa (input → output)
-- [ ] Colab: `metrics.csv` PieBench ≥50 mẫu
+- [x] Mac: ≥5 ví dụ chỉnh sửa (input → output) — `experimental_data/piebench_subset20_2026-06-14/`, `quality_speed_bench_2026-06-14/`
+- [x] Colab: metrics ≥50 mẫu — **600 edit/config** trên Tesla T4 (`experimental_data/quality_speed_bench_2026-06-14/quality_raw.csv`)
 - [ ] Có ablation ≥1 hyperparameter (grid ảnh)
-- [ ] Có phân tích SwiftEdit-RT: latency breakdown + ít nhất 2 tối ưu inference
+- [x] Có phân tích SwiftEdit-RT: latency breakdown + ít nhất 2 tối ưu inference (cache + fp16/channels_last; tốc độ + VRAM + chất lượng quy mô lớn)
 - [ ] Có phân tích global style/weather edit: metric không dùng mask + failure cases
 - [x] Có phân tích object removal: removal success (vật nhỏ/vừa) + failure case (vật lớn) — `experimental_data/object_removal_2026-06-14/`
 - [ ] Có so sánh baseline (Colab) **hoặc** phân tích failure cases chi tiết
-- [ ] Bảng runtime: Mac / Colab / Paper
+- [x] Bảng runtime: Mac (`fp16_benchmark_2026-06-14`) + Colab T4 (`quality_speed_bench_2026-06-14`: fp32 2.54s vs fp16+cache 1.50s/edit)
 - [ ] Slide trình bày (pipeline + kết quả + demo)
 - [ ] Kết luận phản ánh đúng kết quả thực tế
 

@@ -1,0 +1,150 @@
+{
+  "run_id": "20260617-0336-bb4785",
+  "timestamp_utc": "2026-06-17T05:08:16.430607+00:00",
+  "in_colab": true,
+  "device": "cuda",
+  "gpu_name": "Tesla T4",
+  "platform": "Linux-6.6.122+-x86_64-with-glibc2.35",
+  "python": "3.12.13",
+  "git_commit": "1a6706c",
+  "versions": {
+    "torch": "2.11.0+cu128",
+    "diffusers": "0.35.2",
+    "transformers": "4.57.6",
+    "torchmetrics": "1.9.0"
+  },
+  "config": {
+    "N_IMAGES": 200,
+    "PROMPTS_PER_IMAGE": 3,
+    "WARMUP_EDITS": 2,
+    "n_jobs_actual": 200,
+    "n_edits_per_config": 600,
+    "dataset": "PIE-Bench-auto200",
+    "reference": "baseline_fp32",
+    "configs": {
+      "baseline_fp32": {
+        "dtype": "fp32",
+        "channels_last": false,
+        "use_cache": false,
+        "quant": null
+      },
+      "improved_fp16_cache": {
+        "dtype": "fp16",
+        "channels_last": true,
+        "use_cache": true,
+        "quant": null
+      },
+      "improved_fp8_cache": {
+        "dtype": "fp16",
+        "channels_last": true,
+        "use_cache": true,
+        "quant": "fp8"
+      },
+      "improved_fp4_cache": {
+        "dtype": "fp16",
+        "channels_last": true,
+        "use_cache": true,
+        "quant": "fp4"
+      }
+    },
+    "edit_templates": [
+      "{edit}",
+      "{src} at night, dark lighting",
+      "{src} in winter, covered in snow"
+    ]
+  },
+  "results": {
+    "speed": {
+      "baseline_fp32": {
+        "mean": 2.9122856666666666,
+        "median": 2.921,
+        "cache_miss_mean": null,
+        "cache_hit_mean": null,
+        "speedup_overall": 1.0,
+        "speedup_steady": null
+      },
+      "improved_fp16_cache": {
+        "mean": 1.7142318333333333,
+        "median": 1.6148,
+        "cache_miss_mean": 1.934221,
+        "cache_hit_mean": 1.60423725,
+        "speedup_overall": 1.6988867025084413,
+        "speedup_steady": 1.8153709288739348
+      },
+      "improved_fp8_cache": {
+        "mean": 1.5201635,
+        "median": 1.4201,
+        "cache_miss_mean": 1.737816,
+        "cache_hit_mean": 1.4113372499999997,
+        "speedup_overall": 1.915771340823975,
+        "speedup_steady": 2.06349380112136
+      },
+      "improved_fp4_cache": {
+        "mean": 1.736076666666667,
+        "median": 1.6384500000000002,
+        "cache_miss_mean": 1.9535185000000002,
+        "cache_hit_mean": 1.6273557499999998,
+        "speedup_overall": 1.6775098257949435,
+        "speedup_steady": 1.789581452406253
+      }
+    },
+    "quality_vs_ref": {
+      "improved_fp16_cache": {
+        "psnr_mean": 48.563344949086506,
+        "psnr_min": 34.96641159057617,
+        "ssim_mean": 0.9976038845380147,
+        "ssim_min": 0.9888706207275391,
+        "mse_mean": 1.9736413776551368e-05,
+        "lpips_mean": 0.0008334636248400784,
+        "lpips_max": 0.006346159614622593,
+        "n": 600
+      },
+      "improved_fp8_cache": {
+        "psnr_mean": 6.014666963269313,
+        "psnr_min": 0.3337674140930176,
+        "ssim_mean": 0.019538879975055656,
+        "ssim_min": 0.00010680984996724874,
+        "mse_mean": 0.3004451077245176,
+        "lpips_mean": 0.9680512827634812,
+        "lpips_max": 1.2016583681106567,
+        "n": 600
+      },
+      "improved_fp4_cache": {
+        "psnr_mean": 21.670693826675414,
+        "psnr_min": 16.587066650390625,
+        "ssim_mean": 0.775728498796622,
+        "ssim_min": 0.4763109087944031,
+        "mse_mean": 0.0076382248373314116,
+        "lpips_mean": 0.15038669378807148,
+        "lpips_max": 0.30566996335983276,
+        "n": 600
+      }
+    },
+    "vram": {
+      "baseline_fp32": {
+        "max": 14595.6,
+        "min": 14595.6,
+        "mean": 14595.6,
+        "model_mb": 12967.03744
+      },
+      "improved_fp16_cache": {
+        "max": 8445.5,
+        "min": 8445.0,
+        "mean": 8445.333333333334,
+        "model_mb": 10350.468096
+      },
+      "improved_fp8_cache": {
+        "max": 7818.6,
+        "min": 7818.2,
+        "mean": 7818.466666666666,
+        "model_mb": 10049.806336
+      },
+      "improved_fp4_cache": {
+        "max": 7514.6,
+        "min": 7514.1,
+        "mean": 7514.433333333333,
+        "model_mb": 9903.960064
+      }
+    }
+  }
+}

@@ -9,6 +9,7 @@
 
 | Ngày | Giai đoạn | Công việc | Kết quả / Ghi chú | Môi trường |
 |---|---|---|---|---|
+| 2026-06-17 | 4e | Benchmark precision fp32/fp16/fp8/fp4 (200×3×4 config, Colab T4) | fp16+cache khuyến nghị: 1.70×/1.82×, VRAM −42.1%, PSNR 48.6dB; fp8 1.92× nhưng PSNR 6.0dB (hỏng); fp4 VRAM −48.5%, PSNR 21.7dB; RUN_ID 20260617-0336-bb4785; experimental_data/quality_speed_bench_2026-06-17/ | Colab Tesla T4; torch 2.11; git 1a6706c |
 | 2026-06-14 | 4e | Benchmark tốc độ + VRAM + chất lượng quy mô lớn (fp32 vs fp16+cache) | 200 ảnh × 3 prompt = 600 edit/config trên Tesla T4: fp16+cache nhanh 1.70× (overall)/1.82× (cache-hit), giảm 42.1% VRAM (14.6→8.5GB), PSNR 48.5dB / SSIM 0.998 / LPIPS 0.0008 vs fp32 (600 ảnh) → tăng tốc + tiết kiệm bộ nhớ gần như không mất chất lượng; notebook + RUN_ID + zip bằng chứng; experimental_data/quality_speed_bench_2026-06-14/ | Colab Tesla T4 (CUDA); torch 2.11 |
 | 2026-06-14 | 4d | Xóa vật thể bằng khoanh vùng (`user_mask` + tab "Xóa vật thể") | `user_mask` ghi đè self-guided mask trong `edit_image`; UI `gr.ImageEditor` vẽ cọ; xóa OK headphones (vật nhỏ/vừa, ~6s), kiểm chứng mask khoanh đúng vùng; vật rất lớn (xe đạp ~39% khung) còn sót — SwiftEdit không phải inpainting chuyên dụng; lưu experimental_data/object_removal_2026-06-14/ | Mac M4 (MPS); .venv |
 | 2026-06-14 | 4f | Demo UI Gradio (`app_gradio.py`) tích hợp fp16 + channels_last + EditCache | Self-test OK (ảnh edit đúng, ~7.8s edit đầu gồm compile); hiện runtime + dtype + trạng thái cache; chạy local 127.0.0.1:7860 | Mac M4 (MPS); .venv; gradio 5.50 |
@@ -35,6 +36,33 @@
 ## Chi tiết theo phiên làm việc
 
 *(Các entry chi tiết xuất hiện bên dưới, mới nhất ở trên cùng.)*
+
+### 2026-06-17 — [4e] Benchmark precision fp32 / fp16 / fp8 / fp4 (Colab T4)
+
+**Môi trường:** Google Colab — Tesla T4 (CUDA); torch 2.11.0+cu128; diffusers 0.35.2; git `1a6706c`
+
+**Công việc đã làm:**
+- Chạy notebook `CS2309_SwiftEdit_quality_speed_bench.ipynb` với 4 config: `baseline_fp32`, `improved_fp16_cache`, `improved_fp8_cache` (torchao weight-only), `improved_fp4_cache` (bitsandbytes NF4).
+- 200 ảnh × 3 prompt × 4 config = 2400 lần edit đo thời gian; 1800 cặp chất lượng (3 improved vs fp32).
+
+**Kết quả chính:**
+
+| Config | Speedup | VRAM max | PSNR vs fp32 | Kết luận |
+|---|---:|---:|---:|---|
+| fp16 + cache | 1.70× (hit 1.82×) | 8446 MB (−42.1%) | 48.6 dB | **Khuyến nghị** |
+| fp8 + cache | 1.92× (hit 2.06×) | 7819 MB (−46.4%) | 6.0 dB | Nhanh nhưng **hỏng chất lượng** |
+| fp4 + cache | 1.68× | 7515 MB (−48.5%) | 21.7 dB | VRAM thấp nhất; chất lượng giảm nhiều |
+
+- Tách fp16/cache (giống lần 06-14): fp16 không cache 1.93s (**1.51×**); cache-hit 1.60s (**1.21×** trên fp16).
+- fp32 baseline: 2.91s/edit (lần này hơi chậm hơn lần 06-14 do 2.54s — biến thiên Colab bình thường).
+
+**Kết luận nghiên cứu:** **fp16 + cache** là sweet spot. **fp8 weight-only không phù hợp** SwiftEdit (PSNR 6 dB). **fp4** chỉ khi bắt buộc tiết kiệm VRAM.
+
+**Dữ liệu:**
+- Bản nhẹ (commit): `experimental_data/quality_speed_bench_2026-06-17/`
+- Bản đầy đủ (~503MB): `results/quality_speed_bench_2026-06-17_20260617-0336-bb4785/`
+
+---
 
 ### 2026-06-14 — [4e] Benchmark tốc độ + VRAM + chất lượng (fp32 vs fp16+cache, Colab T4)
 

@@ -10,13 +10,13 @@
 | **Repo gốc** | [Qualcomm-AI-research/SwiftEdit](https://github.com/Qualcomm-AI-research/SwiftEdit) |
 | **Môi trường** | MacBook Air M4 24GB + Google Colab (T4) |
 
-Tài liệu: [`SwiftEdit_Overview.md`](./SwiftEdit_Overview.md) · [`SwiftEdit_DeTai_CS2309.md`](./SwiftEdit_DeTai_CS2309.md) · [`QA.md`](./QA.md) · [`NHAT_KY.md`](./NHAT_KY.md)
+Tài liệu: [`SwiftEdit_Overview.md`](./SwiftEdit_Overview.md) · [`SwiftEdit_DeTai_CS2309.md`](./SwiftEdit_DeTai_CS2309.md) · [`QA.md`](./QA.md) · [`NHAT_KY.md`](./NHAT_KY.md) · [`HUONG_DAN_PUBLICATION_THAC_SI.md`](./HUONG_DAN_PUBLICATION_THAC_SI.md) *(cân nhắc paper / tốt nghiệp thạc sĩ UIT)*
 
 ### Mở notebook trên Google Colab
 
 | Notebook | Mở |
 |----------|-----|
-| Benchmark tốc độ & chất lượng (fp32 vs fp16+cache) | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/NguyenKz/CS2309.CH201/blob/main/notebooks/CS2309_SwiftEdit_quality_speed_bench.ipynb) |
+| Benchmark tốc độ & chất lượng (fp32/fp16/fp8/fp4) | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/NguyenKz/CS2309.CH201/blob/main/notebooks/CS2309_SwiftEdit_quality_speed_bench.ipynb) |
 | Thực nghiệm giai đoạn 3 (ablation + PIE-Bench) | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/NguyenKz/CS2309.CH201/blob/main/notebooks/CS2309_SwiftEdit_phase3.ipynb) |
 | Test nhanh pipeline | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/NguyenKz/CS2309.CH201/blob/main/notebooks/CS2309_SwiftEdit_test.ipynb) |
 
@@ -296,7 +296,7 @@ Chi tiết: [Mục 4.2 đề tài](./SwiftEdit_DeTai_CS2309.md#42-google-colab--
 >
 > **Xóa vật thể (khoanh vùng) 2026-06-14:** [`experimental_data/object_removal_2026-06-14/`](./experimental_data/object_removal_2026-06-14/) — vẽ mask để xóa vật thể (`user_mask` + tab "Xóa vật thể"); xóa OK vật nhỏ/vừa, vật rất lớn còn sót. **Kế hoạch kiểm tra tiếp:** [`KE_HOACH_KIEM_TRA.md`](./experimental_data/object_removal_2026-06-14/KE_HOACH_KIEM_TRA.md).
 >
-> **Tốc độ & chất lượng quy mô lớn 2026-06-14 (Colab T4):** [`experimental_data/quality_speed_bench_2026-06-14/`](./experimental_data/quality_speed_bench_2026-06-14/) — **200 ảnh × 3 prompt = 600 edit/config** so fp32 (ground truth) vs fp16+cache: nhanh **1.70×–1.82×**, **giảm 42.1% VRAM** (14.6→8.5GB), chất lượng **PSNR 48.5dB / SSIM 0.998 / LPIPS 0.0008** (notebook `CS2309_SwiftEdit_quality_speed_bench.ipynb`). Tách 2 tầng: **fp16 1.50× vs fp32**; **cache 1.21× vs fp16 không cache** (phụ thuộc tầng fp16, không so thẳng với fp32).
+> **Tốc độ & chất lượng quy mô lớn 2026-06-17 (Colab T4):** [`experimental_data/quality_speed_bench_2026-06-17/`](./experimental_data/quality_speed_bench_2026-06-17/) — **200 ảnh × 3 prompt × 4 config** (fp32 / fp16 / fp8 / fp4): **fp16+cache khuyến nghị** — nhanh **1.70×–1.82×**, VRAM **−42.1%**, PSNR **48.6dB**; **fp8 nhanh 1.92× nhưng PSNR 6.0dB (hỏng)**; **fp4 VRAM −48.5% nhưng PSNR 21.7dB** (notebook `CS2309_SwiftEdit_quality_speed_bench.ipynb`). Bản cũ fp32 vs fp16: `quality_speed_bench_2026-06-14` (nếu còn trong repo).
 
 ---
 
@@ -350,7 +350,7 @@ Chi tiết: [Mục 4.2 đề tài](./SwiftEdit_DeTai_CS2309.md#42-google-colab--
 - [x] Profile baseline theo module: VAE encode/decode, text encoder, inverse UNet, mask, CLIP image encoder, generation UNet
 - [x] Thêm chế độ cache latent ảnh nguồn, image embedding IP-Adapter và source prompt embedding cho demo cùng ảnh nhiều prompt — `EditCache` (infer.py); tiết kiệm ~9.93s/edit khi cùng ảnh+source prompt
 - [x] Thử `fp16` + `channels_last` (Mac M4/MPS): ~3.3× (nguội) → ~7× (chạy liên tục); PSNR ~45dB vs fp32, không NaN/đen; VAE giữ fp32
-- [x] **Benchmark quy mô lớn trên Colab T4** (200 ảnh × 3 prompt = 600 edit/config): fp16+cache nhanh **1.70×–1.82×**, **giảm 42.1% VRAM** (14.6→8.5GB), PSNR **48.5dB** / SSIM **0.998** / LPIPS **0.0008** vs fp32 — `experimental_data/quality_speed_bench_2026-06-14/`
+- [x] **Benchmark quy mô lớn trên Colab T4** (200 ảnh × 3 prompt × 4 config fp32/fp16/fp8/fp4): fp16+cache **1.70×–1.82×**, VRAM **−42.1%**, PSNR **48.6dB**; fp8 **1.92×** nhưng PSNR **6.0dB** (không dùng được); fp4 VRAM **−48.5%**, PSNR **21.7dB** — `experimental_data/quality_speed_bench_2026-06-17/`
 - [ ] Thử `torch.compile` trên Colab CUDA
 - [ ] Thử TinyVAE/TAESD như ablation tốc độ/chất lượng cho VAE encode/decode
 - [x] Lập bảng latency breakdown, speedup, peak memory (VRAM) và metric PSNR/SSIM/LPIPS/MSE so với baseline — notebook `CS2309_SwiftEdit_quality_speed_bench.ipynb`
@@ -393,14 +393,14 @@ Chi tiết: [Mục 4.2 đề tài](./SwiftEdit_DeTai_CS2309.md#42-google-colab--
 
 ### Checklist nộp
 
-- [x] Mac: ≥5 ví dụ chỉnh sửa (input → output) — `experimental_data/piebench_subset20_2026-06-14/`, `quality_speed_bench_2026-06-14/`
-- [x] Colab: metrics ≥50 mẫu — **600 edit/config** trên Tesla T4 (`experimental_data/quality_speed_bench_2026-06-14/quality_raw.csv`)
+- [x] Mac: ≥5 ví dụ chỉnh sửa (input → output) — `experimental_data/piebench_subset20_2026-06-14/`, `quality_speed_bench_2026-06-17/`
+- [x] Colab: metrics ≥50 mẫu — **2400 edit** (600×4 config) trên Tesla T4 (`experimental_data/quality_speed_bench_2026-06-17/quality_raw.csv`)
 - [ ] Có ablation ≥1 hyperparameter (grid ảnh)
 - [x] Có phân tích SwiftEdit-RT: latency breakdown + ít nhất 2 tối ưu inference (cache + fp16/channels_last; tốc độ + VRAM + chất lượng quy mô lớn)
 - [ ] Có phân tích global style/weather edit: metric không dùng mask + failure cases
 - [x] Có phân tích object removal: removal success (vật nhỏ/vừa) + failure case (vật lớn) — `experimental_data/object_removal_2026-06-14/`
 - [ ] Có so sánh baseline (Colab) **hoặc** phân tích failure cases chi tiết
-- [x] Bảng runtime: Mac (`fp16_benchmark_2026-06-14`) + Colab T4 (`quality_speed_bench_2026-06-14`: fp32 2.54s vs fp16+cache 1.50s/edit)
+- [x] Bảng runtime: Mac (`fp16_benchmark_2026-06-14`) + Colab T4 (`quality_speed_bench_2026-06-17`: fp32 2.91s, fp16+cache 1.71s, fp8 1.52s, fp4 1.74s/edit)
 - [ ] Slide trình bày (pipeline + kết quả + demo)
 - [ ] Kết luận phản ánh đúng kết quả thực tế
 

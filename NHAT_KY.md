@@ -9,6 +9,7 @@
 
 | Ngày | Giai đoạn | Công việc | Kết quả / Ghi chú | Môi trường |
 |---|---|---|---|---|
+| 2026-06-18 | 5 | Rà soát toàn bộ tiến độ đề tài; cập nhật README (mục Tiến trình hiện tại), SwiftEdit_DeTai §8.2 | 33/80 task (~41%); SwiftEdit-RT mạnh (2400 edit Colab, fp16+cache khuyến nghị); thiếu báo cáo GĐ5, ablation, slide; ưu tiên: báo cáo → ablation → slide | Mac M4; tài liệu |
 | 2026-06-17 | 4e | Benchmark precision fp32/fp16/fp8/fp4 (200×3×4 config, Colab T4) | fp16+cache khuyến nghị: 1.70×/1.82×, VRAM −42.1%, PSNR 48.6dB; fp8 1.92× nhưng PSNR 6.0dB (hỏng); fp4 VRAM −48.5%, PSNR 21.7dB; RUN_ID 20260617-0336-bb4785; experimental_data/quality_speed_bench_2026-06-17/ | Colab Tesla T4; torch 2.11; git 1a6706c |
 | 2026-06-14 | 4e | Benchmark tốc độ + VRAM + chất lượng quy mô lớn (fp32 vs fp16+cache) | 200 ảnh × 3 prompt = 600 edit/config trên Tesla T4: fp16+cache nhanh 1.70× (overall)/1.82× (cache-hit), giảm 42.1% VRAM (14.6→8.5GB), PSNR 48.5dB / SSIM 0.998 / LPIPS 0.0008 vs fp32 (600 ảnh) → tăng tốc + tiết kiệm bộ nhớ gần như không mất chất lượng; notebook + RUN_ID + zip bằng chứng; experimental_data/quality_speed_bench_2026-06-14/ | Colab Tesla T4 (CUDA); torch 2.11 |
 | 2026-06-14 | 4d | Xóa vật thể bằng khoanh vùng (`user_mask` + tab "Xóa vật thể") | `user_mask` ghi đè self-guided mask trong `edit_image`; UI `gr.ImageEditor` vẽ cọ; xóa OK headphones (vật nhỏ/vừa, ~6s), kiểm chứng mask khoanh đúng vùng; vật rất lớn (xe đạp ~39% khung) còn sót — SwiftEdit không phải inpainting chuyên dụng; lưu experimental_data/object_removal_2026-06-14/ | Mac M4 (MPS); .venv |
@@ -36,6 +37,27 @@
 ## Chi tiết theo phiên làm việc
 
 *(Các entry chi tiết xuất hiện bên dưới, mới nhất ở trên cùng.)*
+
+### 2026-06-18 — [5] Tổng hợp tiến trình & ưu tiên việc tiếp theo
+
+**Môi trường:** Mac M4; tài liệu
+
+**Công việc đã làm:**
+- Rà soát toàn bộ tiến độ đề tài; cập nhật README (mục Tiến trình hiện tại), SwiftEdit_DeTai §8.2 với số liệu thật
+
+**Kết quả:**
+- 33/80 task (~41%); SwiftEdit-RT mạnh (2400 edit Colab, fp16+cache khuyến nghị); thiếu báo cáo GĐ5, ablation, slide; ưu tiên: báo cáo → ablation → slide
+
+**Task README đã đánh [x]:**
+- *(không đánh task README)*
+
+**Bước tiếp theo:**
+- Viết báo cáo GĐ5
+- Ablation hyperparameter Mac
+- Slide trình bày
+- PIE-Bench 50 mẫu Colab (nếu còn thời gian)
+
+---
 
 ### 2026-06-17 — [4e] Benchmark precision fp32 / fp16 / fp8 / fp4 (Colab T4)
 

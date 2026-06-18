@@ -1,7 +1,7 @@
 # Kế hoạch kiểm tra — Xóa vật thể / Object removal
 
 > Trạng thái: **chờ kiểm tra thủ công** (user sẽ test khi có thời gian).  
-> Cập nhật: 2026-06-14
+> Cập nhật: 2026-06-18 — ưu tiên Hướng A nằm ở **#5** trong [`README.md`](../../README.md) mục *Việc tiếp theo*.
 
 Tính năng đã implement: `user_mask` trong `edit_image` + tab **"Xóa vật thể (khoanh vùng)"**
 trong `scripts/app_gradio.py`. Báo cáo kỹ thuật: [`report.md`](./report.md).

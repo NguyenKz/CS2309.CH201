@@ -69,7 +69,10 @@ CS2309.CH201/
 ├── assets/pipeline/
 ├── NHAT_KY.md · QA.md · SwiftEdit_DeTai_CS2309.md
 ├── notebooks/
-│   └── CS2309_SwiftEdit_test.ipynb
+│   ├── CS2309_SwiftEdit_test.ipynb
+│   ├── CS2309_SwiftEdit_phase3.ipynb
+│   └── CS2309_SwiftEdit_quality_speed_bench.ipynb
+├── experimental_data/         ← Bằng chứng thực nghiệm (metrics, ảnh mẫu)
 └── (sau này) results/, report/
 ```
 
@@ -189,7 +192,7 @@ Chi tiết: [Mục 4.2 đề tài](./SwiftEdit_DeTai_CS2309.md#42-google-colab--
 ## Checklist tổng thể
 
 > Đánh dấu `[x]` khi hoàn thành. Cập nhật file này trong quá trình làm đề tài.
-> Cập nhật tiến độ lần cuối: 2026-06-14 — 26/79 task bắt buộc
+> Cập nhật tiến độ lần cuối: 2026-06-18 — 33/80 task bắt buộc
 
 ### Trạng thái nhanh
 
@@ -198,27 +201,62 @@ Chi tiết: [Mục 4.2 đề tài](./SwiftEdit_DeTai_CS2309.md#42-google-colab--
 | 1. Lý thuyết | 🔄 Đang làm (1/6) |
 | 2. Setup Mac + Colab | 🔄 Đang làm (11/17) |
 | 3. Thực nghiệm cơ bản | 🔄 Đang làm (6/19) |
-| 4. So sánh & mở rộng | 🔄 Đang làm (8/18) |
-| 5. Báo cáo & nộp | ⬜ Chưa bắt đầu |
+| 4. So sánh & mở rộng | 🔄 Đang làm (10/19) |
+| 5. Báo cáo & nộp | 🔄 Đang làm (5/19) |
 
 
+**Tổng:** 33/80 task bắt buộc (~41%) — phần thực nghiệm SwiftEdit-RT đã có số liệu lớn; báo cáo và ablation còn thiếu.
 
+### Tiến trình hiện tại (tổng hợp 2026-06-18)
 
+**Điểm mạnh (đã có bằng chứng):**
 
+| Hạng mục | Chi tiết |
+|---|---|
+| Hạ tầng | Mac M4 MPS + Colab T4 chạy end-to-end; 3 notebook + scripts eval |
+| **SwiftEdit-RT** (hướng đào sâu) | fp16 + cache + channels_last; benchmark **2400 edit** Colab (fp32/fp16/fp8/fp4) |
+| Benchmark Colab T4 | fp16+cache **khuyến nghị**: 1.70×, VRAM −42%, PSNR 48.6 dB — [`quality_speed_bench_2026-06-17/`](./experimental_data/quality_speed_bench_2026-06-17/) |
+| PIE-Bench Mac | 20 mẫu (2/loại × 10 loại); CLIP-Whole 23.02 — [`piebench_subset20_2026-06-14/`](./experimental_data/piebench_subset20_2026-06-14/) |
+| Demo | Gradio fp16+cache + tab xóa vật thể — [`app_gradio.py`](./scripts/app_gradio.py) |
+| Runtime 3 cột | Mac MPS ~30s / Colab T4 ~1.3–2.9s / Paper A100 ~0.23s |
 
+**Khoảng trống (cần cho nộp báo cáo):**
 
+| Hạng mục | Trạng thái | Mức ưu tiên |
+|---|---|---|
+| Viết báo cáo GĐ5 | Chưa bắt đầu | **Cao** |
+| Ablation hyperparameter (`s_y`, `s_edit`, `s_non-edit`) | Chưa | **Cao** (checklist nộp) |
+| PIE-Bench 50–100 mẫu metrics Colab | Chỉ 20 mẫu Mac | Trung bình |
+| So sánh baseline (TurboEdit) | Chưa | Trung bình |
+| Slide trình bày | Chưa | **Cao** |
+| Lý thuyết (đọc paper, Related Work) | 1/6 | Trung bình |
 
+**Checklist nộp — đã đạt / chưa:**
 
+- [x] Mac ≥5 ví dụ · Colab ≥50 mẫu (2400 edit benchmark) · SwiftEdit-RT · object removal · bảng runtime
+- [ ] Ablation ≥1 hyperparameter · baseline **hoặc** failure cases chi tiết · slide · kết luận · báo cáo đầy đủ
 
+### Việc tiếp theo (gợi ý ưu tiên)
 
+| Ưu tiên | Việc | Thời gian ước tính |
+|---|---|---|
+| **1** | Bắt đầu viết báo cáo GĐ5 (dùng số liệu SwiftEdit-RT + object removal) | 2–4 ngày |
+| **2** | Ablation hyperparameter Mac (5–10 ảnh, grid `s_edit`/`s_non-edit`) | 0.5–1 ngày |
+| **3** | Slide: pipeline + before/after + bảng fp16 vs fp32 + demo Gradio | 0.5–1 ngày |
+| **4** | PIE-Bench 50 mẫu Colab (`run_piebench_eval.py` + fp16+cache) | 1 ngày |
+| **5** | Object removal Hướng A — test 2–3 ảnh phù hợp ([`KE_HOACH_KIEM_TRA.md`](./experimental_data/object_removal_2026-06-14/KE_HOACH_KIEM_TRA.md)) | 0.5 ngày |
+| **6** | TurboEdit baseline 20 mẫu **hoặc** `torch.compile` Colab | Tùy thời gian |
 
-
-
-
+> **Khuyến nghị:** Nếu deadline gần → ưu tiên **báo cáo + ablation + slide** (đã có xương sống thực nghiệm). Nếu còn 1–2 tuần → thêm PIE-Bench 50 mẫu Colab.
 
 ---
 
 ## Giai đoạn 1 — Lý thuyết (Tuần 1–2)
+
+> **Mục tiêu:** Hiểu SwiftEdit đủ sâu để viết báo cáo §Overview + Related Work + pipeline.  
+> **Tài liệu sẵn có:** [`SwiftEdit_Overview.md`](./SwiftEdit_Overview.md) · [`SwiftEdit_DeTai_CS2309.md` §1](./SwiftEdit_DeTai_CS2309.md#1-overview) · [`QA.md`](./QA.md) · ảnh pipeline cũ [`assets/pipeline/`](./assets/pipeline/)
+
+### Checklist tổng (6 mục)
 
 - [ ] Đọc paper SwiftEdit (Abstract, Sec. 3–5)
 - [ ] Tìm hiểu SwiftBrushv2, DDIM inversion, IP-Adapter
@@ -226,6 +264,82 @@ Chi tiết: [Mục 4.2 đề tài](./SwiftEdit_DeTai_CS2309.md#42-google-colab--
 - [ ] Vẽ/tóm tắt pipeline inversion → mask → ARaM
 - [ ] So sánh SwiftEdit vs P2P, NT-Inv, TurboEdit, ICD (bảng related work)
 - [ ] Viết phần Overview + Related Work trong báo cáo
+
+### Chi tiết từng task (làm tuần tự)
+
+#### Task 1 — Đọc paper SwiftEdit
+
+| # | Việc | Đọc | Deliverable |
+|---|---|---|---|
+| 1.1 | Abstract + Introduction | Motivation, 2 đóng góp chính, so với multi-step | 5–10 bullet ghi chú |
+| 1.2 | **Sec. 3** — One-step Inversion | `F_theta`, inverted noise, Stage 1 (synthetic) + Stage 2 (real/DISTS) | Tóm tắt 1 đoạn: *tại sao DDIM không dùng được* |
+| 1.3 | **Sec. 4** — ARaM + mask | Self-guided mask, `s_y` / `s_edit` / `s_non-edit`, IP-Adapter branch | Liên hệ `infer.py` + `mask_ip_controller.py` |
+| 1.4 | **Sec. 5** — Experiments | Table 1 (PieBench), ablation trong paper, Fig. qualitative | Chép/summarize Table 1 vào ghi chú |
+
+**Paper:** [CVPR 2025 PDF](https://openaccess.thecvf.com/content/CVPR2025/papers/Nguyen_SwiftEdit_Lightning_Fast_Text-Guided_Image_Editing_via_One-Step_Diffusion_CVPR_2025_paper.pdf)
+
+#### Task 2 — Nền tảng kỹ thuật (SwiftBrushv2, DDIM, IP-Adapter)
+
+| # | Chủ đề | Cần nắm | Nguồn gợi ý |
+|---|---|---|---|
+| 2.1 | **Diffusion one-step / SBv2** | SBv2 = backbone one-step T2I; distilled từ SD-Turbo; SwiftEdit build trên SBv2 | Paper SwiftEdit + [Overview §3](./SwiftEdit_Overview.md#3-ý-tưởng-cốt-lõi) |
+| 2.2 | **DDIM inversion** | Multi-step đảo ngược ảnh → noise; mỗi step = 1 lần UNet | [Đề tài §1.3.1](./SwiftEdit_DeTai_CS2309.md#131-mỗi-step-làm-gì-giải-thích-dễ-hiểu) · [QA §1](./QA.md#1-diffusion--text-to-image) |
+| 2.3 | **Null-text Inversion** | Optimization từng timestep; chậm nhưng PSNR cao — bối cảnh so sánh | `assets/pipeline/nulltext-diagram.png` |
+| 2.4 | **IP-Adapter** | Image condition qua decoupled cross-attention; vai trò `G_IP` trong SwiftEdit | Paper IP-Adapter · code `attention_processor.py` |
+
+**Deliverable:** Thêm 2–4 câu Q&A vào [`QA.md` §3 Inversion & Noise](./QA.md#3-inversion--noise) (hiện còn trống).
+
+#### Task 3 — PieBench *(đã [x], ôn lại nhanh)*
+
+| # | Việc | Deliverable |
+|---|---|---|
+| 3.1 | 10 loại editing + GT mask | 1 bảng tóm tắt (copy từ [Đề tài §9.2](./SwiftEdit_DeTai_CS2309.md#92-phân-loại-10-loại-editing-trong-piebench)) |
+| 3.2 | Bộ metric chuẩn | PSNR/MSE nền, CLIP-Whole/Edited, runtime — [QA §5](./QA.md#5-đánh-giá--piebench) |
+| 3.3 | Liên hệ thực nghiệm đề tài | Ghi 2–3 câu: subset 20 mẫu Mac + benchmark 2400 edit Colab |
+
+#### Task 4 — Pipeline SwiftEdit (sơ đồ + map code)
+
+| # | Việc | Deliverable |
+|---|---|---|
+| 4.1 | Vẽ sơ đồ **one-step** (khác pipeline cũ multi-step) | ASCII/Mermaid hoặc figure cho slide + báo cáo |
+| 4.2 | So sánh trực quan pipeline **cũ vs SwiftEdit** | Dùng ảnh `assets/pipeline/` (cũ) + sơ đồ §1.2 đề tài (mới) |
+| 4.3 | Map từng bước → file code | Bảng: VAE encode → `F_theta` → mask → ARaM → VAE decode → `infer.py` / `models.py` |
+| 4.4 | Giải thích hyperparameter ARaM | `scale_edit`, `scale_non_edit`, `mask_threshold` — khi nào tăng/giảm |
+
+**Tham khảo sẵn:** [Overview §4](./SwiftEdit_Overview.md#4-pipeline-suy-luận) · [Đề tài §1.2](./SwiftEdit_DeTai_CS2309.md#12-kiến-trúc-và-pipeline-suy-luận)
+
+#### Task 5 — Bảng Related Work
+
+| # | Việc | Deliverable |
+|---|---|---|
+| 5.1 | Nhóm **multi-step** | P2P, Null-text+P2P, MasaCtrl, Plug-and-Play — steps, runtime, ưu/nhược |
+| 5.2 | Nhóm **few-step** | TurboEdit, ICD, ReNoise — steps, runtime |
+| 5.3 | Nhóm **one-step** | SwiftEdit — điểm khác biệt |
+| 5.4 | Bảng tổng hợp + số liệu Table 1 | Copy/adapt từ [Overview §6](./SwiftEdit_Overview.md#6-so-sánh-với-các-hướng-tiếp-cận) |
+
+**Cột gợi ý:** Method · Inversion steps · Edit steps · Runtime · PSNR · CLIP-Whole · Đặc điểm chính
+
+#### Task 6 — Viết báo cáo (draft lý thuyết)
+
+| # | Mục báo cáo | Nội dung lấy từ | Ghi chú |
+|---|---|---|---|
+| 6.1 | Lý do chọn đề tài | Motivation §1.3 + realtime + đã có SwiftEdit-RT | 0.5–1 trang |
+| 6.2 | Bài toán Input/Output | [Overview §2, §7](./SwiftEdit_Overview.md#2-bài-toán-và-động-lực) | Định nghĩa `x_source`, `y_source`, `y_edit` |
+| 6.3 | Overview + pipeline SwiftEdit | Task 4 | Figure + mô tả 4 bước |
+| 6.4 | Related Work | Task 5 | Bảng so sánh + 1–2 đoạn nhận xét |
+| 6.5 | Research Questions | [Đề tài §5.7](./SwiftEdit_DeTai_CS2309.md#57-câu-hỏi-nghiên-cứu-đề-xuất-research-questions) | Chọn **RQ1–RQ6** (bắt buộc) + **RQ8–RQ11** (SwiftEdit-RT, đã có số liệu) |
+| 6.6 | Tài liệu tham khảo | Paper SwiftEdit, PIE-Bench, CLIP, IP-Adapter, TurboEdit | Format chuẩn UIT |
+
+**Nơi viết:** draft trong `SwiftEdit_DeTai_CS2309.md` §1–2 hoặc file báo cáo riêng (nếu có template UIT).
+
+### Thứ tự làm đề xuất
+
+```
+1.1–1.4 (đọc paper) → 2.1–2.4 (nền tảng) → 4.1–4.4 (pipeline)
+→ 5.1–5.4 (related work) → 3.1–3.3 (ôn PieBench) → 6.1–6.6 (viết báo cáo)
+```
+
+Sau mỗi task xong, báo agent *"xong task X.Y"* để đánh `[x]` README + ghi `NHAT_KY.md`.
 
 ---
 

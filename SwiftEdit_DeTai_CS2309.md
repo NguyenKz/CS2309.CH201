@@ -958,9 +958,10 @@ Hướng chính được chọn để đào sâu là **C13 — SwiftEdit-RT: Rea
 
 | Ngày       | Giai đoạn           | Công việc                                                | Kết quả / Ghi chú                                                        |
 |---|---|---|---|
-| 2026-06-17 | 4e | Benchmark precision fp32/fp16/fp8/fp4 (200×3×4, Colab T4) | fp16+cache khuyến nghị: 1.70×/1.82×, VRAM −42.1%, PSNR 48.6dB; fp8 1.92× nhưng PSNR 6.0dB (hỏng); fp4 VRAM −48.5%, PSNR 21.7dB; experimental_data/quality_speed_bench_2026-06-17/ (Colab Tesla T4; torch 2.11; git 1a6706c) |
-| 2026-06-14 | 4e | Benchmark tốc độ + VRAM + chất lượng quy mô lớn (fp32 vs fp16+cache) | 200 ảnh × 3 prompt = 600 edit/config trên Tesla T4: fp16+cache nhanh 1.70× (overall)/1.82× (cache-hit), giảm 42.1% VRAM (14.6→8.5GB), PSNR 48.5dB / SSIM 0.998 / LPIPS 0.0008 vs fp32 → tăng tốc + tiết kiệm bộ nhớ gần như không mất chất lượng; experimental_data/quality_speed_bench_2026-06-14/ (Colab Tesla T4 (CUDA); torch 2.11) |
-| 2026-06-14 | 4d | Xóa vật thể bằng khoanh vùng (`user_mask` + tab "Xóa vật thể") | `user_mask` ghi đè self-guided mask trong `edit_image`; UI `gr.ImageEditor` vẽ cọ; xóa OK headphones (vật nhỏ/vừa, ~6s), kiểm chứng mask đúng vùng; vật rất lớn (xe đạp ~39% khung) còn sót — SwiftEdit không phải inpainting chuyên dụng; lưu experimental_data/object_removal_2026-06-14/ (Mac M4 (MPS); .venv) |
+| 2026-06-18 | 5 | Rà soát toàn bộ tiến độ đề tài; cập nhật README (mục Tiến trình hiện tại), SwiftEdit_DeTai §8.2 | 33/80 task (~41%); SwiftEdit-RT mạnh (2400 edit Colab, fp16+cache khuyến nghị); thiếu báo cáo GĐ5, ablation, slide; ưu tiên: báo cáo → ablation → slide (Mac M4; tài liệu) |
+| 2026-06-17 | 4e | Benchmark precision fp32/fp16/fp8/fp4 (200×3×4 config, Colab T4) | fp16+cache khuyến nghị: 1.70×/1.82×, VRAM −42.1%, PSNR 48.6dB; fp8 1.92× nhưng PSNR 6.0dB (hỏng); fp4 VRAM −48.5%, PSNR 21.7dB; RUN_ID 20260617-0336-bb4785; experimental_data/quality_speed_bench_2026-06-17/ (Colab Tesla T4; torch 2.11; git 1a6706c) |
+| 2026-06-14 | 4e | Benchmark tốc độ + VRAM + chất lượng quy mô lớn (fp32 vs fp16+cache) | 200 ảnh × 3 prompt = 600 edit/config trên Tesla T4: fp16+cache nhanh 1.70× (overall)/1.82× (cache-hit), giảm 42.1% VRAM (14.6→8.5GB), PSNR 48.5dB / SSIM 0.998 / LPIPS 0.0008 vs fp32 (600 ảnh) → tăng tốc + tiết kiệm bộ nhớ gần như không mất chất lượng; notebook + RUN_ID + zip bằng chứng; experimental_data/quality_speed_bench_2026-06-14/ (Colab Tesla T4 (CUDA); torch 2.11) |
+| 2026-06-14 | 4d | Xóa vật thể bằng khoanh vùng (`user_mask` + tab "Xóa vật thể") | `user_mask` ghi đè self-guided mask trong `edit_image`; UI `gr.ImageEditor` vẽ cọ; xóa OK headphones (vật nhỏ/vừa, ~6s), kiểm chứng mask khoanh đúng vùng; vật rất lớn (xe đạp ~39% khung) còn sót — SwiftEdit không phải inpainting chuyên dụng; lưu experimental_data/object_removal_2026-06-14/ (Mac M4 (MPS); .venv) |
 | 2026-06-14 | 4f | Demo UI Gradio (`app_gradio.py`) tích hợp fp16 + channels_last + EditCache | Self-test OK (ảnh edit đúng, ~7.8s edit đầu gồm compile); hiện runtime + dtype + trạng thái cache; chạy local 127.0.0.1:7860 (Mac M4 (MPS); .venv; gradio 5.50) |
 | 2026-06-14 | 4a | fp16 + channels_last (VAE giữ fp32) cho SwiftEdit | fp16 nhanh ~3.3× (máy nguội) → ~7× (chạy liên tục, fp32 throttle); PSNR ~45dB vs fp32, không NaN/đen; tác động end-to-end lớn nhất (Mac M4 (MPS); .venv) |
 | 2026-06-14 | 4a | Cache latent + CLIP image embed + source prompt embed (EditCache + embed_cache) | Tiết kiệm ~9.93s/edit ở stage phụ thuộc ảnh/source (gen_image_embeds −11.5s, vae_encode −0.95s); embed deterministic (allclose); callers cũ không đổi (Mac M4 (MPS); .venv) |
@@ -984,39 +985,66 @@ Hướng chính được chọn để đào sâu là **C13 — SwiftEdit-RT: Rea
 
 #### 8.2.1. Demo — Mac vs Colab
 
-| Môi trường   | Backend | GPU/RAM      | Thời gian/ảnh |
-| ------------ | ------- | ------------ | ------------- |
-| Mac Air M4   | MPS     | 24GB unified | ~91 giây (demo `woman`→`Taylor Swift`, 512×512) |
-| Google Colab | CUDA    | T4 ~15GB VRAM | Chưa đo (dự kiến nhanh hơn Mac MPS; chưa chạy session Colab) |
-| Paper (ref)  | CUDA    | A100 40GB    | 0.23s         |
+| Môi trường   | Backend | GPU/RAM      | Thời gian/ảnh (inference) | Ghi chú |
+| ------------ | ------- | ------------ | ------------------------- | ------- |
+| Mac Air M4   | MPS     | 24GB unified | ~30s (dog preset); ~69s TB (PIE 20 mẫu); ~7.8s (Gradio fp16+cache) | Thermal throttle fp32; fp16 nhanh hơn nhiều |
+| Google Colab | CUDA    | T4 ~15GB VRAM | **1.3s** (dog preset); **2.91s** fp32 / **1.71s** fp16+cache (benchmark 200×3) | Tesla T4, torch 2.11 |
+| Paper (ref)  | CUDA    | A100 40GB    | 0.23s                     | SwiftEdit CVPR 2025 Table 1 |
+
+Nguồn: `experimental_data/piebench_subset20_2026-06-14/`, `quality_speed_bench_2026-06-17/`, nhật ký 2026-06-04/05/14.
+
+#### 8.2.2. Bảng metrics PieBench
+
+| Metric        | Colab T4 (benchmark speed) | Mac subset 20 mẫu | Paper (A100) |
+| ------------- | -------------------------- | ----------------- | ------------ |
+| PSNR ↑ (nền)  | — (chưa chạy eval 50–100 mẫu) | 14.01 (9/20 có mask) | 23.33 |
+| CLIP-Whole ↑  | —                          | **23.02** (TB)    | 25.16        |
+| CLIP-Edited ↑ | —                          | 21.46 (TB)        | 21.25        |
+| Runtime (s) ↓ | 2.91 fp32 / **1.71** fp16+cache | 69.0 (TB)    | 0.23         |
+
+Ghi chú: `CLIP-Whole` đo toàn ảnh edited với `edit_prompt`; `CLIP-Edited` đo vùng edit mask với `edit_prompt`. PSNR/MSE đo trên vùng background `(1 - mask)`. Colab đã có benchmark tốc độ 2400 edit nhưng **chưa** chạy `run_piebench_eval.py` 50–100 mẫu cho bảng chất lượng chuẩn.
+
+#### 8.2.3. SwiftEdit-RT — benchmark tốc độ & chất lượng (Colab T4, 2026-06-17)
+
+200 ảnh × 3 prompt × 4 config = 2400 edit. Nguồn: `experimental_data/quality_speed_bench_2026-06-17/report.md`.
+
+| Config | Speedup vs fp32 | VRAM max | PSNR vs fp32 | Kết luận |
+|--------|----------------:|---------:|-------------:|----------|
+| fp16 + cache | 1.70× (hit 1.82×) | 8446 MB (−42.1%) | 48.6 dB | **Khuyến nghị** |
+| fp8 + cache | 1.92× | 7819 MB (−46.4%) | 6.0 dB | Nhanh nhưng hỏng (ảnh đen) |
+| fp4 + cache | 1.68× | 7515 MB (−48.5%) | 21.7 dB | Trade-off VRAM/chất lượng |
+
+Mac M4 (2026-06-14): fp16 ~3.3×→7×; EditCache tiết kiệm ~9.93s/edit; bottleneck UNet×2 ~43%, IP embeds ~24%, VAE decode ~23%.
+
+#### 8.2.4. Ablation hyperparameter
 
 ```
-(Chèn ảnh cùng input — output giống nhau trên Mac và Colab)
+(Chưa thực hiện — cần grid ảnh: thay đổi s_y, s_edit, s_non-edit)
 ```
 
-#### 8.2.2. Bảng metrics PieBench (Colab)
-
-| Metric        | Colab (tái hiện) | Mac (subset) | Paper (A100) |
-| ------------- | ---------------- | ------------ | ------------ |
-| PSNR ↑        | <br />           | <br />       | 23.33        |
-| MSE ×10⁴ ↓    | <br />           | <br />       | 6.60         |
-| CLIP-Whole ↑  | <br />           | <br />       | 25.16        |
-| CLIP-Edited ↑ | <br />           | <br />       | 21.25        |
-| Runtime (s) ↓ | <br />           | <br />       | 0.23         |
-
-Ghi chú: `CLIP-Whole` đo toàn ảnh edited với `edit_prompt`; `CLIP-Edited` đo vùng edit mask của ảnh edited với `edit_prompt`. PSNR/MSE đo trên vùng background `(1 - mask)`.
-
-#### 8.2.3. Ablation hyperparameter
+#### 8.2.5. So sánh với baseline
 
 ```
-(Chèn grid ảnh: thay đổi s_y, s_edit, s_non-edit)
+(Chưa thực hiện — dự kiến TurboEdit trên 20 mẫu chung PieBench)
 ```
 
-#### 8.2.4. So sánh với baseline
+#### 8.2.6. Object removal (user mask)
 
-```
-(Chèn bảng + ảnh so sánh SwiftEdit vs TurboEdit / P2P)
-```
+Prototype OK trên Mac: xóa vật nhỏ/vừa (headphones ~6s); failure case vật lớn (xe đạp ~39% khung). Nguồn: `experimental_data/object_removal_2026-06-14/`.
+
+#### 8.2.7. Tiến độ tổng thể (2026-06-18)
+
+| Giai đoạn | Tiến độ | Đánh giá |
+|---|---|---|
+| 1. Lý thuyết | 1/6 | Yếu — chưa Related Work |
+| 2. Setup | 11/17 | Mac ổn; Colab Drive/symlink chưa xong |
+| 3. Thực nghiệm cơ bản | 6/19 | Có pipeline + 20 mẫu Mac; thiếu ablation |
+| 4. So sánh & mở rộng | 10/19 | **Mạnh** — SwiftEdit-RT có số liệu lớn |
+| 5. Báo cáo & nộp | 5/19 | Checklist nộp một phần; chưa viết báo cáo đầy đủ |
+
+**Tổng:** 33/80 task bắt buộc (~41%).
+
+Ưu tiên tiếp theo: viết báo cáo GĐ5 → ablation hyperparameter → slide → PIE-Bench 50 mẫu Colab (chi tiết: `README.md` mục *Tiến trình hiện tại*).
 
 ### 8.3. Khó khăn gặp phải và cách xử lý
 

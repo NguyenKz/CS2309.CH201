@@ -34,9 +34,9 @@ Tài liệu liên quan: [Overview](./SwiftEdit_Overview.md) · [Đề tài](./Sw
 
 | # | Chủ đề | Số câu hỏi |
 |---|---|---|
-| 1 | [Diffusion & Text-to-Image](#1-diffusion--text-to-image) | 2 |
-| 2 | [SwiftEdit & Pipeline](#2-swiftedit--pipeline) | 3 |
-| 3 | [Inversion & Noise](#3-inversion--noise) | 0 |
+| 1 | [Diffusion & Text-to-Image](#1-diffusion--text-to-image) | 4 |
+| 2 | [SwiftEdit & Pipeline](#2-swiftedit--pipeline) | 6 |
+| 3 | [Inversion & Noise](#3-inversion--noise) | 5 |
 | 4 | [Mask & ARaM](#4-mask--aram) | 3 |
 | 5 | [Đánh giá & PieBench](#5-đánh-giá--piebench) | 1 |
 | 6 | [Triển khai Mac / Colab](#6-triển-khai-mac--colab) | 5 |
@@ -52,6 +52,39 @@ Tài liệu liên quan: [Overview](./SwiftEdit_Overview.md) · [Đề tài](./Sw
 *Khái niệm nền: diffusion model, one-step vs multi-step, SBv2, CLIP, VAE, …*
 
 <!-- qa:insert -->
+### Q: SBv2 lấy eps (noise) ở đâu?
+
+**Ngày:** 2026-06-19  
+**Chủ đề:** #sbv2 #eps #noise #swiftedit #f_theta
+
+**Trả lời (tóm tắt):**
+- Tùy ngữ cảnh — SBv2 không tự sinh eps; eps/noise là đầu vào truyền vào gen_img(noise=...).
+- Sinh ảnh mới (text-to-image): eps ~ torch.randn(...) trong latent space — random Gaussian, giống bắt đầu sample DDPM/DDIM.
+- SwiftEdit editing (infer.py): eps đến từ F_theta — unet_inverse(latent, prompt) → inverted_noise_1 (= eps_hat). Trộn: input_sb = alpha_t*latent + sigma_t*inverted_noise_1 rồi truyền vào gen_img(noise=input_sb).
+- Train Stage 1 (tạo data): random eps → SBv2 sinh ảnh synthetic → lưu eps làm nhãn cho F_theta.
+- Tóm lại: sinh mới = random; edit = F_theta invert ảnh nguồn; không lấy từ DDIM multi-step.
+
+**Ghi chú thêm / link:**
+- Code: infer.py dòng input_sb + gen_img(noise=...); models.py IPSBV2Model.gen_img.
+
+
+### Q: eps (epsilon) trong diffusion và SwiftEdit là gì?
+
+**Ngày:** 2026-06-19  
+**Chủ đề:** #diffusion #noise #epsilon #eps_hat #swiftedit
+
+**Trả lời (tóm tắt):**
+- eps (ε, epsilon) = tensor nhiễu Gaussian ngẫu nhiên, thường eps ~ N(0,1) — thành phần random trong công thức forward diffusion.
+- Công thức DDPM (bước 01): x_t = sqrt(alpha_bar_t)*x_0 + sqrt(1-alpha_bar_t)*eps. eps càng lớn (t lớn) thì ảnh càng nhiễu; t=T gần như toàn noise.
+- Train DDPM (bước 02): random eps, trộn vào ảnh → x_t; UNet học predict eps (hoặc x_0). Loss: predicted ≈ eps thật.
+- Sample (bước 03–04): bắt đầu từ eps random thuần → denoise dần → ảnh sạch.
+- SwiftEdit/SBv2: eps nằm trong latent space (vd 4×64×64), không phải pixel. SBv2 nhận eps + prompt → one-step → ảnh.
+- eps_hat: inverted noise do F_theta dự đoán từ latent ảnh + prompt — noise mà SBv2 cần để tái tạo/sửa ảnh. Khác eps train DDPM: eps_hat là output invert, không phải random mỗi lần (trừ khi sinh ảnh mới từ đầu).
+
+**Ghi chú thêm / link:**
+- Học hands-on: learn/diffusion-from-scratch bước 01–02. SwiftEdit: infer.py inverted_noise, models.py gen_img(noise=...).
+
+
 ### Q: Công thức q_sample x_t = sqrt(alpha_bar)*x_0 + sqrt(1-alpha_bar)*epsilon từ đâu ra?
 
 **Ngày:** 2026-06-19  
@@ -91,6 +124,53 @@ Tài liệu liên quan: [Overview](./SwiftEdit_Overview.md) · [Đề tài](./Sw
 *SwiftEdit là gì, input/output, so sánh P2P / TurboEdit, tại sao one-step nhanh, …*
 
 <!-- qa:insert -->
+### Q: Ý tưởng cốt lõi SwiftEdit: thay random noise bằng noise từ ảnh gốc?
+
+**Ngày:** 2026-06-19  
+**Chủ đề:** #swiftedit #pipeline #one-step #f_theta #sbv2 #core-idea
+
+**Trả lời (tóm tắt):**
+- Đúng khung: SBv2 T2I = random noise + prompt → ảnh (1 bước). SwiftEdit = thay random noise bằng inverted noise từ ảnh gốc → pipeline edit 1+1 bước (F_theta invert + SBv2 denoise) thay ~50+50 bước pipeline cũ.
+- Bổ sung: (1) noise qua F_theta(VAE(ảnh), src_prompt), không DDIM inversion. (2) SBv2 edit nhận input_sb=alpha*z+sigma*noise_f_src, không noise_f thuần. (3) Cần dst_prompt + IP-Adapter + ARaM(mask từ |noise_f_src-noise_f_dst|), không chỉ đổi prompt. (4) F_theta phải train Stage 1+2 trước — không plug-and-play.
+- Câu báo cáo: F_theta (1 bước) suy inverted noise từ ảnh gốc; SBv2 (1 bước) denoise với edit prompt, IP-Adapter, ARaM.
+
+**Ghi chú thêm / link:**
+- SwiftEdit_Overview.md §3–4; QA mục 2 (SwiftEdit vs DDIM).
+
+
+### Q: Tóm tắt notation SwiftEdit: Stage 1, Stage 2 train, và inference edit?
+
+**Ngày:** 2026-06-19  
+**Chủ đề:** #swiftedit #notation #stage1 #stage2 #inference #f_theta #sbv2
+
+**Trả lời (tóm tắt):**
+- Ký hiệu: noise_svb=noise random SBv2; Img_svb=SBv2(noise_svb,src_prompt); z=VAE encode; noise_f=F_theta(z,prompt).
+- STAGE 1 TRAIN (synthetic): noise_svb+src_prompt→SBv2→Img_svb→z; F_theta(z,src_prompt)→noise_f. Loss: |noise_svb-noise_f| + recon SBv2(noise_f,src_prompt)≈Img_svb. Chỉ train F_theta.
+- STAGE 2 TRAIN (ảnh thật): Img_real+caption→z→F_theta→noise_f→recon→Img_recon. Loss: DISTS(Img_real,Img_recon)+L_reg. KHÔNG dùng dst_prompt; mục tiêu tái tạo ảnh gốc, không train edit.
+- INFERENCE EDIT: z=VAE(Image_src); noise_f_src=F_theta(z,src_prompt); noise_f_dst=F_theta(z,dst_prompt); mask=|src-dst|; input_sb=alpha*z+sigma*noise_f_src; dst_img=SBv2(input_sb, dst_prompt, IP-Adapter(Image_src), ARaM(mask)). Không phải SBv2(noise_f thuần).
+
+**Ghi chú thêm / link:**
+- Code: SwiftEdit/infer.py. So sánh QA mục 3 (F_theta training chi tiết).
+
+
+### Q: SwiftEdit cải tiến chỗ nào mà nhanh hơn DDIM/DDPM?
+
+**Ngày:** 2026-06-19  
+**Chủ đề:** #swiftedit #pipeline #ddim #ddpm #one-step #inversion #f_theta
+
+**Trả lời (tóm tắt):**
+- SwiftEdit nhanh không phải vì DDIM tốt hơn DDPM — nó đổi cả pipeline chỉnh sửa: từ ~100 lần chạy UNet (50 inversion + 50 edit) xuống 2 forward (1 inversion + 1 edit).
+- Pipeline cũ có 2 giai đoạn độc lập: inversion (DDIM ngược, ảnh→noise) rồi sampling+edit (denoise đa bước + P2P). DDIM chỉ rút bước nửa sau (sinh ảnh); editing vẫn phải inversion đắt trước.
+- Cải tiến 1 — one-step inversion F_theta: latent z + prompt → eps_hat trong 1 pass, thay chuỗi DDIM inversion; không optimize từng ảnh như Null-text.
+- Cải tiến 2 — one-step editing: SwiftBrushv2 (distill one-step) + IP-Adapter G_IP + ARaM; thay vòng lặp p_sample/ddim_sample với edit prompt.
+- Cải tiến 3 — self-guided mask M = |eps_hat_source - eps_hat_edit| tận dụng ngay sau F_theta, không cần segmentation model thêm.
+- Số liệu PieBench (paper): DDIM+P2P ~26s; TurboEdit 4+4 ~1.3s; SwiftEdit 1+1 ~0.23s.
+- Liên hệ học diffusion-from-scratch: q_sample là forward 1 công thức; inversion cũ phải chạy ngược nhiều bước; SwiftEdit học F_theta + dùng backbone one-step thay cả hai vòng lặp.
+
+**Ghi chú thêm / link:**
+- Chi tiết: SwiftEdit_Overview.md §3 (F_theta, ARaM), §6 (bảng so sánh); SwiftEdit_DeTai_CS2309.md §1.3; learn/diffusion-from-scratch bước 03–04 (DDPM/DDIM chỉ là sampling, không phải editing pipeline).
+
+
 ### Q: Source prompt có bắt buộc tự viết không?
 
 **Ngày:** 2026-06-01  
@@ -142,7 +222,89 @@ Tài liệu liên quan: [Overview](./SwiftEdit_Overview.md) · [Đề tài](./Sw
 *DDIM inversion, Null-text, one-step inversion `F_theta`, inverted noise `eps_hat`, stage 1/2 training, …*
 
 <!-- qa:insert -->
-*(Chưa có câu hỏi.)*
+### Q: Loss perceptual Stage 2 (DISTS) chấm điểm thế nào?
+
+**Ngày:** 2026-06-19  
+**Chủ đề:** #f_theta #stage2 #dists #perceptual #commoncanvas #loss
+
+**Trả lời (tóm tắt):**
+- Stage 2 không có eps ground truth (ảnh thật) → không dùng regression ||eps_hat-eps|| như Stage 1.
+- Perceptual loss paper: L = DISTS(x, x_hat). x = ảnh thật đầu vào; x_hat = ảnh tái tạo sau chuỗi z=VAE(x) → F_theta→eps_hat → G_IP → VAE decode.
+- DISTS (Deep Image Structure and Texture Similarity): metric đã train trên ảnh thật, so cấu trúc + texture — robust hơn MSE/PSNR pixel-wise khi lệch sáng/nhẹ pixel.
+- Thêm L_reg (gợi ý SDS): giữ eps_hat gần N(0,I). Chỉ DISTS thì noise có thể ôm pattern ảnh nguồn quá mức → khó edit sau.
+- Loss Stage 2 tổng: DISTS(x, x_hat) + λ·L_reg(eps_hat). λ=1 trong paper.
+- Bảng so sánh: Stage 1 chấm eps_hat vs eps + pixel recon; Stage 2 chấm x_hat vs x (perceptual) + phân phối noise.
+
+**Ghi chú thêm / link:**
+- Paper SwiftEdit Sec. 3 Stage 2; arXiv 2412.04301. Metric eval PieBench khác (PSNR/CLIP) — xem QA mục 5.
+
+
+### Q: Hiểu tổng quan train F_theta: SBv2 sinh mẫu → train F → fine-tune ảnh thật — đúng chỗ nào?
+
+**Ngày:** 2026-06-19  
+**Chủ đề:** #f_theta #stage1 #stage2 #sbv2 #training
+
+**Trả lời (tóm tắt):**
+- Đúng: (1) Đã có SBv2 sinh ảnh one-step nhưng editing vẫn pipeline SD multi-step (DDIM inv + sampling). (2) Stage 1 lợi dụng SBv2 sinh synthetic có nhãn eps để train F_theta nhảy thẳng latent+prompt → noise. (3) Stage 2 fine-tune trên ảnh thật để invert ảnh chụp, không chỉ ảnh synthetic.
+- Chỉnh: F_theta là UNet cỡ SD (unet_inverse), không phải mạng nhỏ. Không học bắt chước từng bước DDIM — thay thế 50 bước bằng 1 forward.
+- Stage 2 data là ảnh thật CommonCanvas + caption — không phải SBv2 sinh thêm mẫu mới; SBv2 vẫn dùng trong loss tái tạo (đưa eps_hat qua generator xem có ra lại ảnh gốc).
+- Tóm 3 tầng: engine one-step có sẵn → synthetic có nhãn train invert → ảnh thật fine-tune perceptual.
+
+**Ghi chú thêm / link:**
+- SwiftEdit_Overview.md §3.1; SwiftEdit_DeTai_CS2309.md §6.4 (đề tài dùng checkpoint, không train lại).
+
+
+### Q: Stage 1 train F_theta — giải thích chi tiết 5 bước?
+
+**Ngày:** 2026-06-19  
+**Chủ đề:** #f_theta #stage1 #synthetic #sbv2 #training
+
+**Trả lời (tóm tắt):**
+- Bước 1 — random eps ~ N(0,1) trong latent space + prompt y (caption). eps là hạt giống; cùng eps khác prompt → ảnh khác.
+- Bước 2 — SBv2 frozen: eps + y → UNet one-step (t≈999) → latent sạch → VAE decode → ảnh x. Lưu eps làm ground truth.
+- Bước 3 — VAE encode x → latent z (như infer.py). z là input F_theta; có thể lệch nhẹ latent trung gian SBv2 do roundtrip VAE.
+- Bước 4 — Train F_theta (unet_inverse): input (z, embedding y) → output eps_hat. Chỉ cập nhật θ của F_theta.
+- Bước 5 — Loss A regression: ||eps_hat - eps||². Loss B reconstruction: SBv2(eps_hat, y) ≈ x (ảnh tái tạo phải giống ảnh gốc qua SBv2, không chỉ khớp tensor).
+- Lặp ~100k iter với cặp (eps,y) khác nhau. Liên hệ DDPM bước 02: cùng tinh thầu predict noise, nhưng input là latent sạch (invert) thay vì x_t đã nhiễu.
+
+**Ghi chú thêm / link:**
+- Code SBv2 forward: SwiftEdit/models.py gen_img(). VAE encode: infer.py vae_encode.
+
+
+### Q: F_theta có phải học mapping step 0 → step end của pipeline inversion cũ không?
+
+**Ngày:** 2026-06-19  
+**Chủ đề:** #f_theta #inversion #ddim #one-step
+
+**Trả lời (tóm tắt):**
+- Đúng hướng: DDIM inversion cũ chạy ngược ảnh/latent sạch z (đầu inversion) → inverted noise eps (cuối inversion) trong ~50 bước; F_theta học cùng quan hệ đó nhưng 1 forward: F_theta(z, prompt) → eps_hat.
+- Sampling sinh ảnh: noise → ảnh sạch. Inversion edit: ảnh sạch → noise — ngược chiều sampling.
+- Không mimic từng bước DDIM: không distill trajectory 50 timestep; thay thế cả chuỗi bằng ánh xạ trực tiếp đã học.
+- Stage 1: nhãn eps từ SBv2 synthetic (biết đáp án), không cần chạy DDIM làm teacher.
+- Tiêu chí: eps_hat phải dùng được với SBv2 tái tạo ảnh — tương đương kết quả cuối inversion mà pipeline cũ cần.
+
+**Ghi chú thêm / link:**
+- So sánh pipeline cũ: QA mục 2 (SwiftEdit vs DDIM). Paper Sec. 3.
+
+
+### Q: Quy trình tạo ra F_theta (inversion network) như thế nào?
+
+**Ngày:** 2026-06-19  
+**Chủ đề:** #f_theta #inversion #training #stage1 #stage2 #synthetic #commoncanvas
+
+**Trả lời (tóm tắt):**
+- Bối cảnh: F_theta không có sẵn trong SD/DDIM — là UNet inversion do SwiftEdit train riêng, lưu checkpoint inverse_ckpt-120k/unet_ema (code: InverseModel.unet_inverse).
+- Tiền đề: cần SwiftBrushv2 (SBv2) one-step đã train sẵn — vì Stage 1 cần biết cặp (noise, latent) ground-truth khi sinh ảnh synthetic.
+- Bước 0 — Khởi tạo: lấy kiến trúc UNet có điều kiện text (cùng họ SD), chưa biết invert — giống khung UNet bước 02 diffusion-from-scratch nhưng nhiệm vụ ngược (latent+prompt → noise).
+- Stage 1 (synthetic, ~100k iter): (1) random noise eps + prompt → SBv2 sinh ảnh; (2) VAE encode → latent z; (3) train F_theta: input (z, prompt) → output eps_hat; (4) loss: eps_hat ≈ eps (regression) + tái tạo ảnh qua SBv2. Vì biết eps gốc nên dạy được one-step inversion có nhãn.
+- Stage 2 (ảnh thực, ~180k iter): dữ liệu CommonCanvas (ảnh thật + caption); fine-tune F_theta với DISTS (perceptual) + regularization giữ phân phối noise — generalize khỏi synthetic.
+- Kết quả: checkpoint F_theta — inference 1 forward: ảnh → VAE → z + prompt → eps_hat; không cần DDIM inversion 50 bước.
+- Repo CS2309 chỉ inference; không có script train Stage 1/2 — dùng weights pretrained từ release SwiftEdit.
+
+**Ghi chú thêm / link:**
+- Code: SwiftEdit/models.py (InverseModel), infer.py (unet_inverse). Paper Sec. 3; SwiftEdit_Overview.md §3.1; SwiftEdit_DeTai_CS2309.md §6.4 (đề tài không train lại).
+
+
 
 ---
 

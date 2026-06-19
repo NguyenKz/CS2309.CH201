@@ -38,6 +38,7 @@ Minimal DDPM and DDIM implementation in PyTorch — train a diffusion model on M
 | `03_sample_ddpm.py` | Generate images with full 1000-step DDPM sampling |
 | `03_sample_ddpm.ipynb` | Notebook giải thích reverse sampling DDPM |
 | `04_sample_ddim.py` | Fast sampling with DDIM (50 and 20 steps) |
+| `04_sample_ddim.ipynb` | Notebook giải thích DDIM sampling |
 | `train_all.py` | Run the entire pipeline end-to-end |
 
 ## Key Concepts

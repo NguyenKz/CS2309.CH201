@@ -32,8 +32,11 @@ Minimal DDPM and DDIM implementation in PyTorch — train a diffusion model on M
 | `diffusion/schedule.py` | Linear beta schedule, forward process q(x_t\|x_0), DDPM & DDIM reverse sampling |
 | `diffusion/unet.py` | U-Net with sinusoidal time embeddings, residual blocks, self-attention |
 | `01_forward_process.py` | Visualize how noise is progressively added |
+| `01_forward_process.ipynb` | Notebook giải thích forward process |
 | `02_train_ddpm.py` | Train the denoising model on MNIST (15 epochs, ~45 min on MPS) |
+| `02_train_ddpm.ipynb` | Notebook giải thích training loop DDPM |
 | `03_sample_ddpm.py` | Generate images with full 1000-step DDPM sampling |
+| `03_sample_ddpm.ipynb` | Notebook giải thích reverse sampling DDPM |
 | `04_sample_ddim.py` | Fast sampling with DDIM (50 and 20 steps) |
 | `train_all.py` | Run the entire pipeline end-to-end |
 

@@ -56,7 +56,109 @@ Minimal DDPM and DDIM implementation in PyTorch — train a diffusion model on M
 - GroupNorm + SiLU activations throughout
 - ~1.4M parameters
 
-## Quick Start
+---
+
+## Công thức forward `q_sample` từ đâu ra?
+
+> Nhiều tutorial nhảy thẳng vào công thức dưới đây mà không giải thích nguồn gốc. Phần này suy ra công thức đó từ định nghĩa DDPM — thêm noise **từng bước**.
+
+$$
+x_t = \sqrt{\bar{\alpha}_t}\, x_0 + \sqrt{1 - \bar{\alpha}_t}\, \epsilon
+$$
+
+Liên quan code: [`01_forward_process.py`](01_forward_process.py) · [`diffusion/schedule.py`](diffusion/schedule.py) · notebook [`01_forward_process.ipynb`](01_forward_process.ipynb)
+
+### Bắt đầu từ định nghĩa DDPM
+
+DDPM định nghĩa quá trình phá hủy ảnh:
+
+$$
+q(x_t \mid x_{t-1}) = \mathcal{N}\!\left(\sqrt{\alpha_t}\, x_{t-1},\; (1 - \alpha_t)\, \mathbf{I}\right)
+$$
+
+Trong code thường viết:
+
+```python
+alpha_t = 1 - beta_t
+```
+
+Từ ảnh ở bước trước $x_{t-1}$, ta tạo $x_t$ bằng cách:
+
+$$
+x_t = \sqrt{\alpha_t}\, x_{t-1} + \sqrt{1 - \alpha_t}\, \epsilon_t
+$$
+
+**Ví dụ:** $\alpha_t = 0.99$ → giữ ~99% tín hiệu cũ + thêm noise mới (vì $\sqrt{0.01} = 0.1$).
+
+### Khai triển từng bước
+
+**Bước 1:**
+
+$$
+x_1 = \sqrt{\alpha_1}\, x_0 + \sqrt{1 - \alpha_1}\, \epsilon_1
+$$
+
+**Bước 2:**
+
+$$
+x_2 = \sqrt{\alpha_2}\, x_1 + \sqrt{1 - \alpha_2}\, \epsilon_2
+$$
+
+Thay $x_1$ vào và khai triển:
+
+$$
+x_2 = \sqrt{\alpha_1 \alpha_2}\, x_0 + \sqrt{\alpha_2(1 - \alpha_1)}\, \epsilon_1 + \sqrt{1 - \alpha_2}\, \epsilon_2
+$$
+
+Bắt đầu thấy tích $\alpha_1 \alpha_2$. Làm tiếp bước 3 sẽ xuất hiện $\alpha_1 \alpha_2 \alpha_3$.
+
+### Tổng quát sau *t* bước
+
+$$
+x_t = \sqrt{\alpha_1 \alpha_2 \cdots \alpha_t}\; x_0 \;+\; \cdots
+$$
+
+Phần $+\cdots$ là **tổng có trọng số** của nhiều noise $\epsilon_1, \epsilon_2, \ldots, \epsilon_t$.
+
+Người ta đặt:
+
+$$
+\bar{\alpha}_t = \alpha_1 \alpha_2 \cdots \alpha_t = \prod_{s=1}^{t} \alpha_s
+$$
+
+(trong code: `schedule.alpha_bar`).
+
+### Gộp nhiều Gaussian thành một
+
+Ta có $\epsilon_1, \epsilon_2, \ldots, \epsilon_t$ đều là Gaussian độc lập. **Định lý:** tổng có trọng số của nhiều Gaussian độc lập vẫn là một Gaussian.
+
+Ví dụ ở bước 2, hai noise có thể gộp thành $\sqrt{1 - \alpha_1 \alpha_2}\, \epsilon$ với $\epsilon \sim \mathcal{N}(0, \mathbf{I})$.
+
+Tương tự cho mọi bước → **kết quả cuối:**
+
+$$
+x_t = \sqrt{\bar{\alpha}_t}\, x_0 + \sqrt{1 - \bar{\alpha}_t}\, \epsilon
+$$
+
+### Nhảy thẳng $x_0 \to x_t$ (không cần loop 1000 bước)
+
+Ban đầu: $x_0 \to x_1 \to x_2 \to \cdots \to x_t$. Sau khi suy ra công thức đóng, train chỉ cần:
+
+```python
+x_t, noise = schedule.q_sample(x_0, t, noise)
+# ≡ sqrt(alpha_bar[t]) * x_0 + sqrt(1 - alpha_bar[t]) * noise
+```
+
+| Khái niệm | Ý nghĩa |
+|-----------|---------|
+| $\alpha_t$ | Mỗi bước giữ lại bao nhiêu tín hiệu cũ ($1 - \beta_t$) |
+| $\bar{\alpha}_t$ | Tích tất cả $\alpha$ từ bước 1 đến $t$ |
+| Công thức đóng | Khai triển từng bước + gộp Gaussian |
+| Train nhanh | Lấy trực tiếp $x_t$ từ $x_0$ + random $t$ |
+
+**Liên hệ SwiftEdit:** forward phá ảnh → noise; inversion (method cũ) đi ngược bằng nhiều bước DDIM; SwiftEdit dùng $F_\theta$ thay chuỗi inversion bằng một forward pass.
+
+---
 
 ```bash
 pip install -r requirements.txt

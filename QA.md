@@ -34,7 +34,7 @@ Tài liệu liên quan: [Overview](./SwiftEdit_Overview.md) · [Đề tài](./Sw
 
 | # | Chủ đề | Số câu hỏi |
 |---|---|---|
-| 1 | [Diffusion & Text-to-Image](#1-diffusion--text-to-image) | 1 |
+| 1 | [Diffusion & Text-to-Image](#1-diffusion--text-to-image) | 2 |
 | 2 | [SwiftEdit & Pipeline](#2-swiftedit--pipeline) | 3 |
 | 3 | [Inversion & Noise](#3-inversion--noise) | 0 |
 | 4 | [Mask & ARaM](#4-mask--aram) | 3 |
@@ -52,6 +52,22 @@ Tài liệu liên quan: [Overview](./SwiftEdit_Overview.md) · [Đề tài](./Sw
 *Khái niệm nền: diffusion model, one-step vs multi-step, SBv2, CLIP, VAE, …*
 
 <!-- qa:insert -->
+### Q: Công thức q_sample x_t = sqrt(alpha_bar)*x_0 + sqrt(1-alpha_bar)*epsilon từ đâu ra?
+
+**Ngày:** 2026-06-19  
+**Chủ đề:** #diffusion #forward-process #q_sample #ddpm
+
+**Trả lời (tóm tắt):**
+- DDPM định nghĩa từng bước: x_t = sqrt(alpha_t)*x_{t-1} + sqrt(1-alpha_t)*eps_t (alpha_t = 1 - beta_t).
+- Khai triển x_2, x_3... xuất hiện tích alpha_1*alpha_2*... → đặt alpha_bar_t.
+- Nhiều Gaussian độc lập có trọng số gộp thành một eps ~ N(0,1) → sqrt(1-alpha_bar_t)*eps.
+- Kết quả đóng: x_t = sqrt(alpha_bar_t)*x_0 + sqrt(1-alpha_bar_t)*epsilon.
+- Train không cần loop 1000 bước — q_sample nhảy thẳng x_0 → x_t.
+
+**Ghi chú thêm / link:**
+- Giải thích đầy đủ: [learn/diffusion-from-scratch/README.md § Công thức forward q_sample](learn/diffusion-from-scratch/README.md#công-thức-forward-q_sample-từ-đâu-ra)
+
+
 ### Q: Mỗi step trong diffusion chỉnh sửa ảnh cũ làm gì?
 
 **Ngày:** 2026-06-01  

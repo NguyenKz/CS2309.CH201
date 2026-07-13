@@ -19,6 +19,7 @@ Tài liệu: [`SwiftEdit_Overview.md`](./SwiftEdit_Overview.md) · [`SwiftEdit_D
 | Benchmark tốc độ & chất lượng (fp32/fp16/fp8/fp4) | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/NguyenKz/CS2309.CH201/blob/main/notebooks/CS2309_SwiftEdit_quality_speed_bench.ipynb) |
 | Thực nghiệm giai đoạn 3 (ablation + PIE-Bench) | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/NguyenKz/CS2309.CH201/blob/main/notebooks/CS2309_SwiftEdit_phase3.ipynb) |
 | Test nhanh pipeline | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/NguyenKz/CS2309.CH201/blob/main/notebooks/CS2309_SwiftEdit_test.ipynb) |
+| **WebUI Gradio** (edit + xóa vật thể) | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/NguyenKz/CS2309.CH201/blob/main/notebooks/CS2309_SwiftEdit_webui.ipynb) |
 
 > Mở badge → Colab → Runtime **T4 GPU** → chạy tuần tự. Repo private cần thêm `GITHUB_TOKEN` trong Colab Secrets (xem cell setup).
 
@@ -70,6 +71,7 @@ CS2309.CH201/
 ├── NHAT_KY.md · QA.md · SwiftEdit_DeTai_CS2309.md
 ├── notebooks/
 │   ├── CS2309_SwiftEdit_test.ipynb
+│   ├── CS2309_SwiftEdit_webui.ipynb
 │   ├── CS2309_SwiftEdit_phase3.ipynb
 │   └── CS2309_SwiftEdit_quality_speed_bench.ipynb
 ├── experimental_data/         ← Bằng chứng thực nghiệm (metrics, ảnh mẫu)
@@ -192,22 +194,23 @@ Chi tiết: [Mục 4.2 đề tài](./SwiftEdit_DeTai_CS2309.md#42-google-colab--
 ## Checklist tổng thể
 
 > Đánh dấu `[x]` khi hoàn thành. Cập nhật file này trong quá trình làm đề tài.
-> Cập nhật tiến độ lần cuối: 2026-06-18 — 33/80 task bắt buộc
+> Cập nhật tiến độ lần cuối: 2026-07-03 — 35/80 task bắt buộc
 
 ### Trạng thái nhanh
 
 | Giai đoạn | Tiến độ |
 |---|---|
-| 1. Lý thuyết | 🔄 Đang làm (1/6) |
+| 1. Lý thuyết | 🔄 Đang làm (3/6) |
 | 2. Setup Mac + Colab | 🔄 Đang làm (11/17) |
 | 3. Thực nghiệm cơ bản | 🔄 Đang làm (6/19) |
 | 4. So sánh & mở rộng | 🔄 Đang làm (10/19) |
 | 5. Báo cáo & nộp | 🔄 Đang làm (5/19) |
 
 
-**Tổng:** 33/80 task bắt buộc (~41%) — phần thực nghiệm SwiftEdit-RT đã có số liệu lớn; báo cáo và ablation còn thiếu.
 
-### Tiến trình hiện tại (tổng hợp 2026-06-18)
+**Tổng:** 35/80 task bắt buộc (~44%) — SwiftEdit-RT đã có số liệu lớn; lý thuyết 3/6; báo cáo và ablation còn thiếu.
+
+### Tiến trình hiện tại (tổng hợp 2026-07-03)
 
 **Điểm mạnh (đã có bằng chứng):**
 
@@ -217,8 +220,9 @@ Chi tiết: [Mục 4.2 đề tài](./SwiftEdit_DeTai_CS2309.md#42-google-colab--
 | **SwiftEdit-RT** (hướng đào sâu) | fp16 + cache + channels_last; benchmark **2400 edit** Colab (fp32/fp16/fp8/fp4) |
 | Benchmark Colab T4 | fp16+cache **khuyến nghị**: 1.70×, VRAM −42%, PSNR 48.6 dB — [`quality_speed_bench_2026-06-17/`](./experimental_data/quality_speed_bench_2026-06-17/) |
 | PIE-Bench Mac | 20 mẫu (2/loại × 10 loại); CLIP-Whole 23.02 — [`piebench_subset20_2026-06-14/`](./experimental_data/piebench_subset20_2026-06-14/) |
-| Demo | Gradio fp16+cache + tab xóa vật thể — [`app_gradio.py`](./scripts/app_gradio.py) |
+| Demo | Gradio fp16+cache + tab xóa vật thể — [`app_gradio.py`](./scripts/app_gradio.py) · notebook [`CS2309_SwiftEdit_webui.ipynb`](./notebooks/CS2309_SwiftEdit_webui.ipynb) |
 | Runtime 3 cột | Mac MPS ~30s / Colab T4 ~1.3–2.9s / Paper A100 ~0.23s |
+| **Học diffusion + QA** | [`learn/diffusion-from-scratch/`](./learn/diffusion-from-scratch/) notebook 01→04; [`QA.md`](./QA.md) §1–3 (F_theta, SBv2, pipeline notation) — xem [`NHAT_KY.md`](./NHAT_KY.md) 2026-07-03 |
 
 **Khoảng trống (cần cho nộp báo cáo):**
 
@@ -229,7 +233,7 @@ Chi tiết: [Mục 4.2 đề tài](./SwiftEdit_DeTai_CS2309.md#42-google-colab--
 | PIE-Bench 50–100 mẫu metrics Colab | Chỉ 20 mẫu Mac | Trung bình |
 | So sánh baseline (TurboEdit) | Chưa | Trung bình |
 | Slide trình bày | Chưa | **Cao** |
-| Lý thuyết (đọc paper, Related Work) | 1/6 | Trung bình |
+| Lý thuyết (đọc paper PDF, Related Work bảng) | 3/6 | Trung bình |
 
 **Checklist nộp — đã đạt / chưa:**
 
@@ -254,14 +258,15 @@ Chi tiết: [Mục 4.2 đề tài](./SwiftEdit_DeTai_CS2309.md#42-google-colab--
 ## Giai đoạn 1 — Lý thuyết (Tuần 1–2)
 
 > **Mục tiêu:** Hiểu SwiftEdit đủ sâu để viết báo cáo §Overview + Related Work + pipeline.  
-> **Tài liệu sẵn có:** [`SwiftEdit_Overview.md`](./SwiftEdit_Overview.md) · [`SwiftEdit_DeTai_CS2309.md` §1](./SwiftEdit_DeTai_CS2309.md#1-overview) · [`QA.md`](./QA.md) · ảnh pipeline cũ [`assets/pipeline/`](./assets/pipeline/)
+> **Tài liệu sẵn có:** [`SwiftEdit_Overview.md`](./SwiftEdit_Overview.md) · [`SwiftEdit_DeTai_CS2309.md` §1](./SwiftEdit_DeTai_CS2309.md#1-overview) · [`QA.md`](./QA.md) · ảnh pipeline cũ [`assets/pipeline/`](./assets/pipeline/)  
+> **Hands-on diffusion (MNIST):** [`learn/diffusion-from-scratch/`](./learn/diffusion-from-scratch/) — notebook 01→04 (forward → train → DDPM/DDIM sample)
 
 ### Checklist tổng (6 mục)
 
 - [ ] Đọc paper SwiftEdit (Abstract, Sec. 3–5)
-- [ ] Tìm hiểu SwiftBrushv2, DDIM inversion, IP-Adapter
+- [x] Tìm hiểu SwiftBrushv2, DDIM inversion, IP-Adapter
 - [x] Tìm hiểu PieBench benchmark
-- [ ] Vẽ/tóm tắt pipeline inversion → mask → ARaM
+- [x] Vẽ/tóm tắt pipeline inversion → mask → ARaM
 - [ ] So sánh SwiftEdit vs P2P, NT-Inv, TurboEdit, ICD (bảng related work)
 - [ ] Viết phần Overview + Related Work trong báo cáo
 
@@ -287,7 +292,7 @@ Chi tiết: [Mục 4.2 đề tài](./SwiftEdit_DeTai_CS2309.md#42-google-colab--
 | 2.3 | **Null-text Inversion** | Optimization từng timestep; chậm nhưng PSNR cao — bối cảnh so sánh | `assets/pipeline/nulltext-diagram.png` |
 | 2.4 | **IP-Adapter** | Image condition qua decoupled cross-attention; vai trò `G_IP` trong SwiftEdit | Paper IP-Adapter · code `attention_processor.py` |
 
-**Deliverable:** Thêm 2–4 câu Q&A vào [`QA.md` §3 Inversion & Noise](./QA.md#3-inversion--noise) (hiện còn trống).
+**Deliverable:** ~~Thêm 2–4 câu Q&A vào QA §3~~ → **đã có 5 câu** ([`QA.md` §3](./QA.md#3-inversion--noise)); ôn IP-Adapter qua [`QA.md` §4](./QA.md#4-mask--aram).
 
 #### Task 3 — PieBench *(đã [x], ôn lại nhanh)*
 

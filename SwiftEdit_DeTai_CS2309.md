@@ -958,6 +958,7 @@ Hướng chính được chọn để đào sâu là **C13 — SwiftEdit-RT: Rea
 
 | Ngày       | Giai đoạn           | Công việc                                                | Kết quả / Ghi chú                                                        |
 |---|---|---|---|
+| 2026-07-03 | 1 | Notebook diffusion-from-scratch 01→04; QA F_theta/SBv2/pipeline | 4 notebook + 4 script; QA §1–3: 15 câu; pipeline 1+1 (F_theta + SBv2) (Mac; học lý thuyết + notebook .venv) |
 | 2026-06-18 | 5 | Rà soát toàn bộ tiến độ đề tài; cập nhật README (mục Tiến trình hiện tại), SwiftEdit_DeTai §8.2 | 33/80 task (~41%); SwiftEdit-RT mạnh (2400 edit Colab, fp16+cache khuyến nghị); thiếu báo cáo GĐ5, ablation, slide; ưu tiên: báo cáo → ablation → slide (Mac M4; tài liệu) |
 | 2026-06-17 | 4e | Benchmark precision fp32/fp16/fp8/fp4 (200×3×4 config, Colab T4) | fp16+cache khuyến nghị: 1.70×/1.82×, VRAM −42.1%, PSNR 48.6dB; fp8 1.92× nhưng PSNR 6.0dB (hỏng); fp4 VRAM −48.5%, PSNR 21.7dB; RUN_ID 20260617-0336-bb4785; experimental_data/quality_speed_bench_2026-06-17/ (Colab Tesla T4; torch 2.11; git 1a6706c) |
 | 2026-06-14 | 4e | Benchmark tốc độ + VRAM + chất lượng quy mô lớn (fp32 vs fp16+cache) | 200 ảnh × 3 prompt = 600 edit/config trên Tesla T4: fp16+cache nhanh 1.70× (overall)/1.82× (cache-hit), giảm 42.1% VRAM (14.6→8.5GB), PSNR 48.5dB / SSIM 0.998 / LPIPS 0.0008 vs fp32 (600 ảnh) → tăng tốc + tiết kiệm bộ nhớ gần như không mất chất lượng; notebook + RUN_ID + zip bằng chứng; experimental_data/quality_speed_bench_2026-06-14/ (Colab Tesla T4 (CUDA); torch 2.11) |
@@ -1032,19 +1033,19 @@ Mac M4 (2026-06-14): fp16 ~3.3×→7×; EditCache tiết kiệm ~9.93s/edit; bot
 
 Prototype OK trên Mac: xóa vật nhỏ/vừa (headphones ~6s); failure case vật lớn (xe đạp ~39% khung). Nguồn: `experimental_data/object_removal_2026-06-14/`.
 
-#### 8.2.7. Tiến độ tổng thể (2026-06-18)
+#### 8.2.7. Tiến độ tổng thể (2026-07-03)
 
 | Giai đoạn | Tiến độ | Đánh giá |
 |---|---|---|
-| 1. Lý thuyết | 1/6 | Yếu — chưa Related Work |
+| 1. Lý thuyết | 3/6 | Tiến triển — diffusion-from-scratch 01→04 + QA §1–3 (F_theta/SBv2); chưa đọc paper PDF, Related Work |
 | 2. Setup | 11/17 | Mac ổn; Colab Drive/symlink chưa xong |
 | 3. Thực nghiệm cơ bản | 6/19 | Có pipeline + 20 mẫu Mac; thiếu ablation |
 | 4. So sánh & mở rộng | 10/19 | **Mạnh** — SwiftEdit-RT có số liệu lớn |
 | 5. Báo cáo & nộp | 5/19 | Checklist nộp một phần; chưa viết báo cáo đầy đủ |
 
-**Tổng:** 33/80 task bắt buộc (~41%).
+**Tổng:** 35/80 task bắt buộc (~44%).
 
-Ưu tiên tiếp theo: viết báo cáo GĐ5 → ablation hyperparameter → slide → PIE-Bench 50 mẫu Colab (chi tiết: `README.md` mục *Tiến trình hiện tại*).
+Ưu tiên tiếp theo: viết báo cáo GĐ5 → ablation hyperparameter → slide → đọc paper Sec. 3–5 (chi tiết: `README.md` mục *Tiến trình hiện tại*, `NHAT_KY.md` 2026-07-03).
 
 ### 8.3. Khó khăn gặp phải và cách xử lý
 

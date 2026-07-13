@@ -1,7 +1,7 @@
 # CS2309 — SwiftEdit trên Mac (MPS). Cài sau khi tạo .venv:
 #   pyenv local 3.12.10 && python -m venv .venv && source .venv/bin/activate
 #   python -m pip install -r requirements-mac.txt
-
+ipywidgets
 torch
 torchvision
 torchaudio

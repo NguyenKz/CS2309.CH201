@@ -12,3 +12,5 @@ tensorboard
 Jinja2
 einops
 packaging
+
+ipywidgets

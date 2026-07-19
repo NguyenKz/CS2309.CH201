@@ -37,10 +37,17 @@ setup_log "pip install..."
 setup_pip_stack "$REQ" "$REQ_P3"
 
 WEIGHTS="$ROOT/SwiftEdit/swiftedit_weights"
-if ! setup_verify_weights "$WEIGHTS"; then
-  setup_log "Tải swiftedit_weights (~9.6 GB)..."
+# Precision notebook: SWIFTEDIT_SKIP_WEIGHTS_DOWNLOAD=1 → Drive/prepare gắn weights,
+# tránh Qualcomm ~10GB+ khi chỉ chạy *_weight.
+if [[ "${SWIFTEDIT_SKIP_WEIGHTS_DOWNLOAD:-0}" == "1" ]]; then
+  setup_log "SKIP tải Qualcomm (SWIFTEDIT_SKIP_WEIGHTS_DOWNLOAD=1) — dùng prepare_colab_weights / Drive"
+  # Dọn leftover archive nếu còn từ lần cũ
+  rm -f "$ROOT/SwiftEdit/swiftedit_weights.tar.gz" \
+        "$ROOT/SwiftEdit/swiftedit_weights.tar.gz.part-"* 2>/dev/null || true
+elif ! setup_verify_weights "$WEIGHTS"; then
+  setup_log "Tải swiftedit_weights (stream, ~10GB extract — không giữ .part/.tar)..."
   setup_download_weights "$ROOT"
-  setup_verify_weights "$WEIGHTS"
+  setup_verify_weights "$WEIGHTS" || true
 fi
 
 setup_log "Tải HF models..."

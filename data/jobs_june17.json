@@ -1,0 +1,3613 @@
+{
+  "source_run": "quality_speed_bench_2026-06-17",
+  "templates": [
+    "{edit}",
+    "{src} at night, dark lighting",
+    "{src} in winter, covered in snow"
+  ],
+  "n_images": 200,
+  "n_jobs": 600,
+  "dataset_dir": "data/PIE-Bench-auto200",
+  "jobs": [
+    {
+      "image_rel": "annotation_images/0_random_140/000000000000.jpg",
+      "src_prompt": "a slanted mountain bicycle on the road in front of a building",
+      "edit_prompt": "a slanted rusty mountain motorcycle in front of a fence",
+      "sample_id": "000000000000"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000000.jpg",
+      "src_prompt": "a slanted mountain bicycle on the road in front of a building",
+      "edit_prompt": "a slanted mountain bicycle on the road in front of a building at night, dark lighting",
+      "sample_id": "000000000000"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000000.jpg",
+      "src_prompt": "a slanted mountain bicycle on the road in front of a building",
+      "edit_prompt": "a slanted mountain bicycle on the road in front of a building in winter, covered in snow",
+      "sample_id": "000000000000"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000001.jpg",
+      "src_prompt": "a round cake with orange frosting on a wooden plate",
+      "edit_prompt": "a square cake with strawberry frosting on a plastic plate",
+      "sample_id": "000000000001"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000001.jpg",
+      "src_prompt": "a round cake with orange frosting on a wooden plate",
+      "edit_prompt": "a round cake with orange frosting on a wooden plate at night, dark lighting",
+      "sample_id": "000000000001"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000001.jpg",
+      "src_prompt": "a round cake with orange frosting on a wooden plate",
+      "edit_prompt": "a round cake with orange frosting on a wooden plate in winter, covered in snow",
+      "sample_id": "000000000001"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000002.jpg",
+      "src_prompt": "a cat sitting on a wooden chair",
+      "edit_prompt": "a red dog with flowers in mouth standing on a metal chair",
+      "sample_id": "000000000002"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000002.jpg",
+      "src_prompt": "a cat sitting on a wooden chair",
+      "edit_prompt": "a cat sitting on a wooden chair at night, dark lighting",
+      "sample_id": "000000000002"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000002.jpg",
+      "src_prompt": "a cat sitting on a wooden chair",
+      "edit_prompt": "a cat sitting on a wooden chair in winter, covered in snow",
+      "sample_id": "000000000002"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000003.jpg",
+      "src_prompt": "blue light, a black and white cat is playing with a flower",
+      "edit_prompt": "blue light, a black and white dog is playing with a yellow ball",
+      "sample_id": "000000000003"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000003.jpg",
+      "src_prompt": "blue light, a black and white cat is playing with a flower",
+      "edit_prompt": "blue light, a black and white cat is playing with a flower at night, dark lighting",
+      "sample_id": "000000000003"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000003.jpg",
+      "src_prompt": "blue light, a black and white cat is playing with a flower",
+      "edit_prompt": "blue light, a black and white cat is playing with a flower in winter, covered in snow",
+      "sample_id": "000000000003"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000004.jpg",
+      "src_prompt": "a cat sitting next to a mirror",
+      "edit_prompt": "a silver cat sculpture standing next to a mirror",
+      "sample_id": "000000000004"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000004.jpg",
+      "src_prompt": "a cat sitting next to a mirror",
+      "edit_prompt": "a cat sitting next to a mirror at night, dark lighting",
+      "sample_id": "000000000004"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000004.jpg",
+      "src_prompt": "a cat sitting next to a mirror",
+      "edit_prompt": "a cat sitting next to a mirror in winter, covered in snow",
+      "sample_id": "000000000004"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000005.jpg",
+      "src_prompt": "an orange cat sitting on top of a fence",
+      "edit_prompt": "an white cat and a dog standing on top of a fence",
+      "sample_id": "000000000005"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000005.jpg",
+      "src_prompt": "an orange cat sitting on top of a fence",
+      "edit_prompt": "an orange cat sitting on top of a fence at night, dark lighting",
+      "sample_id": "000000000005"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000005.jpg",
+      "src_prompt": "an orange cat sitting on top of a fence",
+      "edit_prompt": "an orange cat sitting on top of a fence in winter, covered in snow",
+      "sample_id": "000000000005"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000006.jpg",
+      "src_prompt": "a cup of coffee with drawing of tulip putted on the wooden table",
+      "edit_prompt": "a yellow cup of milk with drawing of rose putted on the wooden table",
+      "sample_id": "000000000006"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000006.jpg",
+      "src_prompt": "a cup of coffee with drawing of tulip putted on the wooden table",
+      "edit_prompt": "a cup of coffee with drawing of tulip putted on the wooden table at night, dark lighting",
+      "sample_id": "000000000006"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000006.jpg",
+      "src_prompt": "a cup of coffee with drawing of tulip putted on the wooden table",
+      "edit_prompt": "a cup of coffee with drawing of tulip putted on the wooden table in winter, covered in snow",
+      "sample_id": "000000000006"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000007.jpg",
+      "src_prompt": "a german shepherd dog stands on the grass with mouth closed",
+      "edit_prompt": "a white german shepherd dog sits on the grass with big mouth opened",
+      "sample_id": "000000000007"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000007.jpg",
+      "src_prompt": "a german shepherd dog stands on the grass with mouth closed",
+      "edit_prompt": "a german shepherd dog stands on the grass with mouth closed at night, dark lighting",
+      "sample_id": "000000000007"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000007.jpg",
+      "src_prompt": "a german shepherd dog stands on the grass with mouth closed",
+      "edit_prompt": "a german shepherd dog stands on the grass with mouth closed in winter, covered in snow",
+      "sample_id": "000000000007"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000008.jpg",
+      "src_prompt": "a golden retriever holding a tulip sitting on the ground in front of fence",
+      "edit_prompt": "a black german shepherd holding a rose standing on the ground in front of fence",
+      "sample_id": "000000000008"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000008.jpg",
+      "src_prompt": "a golden retriever holding a tulip sitting on the ground in front of fence",
+      "edit_prompt": "a golden retriever holding a tulip sitting on the ground in front of fence at night, dark lighting",
+      "sample_id": "000000000008"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000008.jpg",
+      "src_prompt": "a golden retriever holding a tulip sitting on the ground in front of fence",
+      "edit_prompt": "a golden retriever holding a tulip sitting on the ground in front of fence in winter, covered in snow",
+      "sample_id": "000000000008"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000009.jpg",
+      "src_prompt": "a dog is laying down on a white background",
+      "edit_prompt": "Painting of a lion laying down on a blue background",
+      "sample_id": "000000000009"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000009.jpg",
+      "src_prompt": "a dog is laying down on a white background",
+      "edit_prompt": "a dog is laying down on a white background at night, dark lighting",
+      "sample_id": "000000000009"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000009.jpg",
+      "src_prompt": "a dog is laying down on a white background",
+      "edit_prompt": "a dog is laying down on a white background in winter, covered in snow",
+      "sample_id": "000000000009"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000010.jpg",
+      "src_prompt": "photo of a goat and a cat standing on rocks near the ocean",
+      "edit_prompt": "photo of a white horse and a cat sitting on rocks near the ocean",
+      "sample_id": "000000000010"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000010.jpg",
+      "src_prompt": "photo of a goat and a cat standing on rocks near the ocean",
+      "edit_prompt": "photo of a goat and a cat standing on rocks near the ocean at night, dark lighting",
+      "sample_id": "000000000010"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000010.jpg",
+      "src_prompt": "photo of a goat and a cat standing on rocks near the ocean",
+      "edit_prompt": "photo of a goat and a cat standing on rocks near the ocean in winter, covered in snow",
+      "sample_id": "000000000010"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000011.jpg",
+      "src_prompt": "a colorful bird standing on a branch",
+      "edit_prompt": "a brown owl standing on a red flower",
+      "sample_id": "000000000011"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000011.jpg",
+      "src_prompt": "a colorful bird standing on a branch",
+      "edit_prompt": "a colorful bird standing on a branch at night, dark lighting",
+      "sample_id": "000000000011"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000011.jpg",
+      "src_prompt": "a colorful bird standing on a branch",
+      "edit_prompt": "a colorful bird standing on a branch in winter, covered in snow",
+      "sample_id": "000000000011"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000012.jpg",
+      "src_prompt": "meat balls on white ceramics plate",
+      "edit_prompt": "Tuna sushi on white metal plate",
+      "sample_id": "000000000012"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000012.jpg",
+      "src_prompt": "meat balls on white ceramics plate",
+      "edit_prompt": "meat balls on white ceramics plate at night, dark lighting",
+      "sample_id": "000000000012"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000012.jpg",
+      "src_prompt": "meat balls on white ceramics plate",
+      "edit_prompt": "meat balls on white ceramics plate in winter, covered in snow",
+      "sample_id": "000000000012"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000013.jpg",
+      "src_prompt": "three white dumplings on brown wooden bowl",
+      "edit_prompt": "three white cupcakes on black metal bowl",
+      "sample_id": "000000000013"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000013.jpg",
+      "src_prompt": "three white dumplings on brown wooden bowl",
+      "edit_prompt": "three white dumplings on brown wooden bowl at night, dark lighting",
+      "sample_id": "000000000013"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000013.jpg",
+      "src_prompt": "three white dumplings on brown wooden bowl",
+      "edit_prompt": "three white dumplings on brown wooden bowl in winter, covered in snow",
+      "sample_id": "000000000013"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000014.jpg",
+      "src_prompt": "a man in black shirt with his hands hanging down standing by a house",
+      "edit_prompt": "a man in white shirt with his hands up standing by a house",
+      "sample_id": "000000000014"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000014.jpg",
+      "src_prompt": "a man in black shirt with his hands hanging down standing by a house",
+      "edit_prompt": "a man in black shirt with his hands hanging down standing by a house at night, dark lighting",
+      "sample_id": "000000000014"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000014.jpg",
+      "src_prompt": "a man in black shirt with his hands hanging down standing by a house",
+      "edit_prompt": "a man in black shirt with his hands hanging down standing by a house in winter, covered in snow",
+      "sample_id": "000000000014"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000015.jpg",
+      "src_prompt": "white plate with fruits on it",
+      "edit_prompt": "Blue metal plate with vegatables on it",
+      "sample_id": "000000000015"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000015.jpg",
+      "src_prompt": "white plate with fruits on it",
+      "edit_prompt": "white plate with fruits on it at night, dark lighting",
+      "sample_id": "000000000015"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000015.jpg",
+      "src_prompt": "white plate with fruits on it",
+      "edit_prompt": "white plate with fruits on it in winter, covered in snow",
+      "sample_id": "000000000015"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000016.jpg",
+      "src_prompt": "a plate with grilled steak on it",
+      "edit_prompt": "a white plate with grilled salmon and mushroom on it",
+      "sample_id": "000000000016"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000016.jpg",
+      "src_prompt": "a plate with grilled steak on it",
+      "edit_prompt": "a plate with grilled steak on it at night, dark lighting",
+      "sample_id": "000000000016"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000016.jpg",
+      "src_prompt": "a plate with grilled steak on it",
+      "edit_prompt": "a plate with grilled steak on it in winter, covered in snow",
+      "sample_id": "000000000016"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000017.jpg",
+      "src_prompt": "photo of a statue in front view",
+      "edit_prompt": "photo of a white Teddy Bear in side view",
+      "sample_id": "000000000017"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000017.jpg",
+      "src_prompt": "photo of a statue in front view",
+      "edit_prompt": "photo of a statue in front view at night, dark lighting",
+      "sample_id": "000000000017"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000017.jpg",
+      "src_prompt": "photo of a statue in front view",
+      "edit_prompt": "photo of a statue in front view in winter, covered in snow",
+      "sample_id": "000000000017"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000018.jpg",
+      "src_prompt": "the statue of liberty holding a torch",
+      "edit_prompt": "the statue of angel holding a red flower",
+      "sample_id": "000000000018"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000018.jpg",
+      "src_prompt": "the statue of liberty holding a torch",
+      "edit_prompt": "the statue of liberty holding a torch at night, dark lighting",
+      "sample_id": "000000000018"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000018.jpg",
+      "src_prompt": "the statue of liberty holding a torch",
+      "edit_prompt": "the statue of liberty holding a torch in winter, covered in snow",
+      "sample_id": "000000000018"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000019.jpg",
+      "src_prompt": "white tiger on brown ground",
+      "edit_prompt": "white cat on green grass",
+      "sample_id": "000000000019"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000019.jpg",
+      "src_prompt": "white tiger on brown ground",
+      "edit_prompt": "white tiger on brown ground at night, dark lighting",
+      "sample_id": "000000000019"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000019.jpg",
+      "src_prompt": "white tiger on brown ground",
+      "edit_prompt": "white tiger on brown ground in winter, covered in snow",
+      "sample_id": "000000000019"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000020.jpg",
+      "src_prompt": "two birds sitting on a branch",
+      "edit_prompt": "two toy cats standing on a branch",
+      "sample_id": "000000000020"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000020.jpg",
+      "src_prompt": "two birds sitting on a branch",
+      "edit_prompt": "two birds sitting on a branch at night, dark lighting",
+      "sample_id": "000000000020"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000020.jpg",
+      "src_prompt": "two birds sitting on a branch",
+      "edit_prompt": "two birds sitting on a branch in winter, covered in snow",
+      "sample_id": "000000000020"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000021.jpg",
+      "src_prompt": "two parrots sitting on a stick, city street background",
+      "edit_prompt": "two metal owls sitting on a stick, forest background",
+      "sample_id": "000000000021"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000021.jpg",
+      "src_prompt": "two parrots sitting on a stick, city street background",
+      "edit_prompt": "two parrots sitting on a stick, city street background at night, dark lighting",
+      "sample_id": "000000000021"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000021.jpg",
+      "src_prompt": "two parrots sitting on a stick, city street background",
+      "edit_prompt": "two parrots sitting on a stick, city street background in winter, covered in snow",
+      "sample_id": "000000000021"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000022.jpg",
+      "src_prompt": "an orange van with surfboards on top",
+      "edit_prompt": "an pink taxi with colorful flowers on top",
+      "sample_id": "000000000022"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000022.jpg",
+      "src_prompt": "an orange van with surfboards on top",
+      "edit_prompt": "an orange van with surfboards on top at night, dark lighting",
+      "sample_id": "000000000022"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000022.jpg",
+      "src_prompt": "an orange van with surfboards on top",
+      "edit_prompt": "an orange van with surfboards on top in winter, covered in snow",
+      "sample_id": "000000000022"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000023.jpg",
+      "src_prompt": "a gray horse in the field",
+      "edit_prompt": "a black cow with white patterns in the field",
+      "sample_id": "000000000023"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000023.jpg",
+      "src_prompt": "a gray horse in the field",
+      "edit_prompt": "a gray horse in the field at night, dark lighting",
+      "sample_id": "000000000023"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000023.jpg",
+      "src_prompt": "a gray horse in the field",
+      "edit_prompt": "a gray horse in the field in winter, covered in snow",
+      "sample_id": "000000000023"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000024.jpg",
+      "src_prompt": "a white horse running in the sunset",
+      "edit_prompt": "a golden dog jumping in the sunset",
+      "sample_id": "000000000024"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000024.jpg",
+      "src_prompt": "a white horse running in the sunset",
+      "edit_prompt": "a white horse running in the sunset at night, dark lighting",
+      "sample_id": "000000000024"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000024.jpg",
+      "src_prompt": "a white horse running in the sunset",
+      "edit_prompt": "a white horse running in the sunset in winter, covered in snow",
+      "sample_id": "000000000024"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000025.jpg",
+      "src_prompt": "a woman with blue hair wearing a shirt",
+      "edit_prompt": "a woman with red hair wearing a coat",
+      "sample_id": "000000000025"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000025.jpg",
+      "src_prompt": "a woman with blue hair wearing a shirt",
+      "edit_prompt": "a woman with blue hair wearing a shirt at night, dark lighting",
+      "sample_id": "000000000025"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000025.jpg",
+      "src_prompt": "a woman with blue hair wearing a shirt",
+      "edit_prompt": "a woman with blue hair wearing a shirt in winter, covered in snow",
+      "sample_id": "000000000025"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000026.jpg",
+      "src_prompt": "a yellow bird with a red beak sitting on a branch",
+      "edit_prompt": "a toy cat with a red fur sitting on a branch",
+      "sample_id": "000000000026"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000026.jpg",
+      "src_prompt": "a yellow bird with a red beak sitting on a branch",
+      "edit_prompt": "a yellow bird with a red beak sitting on a branch at night, dark lighting",
+      "sample_id": "000000000026"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000026.jpg",
+      "src_prompt": "a yellow bird with a red beak sitting on a branch",
+      "edit_prompt": "a yellow bird with a red beak sitting on a branch in winter, covered in snow",
+      "sample_id": "000000000026"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000027.jpg",
+      "src_prompt": "a opened eyes cat sitting on wooden floor",
+      "edit_prompt": "a closed eyes dog sitting on green grass",
+      "sample_id": "000000000027"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000027.jpg",
+      "src_prompt": "a opened eyes cat sitting on wooden floor",
+      "edit_prompt": "a opened eyes cat sitting on wooden floor at night, dark lighting",
+      "sample_id": "000000000027"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000027.jpg",
+      "src_prompt": "a opened eyes cat sitting on wooden floor",
+      "edit_prompt": "a opened eyes cat sitting on wooden floor in winter, covered in snow",
+      "sample_id": "000000000027"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000028.jpg",
+      "src_prompt": "white flowers on a tree branch with blue sky background",
+      "edit_prompt": "Painting of red flowers on a tree branch with white background",
+      "sample_id": "000000000028"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000028.jpg",
+      "src_prompt": "white flowers on a tree branch with blue sky background",
+      "edit_prompt": "white flowers on a tree branch with blue sky background at night, dark lighting",
+      "sample_id": "000000000028"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000028.jpg",
+      "src_prompt": "white flowers on a tree branch with blue sky background",
+      "edit_prompt": "white flowers on a tree branch with blue sky background in winter, covered in snow",
+      "sample_id": "000000000028"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000029.jpg",
+      "src_prompt": "a kitten walking on the grass",
+      "edit_prompt": "a duck sitting on the floor",
+      "sample_id": "000000000029"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000029.jpg",
+      "src_prompt": "a kitten walking on the grass",
+      "edit_prompt": "a kitten walking on the grass at night, dark lighting",
+      "sample_id": "000000000029"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000029.jpg",
+      "src_prompt": "a kitten walking on the grass",
+      "edit_prompt": "a kitten walking on the grass in winter, covered in snow",
+      "sample_id": "000000000029"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000030.jpg",
+      "src_prompt": "a stream in a lush forest with rocks",
+      "edit_prompt": "a road in a lush city with black rocks",
+      "sample_id": "000000000030"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000030.jpg",
+      "src_prompt": "a stream in a lush forest with rocks",
+      "edit_prompt": "a stream in a lush forest with rocks at night, dark lighting",
+      "sample_id": "000000000030"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000030.jpg",
+      "src_prompt": "a stream in a lush forest with rocks",
+      "edit_prompt": "a stream in a lush forest with rocks in winter, covered in snow",
+      "sample_id": "000000000030"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000031.jpg",
+      "src_prompt": "a red rose in the dark",
+      "edit_prompt": "a blue tulip in the yellow light",
+      "sample_id": "000000000031"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000031.jpg",
+      "src_prompt": "a red rose in the dark",
+      "edit_prompt": "a red rose in the dark at night, dark lighting",
+      "sample_id": "000000000031"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000031.jpg",
+      "src_prompt": "a red rose in the dark",
+      "edit_prompt": "a red rose in the dark in winter, covered in snow",
+      "sample_id": "000000000031"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000032.jpg",
+      "src_prompt": "a group of pink flowers hanging from a tree",
+      "edit_prompt": "a group of red apples hanging from a big tree",
+      "sample_id": "000000000032"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000032.jpg",
+      "src_prompt": "a group of pink flowers hanging from a tree",
+      "edit_prompt": "a group of pink flowers hanging from a tree at night, dark lighting",
+      "sample_id": "000000000032"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000032.jpg",
+      "src_prompt": "a group of pink flowers hanging from a tree",
+      "edit_prompt": "a group of pink flowers hanging from a tree in winter, covered in snow",
+      "sample_id": "000000000032"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000033.jpg",
+      "src_prompt": "a cartoon of a boy walking his dog in autumn",
+      "edit_prompt": "a painting of a boy walking his cat in winter",
+      "sample_id": "000000000033"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000033.jpg",
+      "src_prompt": "a cartoon of a boy walking his dog in autumn",
+      "edit_prompt": "a cartoon of a boy walking his dog in autumn at night, dark lighting",
+      "sample_id": "000000000033"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000033.jpg",
+      "src_prompt": "a cartoon of a boy walking his dog in autumn",
+      "edit_prompt": "a cartoon of a boy walking his dog in autumn in winter, covered in snow",
+      "sample_id": "000000000033"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000034.jpg",
+      "src_prompt": "a mother duck and her babies are standing near the water",
+      "edit_prompt": "a sketch painting of a mother cat and her babies are standing near the forest",
+      "sample_id": "000000000034"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000034.jpg",
+      "src_prompt": "a mother duck and her babies are standing near the water",
+      "edit_prompt": "a mother duck and her babies are standing near the water at night, dark lighting",
+      "sample_id": "000000000034"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000034.jpg",
+      "src_prompt": "a mother duck and her babies are standing near the water",
+      "edit_prompt": "a mother duck and her babies are standing near the water in winter, covered in snow",
+      "sample_id": "000000000034"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000035.jpg",
+      "src_prompt": "photograph, window of the world by jimmy kirk",
+      "edit_prompt": "painting, yellow ball of the world by jimmy kirk",
+      "sample_id": "000000000035"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000035.jpg",
+      "src_prompt": "photograph, window of the world by jimmy kirk",
+      "edit_prompt": "photograph, window of the world by jimmy kirk at night, dark lighting",
+      "sample_id": "000000000035"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000035.jpg",
+      "src_prompt": "photograph, window of the world by jimmy kirk",
+      "edit_prompt": "photograph, window of the world by jimmy kirk in winter, covered in snow",
+      "sample_id": "000000000035"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000036.jpg",
+      "src_prompt": "smoke",
+      "edit_prompt": "red flame in the dark",
+      "sample_id": "000000000036"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000036.jpg",
+      "src_prompt": "smoke",
+      "edit_prompt": "smoke at night, dark lighting",
+      "sample_id": "000000000036"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000036.jpg",
+      "src_prompt": "smoke",
+      "edit_prompt": "smoke in winter, covered in snow",
+      "sample_id": "000000000036"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000037.jpg",
+      "src_prompt": "mountain landscape with flowers and withered grass",
+      "edit_prompt": "snow mountain landscape with flowers and green grass",
+      "sample_id": "000000000037"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000037.jpg",
+      "src_prompt": "mountain landscape with flowers and withered grass",
+      "edit_prompt": "mountain landscape with flowers and withered grass at night, dark lighting",
+      "sample_id": "000000000037"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000037.jpg",
+      "src_prompt": "mountain landscape with flowers and withered grass",
+      "edit_prompt": "mountain landscape with flowers and withered grass in winter, covered in snow",
+      "sample_id": "000000000037"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000038.jpg",
+      "src_prompt": "a little girl with green eyes and flowers in a blue dress",
+      "edit_prompt": "a little girl with blue eyes and yellow flowers in a blue coat",
+      "sample_id": "000000000038"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000038.jpg",
+      "src_prompt": "a little girl with green eyes and flowers in a blue dress",
+      "edit_prompt": "a little girl with green eyes and flowers in a blue dress at night, dark lighting",
+      "sample_id": "000000000038"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000038.jpg",
+      "src_prompt": "a little girl with green eyes and flowers in a blue dress",
+      "edit_prompt": "a little girl with green eyes and flowers in a blue dress in winter, covered in snow",
+      "sample_id": "000000000038"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000039.jpg",
+      "src_prompt": "two ducks in the dirt",
+      "edit_prompt": "two cats swimming in the sea",
+      "sample_id": "000000000039"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000039.jpg",
+      "src_prompt": "two ducks in the dirt",
+      "edit_prompt": "two ducks in the dirt at night, dark lighting",
+      "sample_id": "000000000039"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000039.jpg",
+      "src_prompt": "two ducks in the dirt",
+      "edit_prompt": "two ducks in the dirt in winter, covered in snow",
+      "sample_id": "000000000039"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000040.jpg",
+      "src_prompt": "a cat sitting with beads collar",
+      "edit_prompt": "a orange cat sitting with cotton scarf putting hands up",
+      "sample_id": "000000000040"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000040.jpg",
+      "src_prompt": "a cat sitting with beads collar",
+      "edit_prompt": "a cat sitting with beads collar at night, dark lighting",
+      "sample_id": "000000000040"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000040.jpg",
+      "src_prompt": "a cat sitting with beads collar",
+      "edit_prompt": "a cat sitting with beads collar in winter, covered in snow",
+      "sample_id": "000000000040"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000041.jpg",
+      "src_prompt": "the arctic sky",
+      "edit_prompt": "a spacecraft in the blue arctic sky",
+      "sample_id": "000000000041"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000041.jpg",
+      "src_prompt": "the arctic sky",
+      "edit_prompt": "the arctic sky at night, dark lighting",
+      "sample_id": "000000000041"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000041.jpg",
+      "src_prompt": "the arctic sky",
+      "edit_prompt": "the arctic sky in winter, covered in snow",
+      "sample_id": "000000000041"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000042.jpg",
+      "src_prompt": "a black wolf is standing on rocks in a dark forest",
+      "edit_prompt": "a white dog is standing on rocks in a bright forest",
+      "sample_id": "000000000042"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000042.jpg",
+      "src_prompt": "a black wolf is standing on rocks in a dark forest",
+      "edit_prompt": "a black wolf is standing on rocks in a dark forest at night, dark lighting",
+      "sample_id": "000000000042"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000042.jpg",
+      "src_prompt": "a black wolf is standing on rocks in a dark forest",
+      "edit_prompt": "a black wolf is standing on rocks in a dark forest in winter, covered in snow",
+      "sample_id": "000000000042"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000043.jpg",
+      "src_prompt": "a large red cargo ship in the ocean at sunset",
+      "edit_prompt": "a small blue cruise ship in the ocean at sunset",
+      "sample_id": "000000000043"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000043.jpg",
+      "src_prompt": "a large red cargo ship in the ocean at sunset",
+      "edit_prompt": "a large red cargo ship in the ocean at sunset at night, dark lighting",
+      "sample_id": "000000000043"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000043.jpg",
+      "src_prompt": "a large red cargo ship in the ocean at sunset",
+      "edit_prompt": "a large red cargo ship in the ocean at sunset in winter, covered in snow",
+      "sample_id": "000000000043"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000044.jpg",
+      "src_prompt": "a cat sitting in the grass",
+      "edit_prompt": "a yellow cat with red scarf sitting in the flowers",
+      "sample_id": "000000000044"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000044.jpg",
+      "src_prompt": "a cat sitting in the grass",
+      "edit_prompt": "a cat sitting in the grass at night, dark lighting",
+      "sample_id": "000000000044"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000044.jpg",
+      "src_prompt": "a cat sitting in the grass",
+      "edit_prompt": "a cat sitting in the grass in winter, covered in snow",
+      "sample_id": "000000000044"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000045.jpg",
+      "src_prompt": "the christmas illustration of a santa's laughing face",
+      "edit_prompt": "the christmas card of a santa's angry face with red mustache",
+      "sample_id": "000000000045"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000045.jpg",
+      "src_prompt": "the christmas illustration of a santa's laughing face",
+      "edit_prompt": "the christmas illustration of a santa's laughing face at night, dark lighting",
+      "sample_id": "000000000045"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000045.jpg",
+      "src_prompt": "the christmas illustration of a santa's laughing face",
+      "edit_prompt": "the christmas illustration of a santa's laughing face in winter, covered in snow",
+      "sample_id": "000000000045"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000046.jpg",
+      "src_prompt": "painting of clouds in the sky",
+      "edit_prompt": "photo of pink stars in the sky",
+      "sample_id": "000000000046"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000046.jpg",
+      "src_prompt": "painting of clouds in the sky",
+      "edit_prompt": "painting of clouds in the sky at night, dark lighting",
+      "sample_id": "000000000046"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000046.jpg",
+      "src_prompt": "painting of clouds in the sky",
+      "edit_prompt": "painting of clouds in the sky in winter, covered in snow",
+      "sample_id": "000000000046"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000047.jpg",
+      "src_prompt": "rusty car by jill kaufman",
+      "edit_prompt": "shiny blue bus by jill kaufman",
+      "sample_id": "000000000047"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000047.jpg",
+      "src_prompt": "rusty car by jill kaufman",
+      "edit_prompt": "rusty car by jill kaufman at night, dark lighting",
+      "sample_id": "000000000047"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000047.jpg",
+      "src_prompt": "rusty car by jill kaufman",
+      "edit_prompt": "rusty car by jill kaufman in winter, covered in snow",
+      "sample_id": "000000000047"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000048.jpg",
+      "src_prompt": "sunset over a field with clouds and a bright sky",
+      "edit_prompt": "sunset over a field with pink stars and a dark sky",
+      "sample_id": "000000000048"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000048.jpg",
+      "src_prompt": "sunset over a field with clouds and a bright sky",
+      "edit_prompt": "sunset over a field with clouds and a bright sky at night, dark lighting",
+      "sample_id": "000000000048"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000048.jpg",
+      "src_prompt": "sunset over a field with clouds and a bright sky",
+      "edit_prompt": "sunset over a field with clouds and a bright sky in winter, covered in snow",
+      "sample_id": "000000000048"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000049.jpg",
+      "src_prompt": "black chair in a conference room",
+      "edit_prompt": "yellow metal chair with black dots in a conference room",
+      "sample_id": "000000000049"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000049.jpg",
+      "src_prompt": "black chair in a conference room",
+      "edit_prompt": "black chair in a conference room at night, dark lighting",
+      "sample_id": "000000000049"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000049.jpg",
+      "src_prompt": "black chair in a conference room",
+      "edit_prompt": "black chair in a conference room in winter, covered in snow",
+      "sample_id": "000000000049"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000050.jpg",
+      "src_prompt": "a bird standing on clods",
+      "edit_prompt": "a cat jumping on eggs",
+      "sample_id": "000000000050"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000050.jpg",
+      "src_prompt": "a bird standing on clods",
+      "edit_prompt": "a bird standing on clods at night, dark lighting",
+      "sample_id": "000000000050"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000050.jpg",
+      "src_prompt": "a bird standing on clods",
+      "edit_prompt": "a bird standing on clods in winter, covered in snow",
+      "sample_id": "000000000050"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000051.jpg",
+      "src_prompt": "a painting of colorful flowers in a blue vase",
+      "edit_prompt": "a painting of red flowers in a white vase",
+      "sample_id": "000000000051"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000051.jpg",
+      "src_prompt": "a painting of colorful flowers in a blue vase",
+      "edit_prompt": "a painting of colorful flowers in a blue vase at night, dark lighting",
+      "sample_id": "000000000051"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000051.jpg",
+      "src_prompt": "a painting of colorful flowers in a blue vase",
+      "edit_prompt": "a painting of colorful flowers in a blue vase in winter, covered in snow",
+      "sample_id": "000000000051"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000052.jpg",
+      "src_prompt": "a logo of bird shape in a black background",
+      "edit_prompt": "a logo of X with pink color in a light background",
+      "sample_id": "000000000052"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000052.jpg",
+      "src_prompt": "a logo of bird shape in a black background",
+      "edit_prompt": "a logo of bird shape in a black background at night, dark lighting",
+      "sample_id": "000000000052"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000052.jpg",
+      "src_prompt": "a logo of bird shape in a black background",
+      "edit_prompt": "a logo of bird shape in a black background in winter, covered in snow",
+      "sample_id": "000000000052"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000053.jpg",
+      "src_prompt": "a fluffy dog with a blue leash sitting in the grass",
+      "edit_prompt": "a fluffy cat with a blue leash jumping on the ground",
+      "sample_id": "000000000053"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000053.jpg",
+      "src_prompt": "a fluffy dog with a blue leash sitting in the grass",
+      "edit_prompt": "a fluffy dog with a blue leash sitting in the grass at night, dark lighting",
+      "sample_id": "000000000053"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000053.jpg",
+      "src_prompt": "a fluffy dog with a blue leash sitting in the grass",
+      "edit_prompt": "a fluffy dog with a blue leash sitting in the grass in winter, covered in snow",
+      "sample_id": "000000000053"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000054.jpg",
+      "src_prompt": "a camera and a notebook on a bed",
+      "edit_prompt": "a red ball and a notebook on a table",
+      "sample_id": "000000000054"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000054.jpg",
+      "src_prompt": "a camera and a notebook on a bed",
+      "edit_prompt": "a camera and a notebook on a bed at night, dark lighting",
+      "sample_id": "000000000054"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000054.jpg",
+      "src_prompt": "a camera and a notebook on a bed",
+      "edit_prompt": "a camera and a notebook on a bed in winter, covered in snow",
+      "sample_id": "000000000054"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000055.jpg",
+      "src_prompt": "a black dog is looking at the camera in the snow",
+      "edit_prompt": "a white tiger is looking at the camera in the rain",
+      "sample_id": "000000000055"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000055.jpg",
+      "src_prompt": "a black dog is looking at the camera in the snow",
+      "edit_prompt": "a black dog is looking at the camera in the snow at night, dark lighting",
+      "sample_id": "000000000055"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000055.jpg",
+      "src_prompt": "a black dog is looking at the camera in the snow",
+      "edit_prompt": "a black dog is looking at the camera in the snow in winter, covered in snow",
+      "sample_id": "000000000055"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000056.jpg",
+      "src_prompt": "a meerkat puppy wrapped in a blue towel",
+      "edit_prompt": "a lion puppy with black fur wrapped in a blue coat",
+      "sample_id": "000000000056"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000056.jpg",
+      "src_prompt": "a meerkat puppy wrapped in a blue towel",
+      "edit_prompt": "a meerkat puppy wrapped in a blue towel at night, dark lighting",
+      "sample_id": "000000000056"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000056.jpg",
+      "src_prompt": "a meerkat puppy wrapped in a blue towel",
+      "edit_prompt": "a meerkat puppy wrapped in a blue towel in winter, covered in snow",
+      "sample_id": "000000000056"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000057.jpg",
+      "src_prompt": "an owl sitting on a branch",
+      "edit_prompt": "a photo of an owl jumping on a rock",
+      "sample_id": "000000000057"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000057.jpg",
+      "src_prompt": "an owl sitting on a branch",
+      "edit_prompt": "an owl sitting on a branch at night, dark lighting",
+      "sample_id": "000000000057"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000057.jpg",
+      "src_prompt": "an owl sitting on a branch",
+      "edit_prompt": "an owl sitting on a branch in winter, covered in snow",
+      "sample_id": "000000000057"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000058.jpg",
+      "src_prompt": "purple tulips in vase",
+      "edit_prompt": "yellow roses in blue vase",
+      "sample_id": "000000000058"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000058.jpg",
+      "src_prompt": "purple tulips in vase",
+      "edit_prompt": "purple tulips in vase at night, dark lighting",
+      "sample_id": "000000000058"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000058.jpg",
+      "src_prompt": "purple tulips in vase",
+      "edit_prompt": "purple tulips in vase in winter, covered in snow",
+      "sample_id": "000000000058"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000059.jpg",
+      "src_prompt": "a cartoon goat",
+      "edit_prompt": "a cartoon cat face backward is jumping",
+      "sample_id": "000000000059"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000059.jpg",
+      "src_prompt": "a cartoon goat",
+      "edit_prompt": "a cartoon goat at night, dark lighting",
+      "sample_id": "000000000059"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000059.jpg",
+      "src_prompt": "a cartoon goat",
+      "edit_prompt": "a cartoon goat in winter, covered in snow",
+      "sample_id": "000000000059"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000060.jpg",
+      "src_prompt": "a yellow apple sitting on top of a wooden table",
+      "edit_prompt": "a red pear sitting on top of a glass table",
+      "sample_id": "000000000060"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000060.jpg",
+      "src_prompt": "a yellow apple sitting on top of a wooden table",
+      "edit_prompt": "a yellow apple sitting on top of a wooden table at night, dark lighting",
+      "sample_id": "000000000060"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000060.jpg",
+      "src_prompt": "a yellow apple sitting on top of a wooden table",
+      "edit_prompt": "a yellow apple sitting on top of a wooden table in winter, covered in snow",
+      "sample_id": "000000000060"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000061.jpg",
+      "src_prompt": "a mid autumn road lined with trees and leaves",
+      "edit_prompt": "a mid winter road with rocks lined with trees and flowers",
+      "sample_id": "000000000061"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000061.jpg",
+      "src_prompt": "a mid autumn road lined with trees and leaves",
+      "edit_prompt": "a mid autumn road lined with trees and leaves at night, dark lighting",
+      "sample_id": "000000000061"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000061.jpg",
+      "src_prompt": "a mid autumn road lined with trees and leaves",
+      "edit_prompt": "a mid autumn road lined with trees and leaves in winter, covered in snow",
+      "sample_id": "000000000061"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000062.jpg",
+      "src_prompt": "a rabbit is sitting in a pile of colorful eggs",
+      "edit_prompt": "a cat is sleeping in a pile of colorful stones",
+      "sample_id": "000000000062"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000062.jpg",
+      "src_prompt": "a rabbit is sitting in a pile of colorful eggs",
+      "edit_prompt": "a rabbit is sitting in a pile of colorful eggs at night, dark lighting",
+      "sample_id": "000000000062"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000062.jpg",
+      "src_prompt": "a rabbit is sitting in a pile of colorful eggs",
+      "edit_prompt": "a rabbit is sitting in a pile of colorful eggs in winter, covered in snow",
+      "sample_id": "000000000062"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000063.jpg",
+      "src_prompt": "a vase with some blooming flowers in it",
+      "edit_prompt": "a white vase with some wilted vegatables in it",
+      "sample_id": "000000000063"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000063.jpg",
+      "src_prompt": "a vase with some blooming flowers in it",
+      "edit_prompt": "a vase with some blooming flowers in it at night, dark lighting",
+      "sample_id": "000000000063"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000063.jpg",
+      "src_prompt": "a vase with some blooming flowers in it",
+      "edit_prompt": "a vase with some blooming flowers in it in winter, covered in snow",
+      "sample_id": "000000000063"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000064.jpg",
+      "src_prompt": "a woman in front of a glowing yellow light",
+      "edit_prompt": "a woman riding a lion in front of a glowing red flame",
+      "sample_id": "000000000064"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000064.jpg",
+      "src_prompt": "a woman in front of a glowing yellow light",
+      "edit_prompt": "a woman in front of a glowing yellow light at night, dark lighting",
+      "sample_id": "000000000064"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000064.jpg",
+      "src_prompt": "a woman in front of a glowing yellow light",
+      "edit_prompt": "a woman in front of a glowing yellow light in winter, covered in snow",
+      "sample_id": "000000000064"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000065.jpg",
+      "src_prompt": "a bird is sitting on a branch with moss",
+      "edit_prompt": "a blue bird is standing on a stone",
+      "sample_id": "000000000065"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000065.jpg",
+      "src_prompt": "a bird is sitting on a branch with moss",
+      "edit_prompt": "a bird is sitting on a branch with moss at night, dark lighting",
+      "sample_id": "000000000065"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000065.jpg",
+      "src_prompt": "a bird is sitting on a branch with moss",
+      "edit_prompt": "a bird is sitting on a branch with moss in winter, covered in snow",
+      "sample_id": "000000000065"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000066.jpg",
+      "src_prompt": "a dalmatian dog laying on the ground",
+      "edit_prompt": "painting of a german shepherd standing on the ground",
+      "sample_id": "000000000066"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000066.jpg",
+      "src_prompt": "a dalmatian dog laying on the ground",
+      "edit_prompt": "a dalmatian dog laying on the ground at night, dark lighting",
+      "sample_id": "000000000066"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000066.jpg",
+      "src_prompt": "a dalmatian dog laying on the ground",
+      "edit_prompt": "a dalmatian dog laying on the ground in winter, covered in snow",
+      "sample_id": "000000000066"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000067.jpg",
+      "src_prompt": "a woman in a jacket standing in the rain",
+      "edit_prompt": "a woman in a white shirt crying in the rain",
+      "sample_id": "000000000067"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000067.jpg",
+      "src_prompt": "a woman in a jacket standing in the rain",
+      "edit_prompt": "a woman in a jacket standing in the rain at night, dark lighting",
+      "sample_id": "000000000067"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000067.jpg",
+      "src_prompt": "a woman in a jacket standing in the rain",
+      "edit_prompt": "a woman in a jacket standing in the rain in winter, covered in snow",
+      "sample_id": "000000000067"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000068.jpg",
+      "src_prompt": "photo of horses running in the woods",
+      "edit_prompt": "painting of white unicorns standing in the woods",
+      "sample_id": "000000000068"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000068.jpg",
+      "src_prompt": "photo of horses running in the woods",
+      "edit_prompt": "photo of horses running in the woods at night, dark lighting",
+      "sample_id": "000000000068"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000068.jpg",
+      "src_prompt": "photo of horses running in the woods",
+      "edit_prompt": "photo of horses running in the woods in winter, covered in snow",
+      "sample_id": "000000000068"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000069.jpg",
+      "src_prompt": "sea and house",
+      "edit_prompt": "forest with snow and bus",
+      "sample_id": "000000000069"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000069.jpg",
+      "src_prompt": "sea and house",
+      "edit_prompt": "sea and house at night, dark lighting",
+      "sample_id": "000000000069"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000069.jpg",
+      "src_prompt": "sea and house",
+      "edit_prompt": "sea and house in winter, covered in snow",
+      "sample_id": "000000000069"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000070.jpg",
+      "src_prompt": "the city of dresden, germany, europe",
+      "edit_prompt": "a sunny day of the park of dresden, germany, europe",
+      "sample_id": "000000000070"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000070.jpg",
+      "src_prompt": "the city of dresden, germany, europe",
+      "edit_prompt": "the city of dresden, germany, europe at night, dark lighting",
+      "sample_id": "000000000070"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000070.jpg",
+      "src_prompt": "the city of dresden, germany, europe",
+      "edit_prompt": "the city of dresden, germany, europe in winter, covered in snow",
+      "sample_id": "000000000070"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000071.jpg",
+      "src_prompt": "an apple with two faces on it in a white background",
+      "edit_prompt": "an orange with two hands on it in a dark background",
+      "sample_id": "000000000071"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000071.jpg",
+      "src_prompt": "an apple with two faces on it in a white background",
+      "edit_prompt": "an apple with two faces on it in a white background at night, dark lighting",
+      "sample_id": "000000000071"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000071.jpg",
+      "src_prompt": "an apple with two faces on it in a white background",
+      "edit_prompt": "an apple with two faces on it in a white background in winter, covered in snow",
+      "sample_id": "000000000071"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000072.jpg",
+      "src_prompt": "colorful cups",
+      "edit_prompt": "wooden green vases",
+      "sample_id": "000000000072"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000072.jpg",
+      "src_prompt": "colorful cups",
+      "edit_prompt": "colorful cups at night, dark lighting",
+      "sample_id": "000000000072"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000072.jpg",
+      "src_prompt": "colorful cups",
+      "edit_prompt": "colorful cups in winter, covered in snow",
+      "sample_id": "000000000072"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000073.jpg",
+      "src_prompt": "a spring field with trees and a blue sky",
+      "edit_prompt": "a autumn field with buildings and a pink sky",
+      "sample_id": "000000000073"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000073.jpg",
+      "src_prompt": "a spring field with trees and a blue sky",
+      "edit_prompt": "a spring field with trees and a blue sky at night, dark lighting",
+      "sample_id": "000000000073"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000073.jpg",
+      "src_prompt": "a spring field with trees and a blue sky",
+      "edit_prompt": "a spring field with trees and a blue sky in winter, covered in snow",
+      "sample_id": "000000000073"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000074.jpg",
+      "src_prompt": "a mountain is covered in clouds and snow",
+      "edit_prompt": "a building is covered in leaves and snow",
+      "sample_id": "000000000074"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000074.jpg",
+      "src_prompt": "a mountain is covered in clouds and snow",
+      "edit_prompt": "a mountain is covered in clouds and snow at night, dark lighting",
+      "sample_id": "000000000074"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000074.jpg",
+      "src_prompt": "a mountain is covered in clouds and snow",
+      "edit_prompt": "a mountain is covered in clouds and snow in winter, covered in snow",
+      "sample_id": "000000000074"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000075.jpg",
+      "src_prompt": "a woman with flowers around her face",
+      "edit_prompt": "a woman with cats and dogs playing around her face",
+      "sample_id": "000000000075"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000075.jpg",
+      "src_prompt": "a woman with flowers around her face",
+      "edit_prompt": "a woman with flowers around her face at night, dark lighting",
+      "sample_id": "000000000075"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000075.jpg",
+      "src_prompt": "a woman with flowers around her face",
+      "edit_prompt": "a woman with flowers around her face in winter, covered in snow",
+      "sample_id": "000000000075"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000076.jpg",
+      "src_prompt": "a painting of a cup with a smoke coming out of it",
+      "edit_prompt": "a painting of a golden vase with a flower coming out of it",
+      "sample_id": "000000000076"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000076.jpg",
+      "src_prompt": "a painting of a cup with a smoke coming out of it",
+      "edit_prompt": "a painting of a cup with a smoke coming out of it at night, dark lighting",
+      "sample_id": "000000000076"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000076.jpg",
+      "src_prompt": "a painting of a cup with a smoke coming out of it",
+      "edit_prompt": "a painting of a cup with a smoke coming out of it in winter, covered in snow",
+      "sample_id": "000000000076"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000077.jpg",
+      "src_prompt": "a painting of a cabin in the snow with mountains in the background",
+      "edit_prompt": "a painting of a car in the snow with colorful buildings in the background",
+      "sample_id": "000000000077"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000077.jpg",
+      "src_prompt": "a painting of a cabin in the snow with mountains in the background",
+      "edit_prompt": "a painting of a cabin in the snow with mountains in the background at night, dark lighting",
+      "sample_id": "000000000077"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000077.jpg",
+      "src_prompt": "a painting of a cabin in the snow with mountains in the background",
+      "edit_prompt": "a painting of a cabin in the snow with mountains in the background in winter, covered in snow",
+      "sample_id": "000000000077"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000078.jpg",
+      "src_prompt": "ocean with clouds in the sky",
+      "edit_prompt": "ocean with stars shining in the pink sky",
+      "sample_id": "000000000078"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000078.jpg",
+      "src_prompt": "ocean with clouds in the sky",
+      "edit_prompt": "ocean with clouds in the sky at night, dark lighting",
+      "sample_id": "000000000078"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000078.jpg",
+      "src_prompt": "ocean with clouds in the sky",
+      "edit_prompt": "ocean with clouds in the sky in winter, covered in snow",
+      "sample_id": "000000000078"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000079.jpg",
+      "src_prompt": "a man walking in a town with mountains in the background",
+      "edit_prompt": "a man walking in a city with buildings in the background",
+      "sample_id": "000000000079"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000079.jpg",
+      "src_prompt": "a man walking in a town with mountains in the background",
+      "edit_prompt": "a man walking in a town with mountains in the background at night, dark lighting",
+      "sample_id": "000000000079"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000079.jpg",
+      "src_prompt": "a man walking in a town with mountains in the background",
+      "edit_prompt": "a man walking in a town with mountains in the background in winter, covered in snow",
+      "sample_id": "000000000079"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000080.jpg",
+      "src_prompt": "a cat is shown in a low polygonal style",
+      "edit_prompt": "a fox is shown smiling in a high polygonal style",
+      "sample_id": "000000000080"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000080.jpg",
+      "src_prompt": "a cat is shown in a low polygonal style",
+      "edit_prompt": "a cat is shown in a low polygonal style at night, dark lighting",
+      "sample_id": "000000000080"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000080.jpg",
+      "src_prompt": "a cat is shown in a low polygonal style",
+      "edit_prompt": "a cat is shown in a low polygonal style in winter, covered in snow",
+      "sample_id": "000000000080"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000081.jpg",
+      "src_prompt": "mushrooms on a branch in the forest",
+      "edit_prompt": "flowers on a rock in the forest",
+      "sample_id": "000000000081"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000081.jpg",
+      "src_prompt": "mushrooms on a branch in the forest",
+      "edit_prompt": "mushrooms on a branch in the forest at night, dark lighting",
+      "sample_id": "000000000081"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000081.jpg",
+      "src_prompt": "mushrooms on a branch in the forest",
+      "edit_prompt": "mushrooms on a branch in the forest in winter, covered in snow",
+      "sample_id": "000000000081"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000082.jpg",
+      "src_prompt": "a cute dog holding a red heart",
+      "edit_prompt": "a cute cat holding a pink ball",
+      "sample_id": "000000000082"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000082.jpg",
+      "src_prompt": "a cute dog holding a red heart",
+      "edit_prompt": "a cute dog holding a red heart at night, dark lighting",
+      "sample_id": "000000000082"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000082.jpg",
+      "src_prompt": "a cute dog holding a red heart",
+      "edit_prompt": "a cute dog holding a red heart in winter, covered in snow",
+      "sample_id": "000000000082"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000083.jpg",
+      "src_prompt": "a water droplet hangs from a string of lights",
+      "edit_prompt": "a ink droplet hangs from a string of flashing red lights",
+      "sample_id": "000000000083"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000083.jpg",
+      "src_prompt": "a water droplet hangs from a string of lights",
+      "edit_prompt": "a water droplet hangs from a string of lights at night, dark lighting",
+      "sample_id": "000000000083"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000083.jpg",
+      "src_prompt": "a water droplet hangs from a string of lights",
+      "edit_prompt": "a water droplet hangs from a string of lights in winter, covered in snow",
+      "sample_id": "000000000083"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000084.jpg",
+      "src_prompt": "two red and white toy gnomes are sitting on a snow covered surface",
+      "edit_prompt": "two blue and green toy cats are standing on a snow covered surface",
+      "sample_id": "000000000084"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000084.jpg",
+      "src_prompt": "two red and white toy gnomes are sitting on a snow covered surface",
+      "edit_prompt": "two red and white toy gnomes are sitting on a snow covered surface at night, dark lighting",
+      "sample_id": "000000000084"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000084.jpg",
+      "src_prompt": "two red and white toy gnomes are sitting on a snow covered surface",
+      "edit_prompt": "two red and white toy gnomes are sitting on a snow covered surface in winter, covered in snow",
+      "sample_id": "000000000084"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000085.jpg",
+      "src_prompt": "wolf howling at the moon with a outline of a wolf",
+      "edit_prompt": "dog howling at the sun with a outline of a person",
+      "sample_id": "000000000085"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000085.jpg",
+      "src_prompt": "wolf howling at the moon with a outline of a wolf",
+      "edit_prompt": "wolf howling at the moon with a outline of a wolf at night, dark lighting",
+      "sample_id": "000000000085"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000085.jpg",
+      "src_prompt": "wolf howling at the moon with a outline of a wolf",
+      "edit_prompt": "wolf howling at the moon with a outline of a wolf in winter, covered in snow",
+      "sample_id": "000000000085"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000086.jpg",
+      "src_prompt": "the almond tree is blooming in the spring",
+      "edit_prompt": "the violet cherry tree is blooming in the winter",
+      "sample_id": "000000000086"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000086.jpg",
+      "src_prompt": "the almond tree is blooming in the spring",
+      "edit_prompt": "the almond tree is blooming in the spring at night, dark lighting",
+      "sample_id": "000000000086"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000086.jpg",
+      "src_prompt": "the almond tree is blooming in the spring",
+      "edit_prompt": "the almond tree is blooming in the spring in winter, covered in snow",
+      "sample_id": "000000000086"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000087.jpg",
+      "src_prompt": "a jockey rides a horse on a grassy field",
+      "edit_prompt": "a girl rides a dog on a snow field",
+      "sample_id": "000000000087"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000087.jpg",
+      "src_prompt": "a jockey rides a horse on a grassy field",
+      "edit_prompt": "a jockey rides a horse on a grassy field at night, dark lighting",
+      "sample_id": "000000000087"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000087.jpg",
+      "src_prompt": "a jockey rides a horse on a grassy field",
+      "edit_prompt": "a jockey rides a horse on a grassy field in winter, covered in snow",
+      "sample_id": "000000000087"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000088.jpg",
+      "src_prompt": "a plate with rice, lemon slices and fish",
+      "edit_prompt": "a plate with rice, apple slices and steak",
+      "sample_id": "000000000088"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000088.jpg",
+      "src_prompt": "a plate with rice, lemon slices and fish",
+      "edit_prompt": "a plate with rice, lemon slices and fish at night, dark lighting",
+      "sample_id": "000000000088"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000088.jpg",
+      "src_prompt": "a plate with rice, lemon slices and fish",
+      "edit_prompt": "a plate with rice, lemon slices and fish in winter, covered in snow",
+      "sample_id": "000000000088"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000089.jpg",
+      "src_prompt": "two red berries on a tree branch with a blue sky in the background",
+      "edit_prompt": "two purple apples on a tree branch with a pink sky in the background",
+      "sample_id": "000000000089"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000089.jpg",
+      "src_prompt": "two red berries on a tree branch with a blue sky in the background",
+      "edit_prompt": "two red berries on a tree branch with a blue sky in the background at night, dark lighting",
+      "sample_id": "000000000089"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000089.jpg",
+      "src_prompt": "two red berries on a tree branch with a blue sky in the background",
+      "edit_prompt": "two red berries on a tree branch with a blue sky in the background in winter, covered in snow",
+      "sample_id": "000000000089"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000090.jpg",
+      "src_prompt": "a drawing of a woman with a towel on her head",
+      "edit_prompt": "a drawing of a woman with a colorfull hat on her head and a dress on her body",
+      "sample_id": "000000000090"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000090.jpg",
+      "src_prompt": "a drawing of a woman with a towel on her head",
+      "edit_prompt": "a drawing of a woman with a towel on her head at night, dark lighting",
+      "sample_id": "000000000090"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000090.jpg",
+      "src_prompt": "a drawing of a woman with a towel on her head",
+      "edit_prompt": "a drawing of a woman with a towel on her head in winter, covered in snow",
+      "sample_id": "000000000090"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000091.jpg",
+      "src_prompt": "a girl sitting at a table with pizza and drinks",
+      "edit_prompt": "a girl with flowers sitting at a table with noodles and cakes",
+      "sample_id": "000000000091"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000091.jpg",
+      "src_prompt": "a girl sitting at a table with pizza and drinks",
+      "edit_prompt": "a girl sitting at a table with pizza and drinks at night, dark lighting",
+      "sample_id": "000000000091"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000091.jpg",
+      "src_prompt": "a girl sitting at a table with pizza and drinks",
+      "edit_prompt": "a girl sitting at a table with pizza and drinks in winter, covered in snow",
+      "sample_id": "000000000091"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000092.jpg",
+      "src_prompt": "lilas and book on wooden surface",
+      "edit_prompt": "lilas and cakes on black glass surface",
+      "sample_id": "000000000092"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000092.jpg",
+      "src_prompt": "lilas and book on wooden surface",
+      "edit_prompt": "lilas and book on wooden surface at night, dark lighting",
+      "sample_id": "000000000092"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000092.jpg",
+      "src_prompt": "lilas and book on wooden surface",
+      "edit_prompt": "lilas and book on wooden surface in winter, covered in snow",
+      "sample_id": "000000000092"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000093.jpg",
+      "src_prompt": "a collie dog is sitting on a bed",
+      "edit_prompt": "a garfield cat is sleeping on a sofa",
+      "sample_id": "000000000093"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000093.jpg",
+      "src_prompt": "a collie dog is sitting on a bed",
+      "edit_prompt": "a collie dog is sitting on a bed at night, dark lighting",
+      "sample_id": "000000000093"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000093.jpg",
+      "src_prompt": "a collie dog is sitting on a bed",
+      "edit_prompt": "a collie dog is sitting on a bed in winter, covered in snow",
+      "sample_id": "000000000093"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000094.jpg",
+      "src_prompt": "a cat is sitting on a red blanket",
+      "edit_prompt": "a cat is sleeping on a blue sweater",
+      "sample_id": "000000000094"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000094.jpg",
+      "src_prompt": "a cat is sitting on a red blanket",
+      "edit_prompt": "a cat is sitting on a red blanket at night, dark lighting",
+      "sample_id": "000000000094"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000094.jpg",
+      "src_prompt": "a cat is sitting on a red blanket",
+      "edit_prompt": "a cat is sitting on a red blanket in winter, covered in snow",
+      "sample_id": "000000000094"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000095.jpg",
+      "src_prompt": "a painting of a fairy with green wings holding a glowing jar",
+      "edit_prompt": "a painting of a fairy with purple wings holding a white crystal ball",
+      "sample_id": "000000000095"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000095.jpg",
+      "src_prompt": "a painting of a fairy with green wings holding a glowing jar",
+      "edit_prompt": "a painting of a fairy with green wings holding a glowing jar at night, dark lighting",
+      "sample_id": "000000000095"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000095.jpg",
+      "src_prompt": "a painting of a fairy with green wings holding a glowing jar",
+      "edit_prompt": "a painting of a fairy with green wings holding a glowing jar in winter, covered in snow",
+      "sample_id": "000000000095"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000096.jpg",
+      "src_prompt": "a white and black photo of bride and groom embrace in the woods",
+      "edit_prompt": "a colorful and beautiful photo of bride and groom embrace in the church",
+      "sample_id": "000000000096"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000096.jpg",
+      "src_prompt": "a white and black photo of bride and groom embrace in the woods",
+      "edit_prompt": "a white and black photo of bride and groom embrace in the woods at night, dark lighting",
+      "sample_id": "000000000096"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000096.jpg",
+      "src_prompt": "a white and black photo of bride and groom embrace in the woods",
+      "edit_prompt": "a white and black photo of bride and groom embrace in the woods in winter, covered in snow",
+      "sample_id": "000000000096"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000097.jpg",
+      "src_prompt": "a vase of colorful flowers on a wooden table",
+      "edit_prompt": "a metal vase of colorful rose flowers on a white table",
+      "sample_id": "000000000097"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000097.jpg",
+      "src_prompt": "a vase of colorful flowers on a wooden table",
+      "edit_prompt": "a vase of colorful flowers on a wooden table at night, dark lighting",
+      "sample_id": "000000000097"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000097.jpg",
+      "src_prompt": "a vase of colorful flowers on a wooden table",
+      "edit_prompt": "a vase of colorful flowers on a wooden table in winter, covered in snow",
+      "sample_id": "000000000097"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000098.jpg",
+      "src_prompt": "a light bulb hanging from a wire with sky in the background",
+      "edit_prompt": "a cat hanging from a wire with grass in the background",
+      "sample_id": "000000000098"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000098.jpg",
+      "src_prompt": "a light bulb hanging from a wire with sky in the background",
+      "edit_prompt": "a light bulb hanging from a wire with sky in the background at night, dark lighting",
+      "sample_id": "000000000098"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000098.jpg",
+      "src_prompt": "a light bulb hanging from a wire with sky in the background",
+      "edit_prompt": "a light bulb hanging from a wire with sky in the background in winter, covered in snow",
+      "sample_id": "000000000098"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000099.jpg",
+      "src_prompt": "a painting of a woman holding a pink flower",
+      "edit_prompt": "a painting of a woman with pink hair holding a teddy bear",
+      "sample_id": "000000000099"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000099.jpg",
+      "src_prompt": "a painting of a woman holding a pink flower",
+      "edit_prompt": "a painting of a woman holding a pink flower at night, dark lighting",
+      "sample_id": "000000000099"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000099.jpg",
+      "src_prompt": "a painting of a woman holding a pink flower",
+      "edit_prompt": "a painting of a woman holding a pink flower in winter, covered in snow",
+      "sample_id": "000000000099"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000100.jpg",
+      "src_prompt": "a woman in black holding an umbrella walks through a field",
+      "edit_prompt": "a woman in red holding an umbrella runs through a forest",
+      "sample_id": "000000000100"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000100.jpg",
+      "src_prompt": "a woman in black holding an umbrella walks through a field",
+      "edit_prompt": "a woman in black holding an umbrella walks through a field at night, dark lighting",
+      "sample_id": "000000000100"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000100.jpg",
+      "src_prompt": "a woman in black holding an umbrella walks through a field",
+      "edit_prompt": "a woman in black holding an umbrella walks through a field in winter, covered in snow",
+      "sample_id": "000000000100"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000101.jpg",
+      "src_prompt": "poppies",
+      "edit_prompt": "blue poppies and bees in winter",
+      "sample_id": "000000000101"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000101.jpg",
+      "src_prompt": "poppies",
+      "edit_prompt": "poppies at night, dark lighting",
+      "sample_id": "000000000101"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000101.jpg",
+      "src_prompt": "poppies",
+      "edit_prompt": "poppies in winter, covered in snow",
+      "sample_id": "000000000101"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000102.jpg",
+      "src_prompt": "a rose on the rail",
+      "edit_prompt": "a white tulip on the rail",
+      "sample_id": "000000000102"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000102.jpg",
+      "src_prompt": "a rose on the rail",
+      "edit_prompt": "a rose on the rail at night, dark lighting",
+      "sample_id": "000000000102"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000102.jpg",
+      "src_prompt": "a rose on the rail",
+      "edit_prompt": "a rose on the rail in winter, covered in snow",
+      "sample_id": "000000000102"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000103.jpg",
+      "src_prompt": "an abstract painting of waves and water",
+      "edit_prompt": "an digital painting of stars and moon",
+      "sample_id": "000000000103"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000103.jpg",
+      "src_prompt": "an abstract painting of waves and water",
+      "edit_prompt": "an abstract painting of waves and water at night, dark lighting",
+      "sample_id": "000000000103"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000103.jpg",
+      "src_prompt": "an abstract painting of waves and water",
+      "edit_prompt": "an abstract painting of waves and water in winter, covered in snow",
+      "sample_id": "000000000103"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000104.jpg",
+      "src_prompt": "a woman with flowers in her hair",
+      "edit_prompt": "a woman with white snakes in her hair",
+      "sample_id": "000000000104"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000104.jpg",
+      "src_prompt": "a woman with flowers in her hair",
+      "edit_prompt": "a woman with flowers in her hair at night, dark lighting",
+      "sample_id": "000000000104"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000104.jpg",
+      "src_prompt": "a woman with flowers in her hair",
+      "edit_prompt": "a woman with flowers in her hair in winter, covered in snow",
+      "sample_id": "000000000104"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000105.jpg",
+      "src_prompt": "cat with yellow eyes",
+      "edit_prompt": "fat orange cat with green eyes",
+      "sample_id": "000000000105"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000105.jpg",
+      "src_prompt": "cat with yellow eyes",
+      "edit_prompt": "cat with yellow eyes at night, dark lighting",
+      "sample_id": "000000000105"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000105.jpg",
+      "src_prompt": "cat with yellow eyes",
+      "edit_prompt": "cat with yellow eyes in winter, covered in snow",
+      "sample_id": "000000000105"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000106.jpg",
+      "src_prompt": "a red mushroom with white spots on it is sitting on the ground",
+      "edit_prompt": "a blue umbrella with rainbow spots on it is sitting on the ground",
+      "sample_id": "000000000106"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000106.jpg",
+      "src_prompt": "a red mushroom with white spots on it is sitting on the ground",
+      "edit_prompt": "a red mushroom with white spots on it is sitting on the ground at night, dark lighting",
+      "sample_id": "000000000106"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000106.jpg",
+      "src_prompt": "a red mushroom with white spots on it is sitting on the ground",
+      "edit_prompt": "a red mushroom with white spots on it is sitting on the ground in winter, covered in snow",
+      "sample_id": "000000000106"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000107.jpg",
+      "src_prompt": "a bird on the branch",
+      "edit_prompt": "a red wodden duck on the branch",
+      "sample_id": "000000000107"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000107.jpg",
+      "src_prompt": "a bird on the branch",
+      "edit_prompt": "a bird on the branch at night, dark lighting",
+      "sample_id": "000000000107"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000107.jpg",
+      "src_prompt": "a bird on the branch",
+      "edit_prompt": "a bird on the branch in winter, covered in snow",
+      "sample_id": "000000000107"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000108.jpg",
+      "src_prompt": "a woman sitting in a living room",
+      "edit_prompt": "watercolor painting of a boy standing in a living room",
+      "sample_id": "000000000108"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000108.jpg",
+      "src_prompt": "a woman sitting in a living room",
+      "edit_prompt": "a woman sitting in a living room at night, dark lighting",
+      "sample_id": "000000000108"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000108.jpg",
+      "src_prompt": "a woman sitting in a living room",
+      "edit_prompt": "a woman sitting in a living room in winter, covered in snow",
+      "sample_id": "000000000108"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000109.jpg",
+      "src_prompt": "a farm with a thatched roof and trees in the background",
+      "edit_prompt": "a school with a red tile roof and trees in the background",
+      "sample_id": "000000000109"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000109.jpg",
+      "src_prompt": "a farm with a thatched roof and trees in the background",
+      "edit_prompt": "a farm with a thatched roof and trees in the background at night, dark lighting",
+      "sample_id": "000000000109"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000109.jpg",
+      "src_prompt": "a farm with a thatched roof and trees in the background",
+      "edit_prompt": "a farm with a thatched roof and trees in the background in winter, covered in snow",
+      "sample_id": "000000000109"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000110.jpg",
+      "src_prompt": "a young woman is holding a dog",
+      "edit_prompt": "a old woman is holding a white cat",
+      "sample_id": "000000000110"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000110.jpg",
+      "src_prompt": "a young woman is holding a dog",
+      "edit_prompt": "a young woman is holding a dog at night, dark lighting",
+      "sample_id": "000000000110"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000110.jpg",
+      "src_prompt": "a young woman is holding a dog",
+      "edit_prompt": "a young woman is holding a dog in winter, covered in snow",
+      "sample_id": "000000000110"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000111.jpg",
+      "src_prompt": "a cat with green eyes sitting on the ground",
+      "edit_prompt": "a dog with blue eyes standing on the ground",
+      "sample_id": "000000000111"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000111.jpg",
+      "src_prompt": "a cat with green eyes sitting on the ground",
+      "edit_prompt": "a cat with green eyes sitting on the ground at night, dark lighting",
+      "sample_id": "000000000111"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000111.jpg",
+      "src_prompt": "a cat with green eyes sitting on the ground",
+      "edit_prompt": "a cat with green eyes sitting on the ground in winter, covered in snow",
+      "sample_id": "000000000111"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000112.jpg",
+      "src_prompt": "a group of rubber ducks are lined up in a canal",
+      "edit_prompt": "a group of pink plush ducks are swimming in a canal",
+      "sample_id": "000000000112"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000112.jpg",
+      "src_prompt": "a group of rubber ducks are lined up in a canal",
+      "edit_prompt": "a group of rubber ducks are lined up in a canal at night, dark lighting",
+      "sample_id": "000000000112"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000112.jpg",
+      "src_prompt": "a group of rubber ducks are lined up in a canal",
+      "edit_prompt": "a group of rubber ducks are lined up in a canal in winter, covered in snow",
+      "sample_id": "000000000112"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000113.jpg",
+      "src_prompt": "dogs running in the grass",
+      "edit_prompt": "rabbits holding apples in the grass",
+      "sample_id": "000000000113"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000113.jpg",
+      "src_prompt": "dogs running in the grass",
+      "edit_prompt": "dogs running in the grass at night, dark lighting",
+      "sample_id": "000000000113"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000113.jpg",
+      "src_prompt": "dogs running in the grass",
+      "edit_prompt": "dogs running in the grass in winter, covered in snow",
+      "sample_id": "000000000113"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000114.jpg",
+      "src_prompt": "a photo of a man and woman sitting on the ground",
+      "edit_prompt": "a painting of a man and woman playing on the ground",
+      "sample_id": "000000000114"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000114.jpg",
+      "src_prompt": "a photo of a man and woman sitting on the ground",
+      "edit_prompt": "a photo of a man and woman sitting on the ground at night, dark lighting",
+      "sample_id": "000000000114"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000114.jpg",
+      "src_prompt": "a photo of a man and woman sitting on the ground",
+      "edit_prompt": "a photo of a man and woman sitting on the ground in winter, covered in snow",
+      "sample_id": "000000000114"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000115.jpg",
+      "src_prompt": "two ducks standing next to each other",
+      "edit_prompt": "two colorful birds flying next to each other",
+      "sample_id": "000000000115"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000115.jpg",
+      "src_prompt": "two ducks standing next to each other",
+      "edit_prompt": "two ducks standing next to each other at night, dark lighting",
+      "sample_id": "000000000115"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000115.jpg",
+      "src_prompt": "two ducks standing next to each other",
+      "edit_prompt": "two ducks standing next to each other in winter, covered in snow",
+      "sample_id": "000000000115"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000116.jpg",
+      "src_prompt": "easter eggs in a teacup",
+      "edit_prompt": "colorful dinosaur eggs in a glass",
+      "sample_id": "000000000116"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000116.jpg",
+      "src_prompt": "easter eggs in a teacup",
+      "edit_prompt": "easter eggs in a teacup at night, dark lighting",
+      "sample_id": "000000000116"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000116.jpg",
+      "src_prompt": "easter eggs in a teacup",
+      "edit_prompt": "easter eggs in a teacup in winter, covered in snow",
+      "sample_id": "000000000116"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000117.jpg",
+      "src_prompt": "a pink flower with yellow center in the middle",
+      "edit_prompt": "a blue flower with red bee center in the middle",
+      "sample_id": "000000000117"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000117.jpg",
+      "src_prompt": "a pink flower with yellow center in the middle",
+      "edit_prompt": "a pink flower with yellow center in the middle at night, dark lighting",
+      "sample_id": "000000000117"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000117.jpg",
+      "src_prompt": "a pink flower with yellow center in the middle",
+      "edit_prompt": "a pink flower with yellow center in the middle in winter, covered in snow",
+      "sample_id": "000000000117"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000118.jpg",
+      "src_prompt": "a small bird is sitting on a branch in a field",
+      "edit_prompt": "a big cat is sitting on a branch in a forest",
+      "sample_id": "000000000118"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000118.jpg",
+      "src_prompt": "a small bird is sitting on a branch in a field",
+      "edit_prompt": "a small bird is sitting on a branch in a field at night, dark lighting",
+      "sample_id": "000000000118"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000118.jpg",
+      "src_prompt": "a small bird is sitting on a branch in a field",
+      "edit_prompt": "a small bird is sitting on a branch in a field in winter, covered in snow",
+      "sample_id": "000000000118"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000119.jpg",
+      "src_prompt": "a woman in red sitting on a chair with castle in the background",
+      "edit_prompt": "a woman in white crying on a chair with ghost in the background",
+      "sample_id": "000000000119"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000119.jpg",
+      "src_prompt": "a woman in red sitting on a chair with castle in the background",
+      "edit_prompt": "a woman in red sitting on a chair with castle in the background at night, dark lighting",
+      "sample_id": "000000000119"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000119.jpg",
+      "src_prompt": "a woman in red sitting on a chair with castle in the background",
+      "edit_prompt": "a woman in red sitting on a chair with castle in the background in winter, covered in snow",
+      "sample_id": "000000000119"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000120.jpg",
+      "src_prompt": "woman with brown hair",
+      "edit_prompt": "woman with pink straight hair and blue eyes",
+      "sample_id": "000000000120"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000120.jpg",
+      "src_prompt": "woman with brown hair",
+      "edit_prompt": "woman with brown hair at night, dark lighting",
+      "sample_id": "000000000120"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000120.jpg",
+      "src_prompt": "woman with brown hair",
+      "edit_prompt": "woman with brown hair in winter, covered in snow",
+      "sample_id": "000000000120"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000121.jpg",
+      "src_prompt": "watercolor of leaves on a branch",
+      "edit_prompt": "oilpainting of pink roses on a branch",
+      "sample_id": "000000000121"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000121.jpg",
+      "src_prompt": "watercolor of leaves on a branch",
+      "edit_prompt": "watercolor of leaves on a branch at night, dark lighting",
+      "sample_id": "000000000121"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000121.jpg",
+      "src_prompt": "watercolor of leaves on a branch",
+      "edit_prompt": "watercolor of leaves on a branch in winter, covered in snow",
+      "sample_id": "000000000121"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000122.jpg",
+      "src_prompt": "a view of the mountains covered in snow",
+      "edit_prompt": "a view of the mountains covered in red berries and leaves",
+      "sample_id": "000000000122"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000122.jpg",
+      "src_prompt": "a view of the mountains covered in snow",
+      "edit_prompt": "a view of the mountains covered in snow at night, dark lighting",
+      "sample_id": "000000000122"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000122.jpg",
+      "src_prompt": "a view of the mountains covered in snow",
+      "edit_prompt": "a view of the mountains covered in snow in winter, covered in snow",
+      "sample_id": "000000000122"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000123.jpg",
+      "src_prompt": "gold buddha statue in the temple",
+      "edit_prompt": "red stone buddha statue with diamonds in the temple",
+      "sample_id": "000000000123"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000123.jpg",
+      "src_prompt": "gold buddha statue in the temple",
+      "edit_prompt": "gold buddha statue in the temple at night, dark lighting",
+      "sample_id": "000000000123"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000123.jpg",
+      "src_prompt": "gold buddha statue in the temple",
+      "edit_prompt": "gold buddha statue in the temple in winter, covered in snow",
+      "sample_id": "000000000123"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000124.jpg",
+      "src_prompt": "the galaxy over the durdle door",
+      "edit_prompt": "the pink sunset and rainbow over the durdle door",
+      "sample_id": "000000000124"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000124.jpg",
+      "src_prompt": "the galaxy over the durdle door",
+      "edit_prompt": "the galaxy over the durdle door at night, dark lighting",
+      "sample_id": "000000000124"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000124.jpg",
+      "src_prompt": "the galaxy over the durdle door",
+      "edit_prompt": "the galaxy over the durdle door in winter, covered in snow",
+      "sample_id": "000000000124"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000125.jpg",
+      "src_prompt": "a close up of a purple flower on a black background",
+      "edit_prompt": "a close up of a blue flower lego on a light background",
+      "sample_id": "000000000125"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000125.jpg",
+      "src_prompt": "a close up of a purple flower on a black background",
+      "edit_prompt": "a close up of a purple flower on a black background at night, dark lighting",
+      "sample_id": "000000000125"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000125.jpg",
+      "src_prompt": "a close up of a purple flower on a black background",
+      "edit_prompt": "a close up of a purple flower on a black background in winter, covered in snow",
+      "sample_id": "000000000125"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000126.jpg",
+      "src_prompt": "a kitchen",
+      "edit_prompt": "an oil painting of a cat in kitchen",
+      "sample_id": "000000000126"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000126.jpg",
+      "src_prompt": "a kitchen",
+      "edit_prompt": "a kitchen at night, dark lighting",
+      "sample_id": "000000000126"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000126.jpg",
+      "src_prompt": "a kitchen",
+      "edit_prompt": "a kitchen in winter, covered in snow",
+      "sample_id": "000000000126"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000127.jpg",
+      "src_prompt": "a boat is docked on a lake in the heavy fog",
+      "edit_prompt": "a white boat with boxes is docked on a lake in the sunny day",
+      "sample_id": "000000000127"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000127.jpg",
+      "src_prompt": "a boat is docked on a lake in the heavy fog",
+      "edit_prompt": "a boat is docked on a lake in the heavy fog at night, dark lighting",
+      "sample_id": "000000000127"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000127.jpg",
+      "src_prompt": "a boat is docked on a lake in the heavy fog",
+      "edit_prompt": "a boat is docked on a lake in the heavy fog in winter, covered in snow",
+      "sample_id": "000000000127"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000128.jpg",
+      "src_prompt": "cartoon painting of a fox sleeping with flowers with a gray background",
+      "edit_prompt": "watercolor painting of a cat sleeping with pink flowers with a light background",
+      "sample_id": "000000000128"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000128.jpg",
+      "src_prompt": "cartoon painting of a fox sleeping with flowers with a gray background",
+      "edit_prompt": "cartoon painting of a fox sleeping with flowers with a gray background at night, dark lighting",
+      "sample_id": "000000000128"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000128.jpg",
+      "src_prompt": "cartoon painting of a fox sleeping with flowers with a gray background",
+      "edit_prompt": "cartoon painting of a fox sleeping with flowers with a gray background in winter, covered in snow",
+      "sample_id": "000000000128"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000129.jpg",
+      "src_prompt": "a woman with gold makeup",
+      "edit_prompt": "a woman with blue makeup and a hat",
+      "sample_id": "000000000129"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000129.jpg",
+      "src_prompt": "a woman with gold makeup",
+      "edit_prompt": "a woman with gold makeup at night, dark lighting",
+      "sample_id": "000000000129"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000129.jpg",
+      "src_prompt": "a woman with gold makeup",
+      "edit_prompt": "a woman with gold makeup in winter, covered in snow",
+      "sample_id": "000000000129"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000130.jpg",
+      "src_prompt": "a toy figure of naruto standing on a table",
+      "edit_prompt": "a toy figure of cat sitting on a rock",
+      "sample_id": "000000000130"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000130.jpg",
+      "src_prompt": "a toy figure of naruto standing on a table",
+      "edit_prompt": "a toy figure of naruto standing on a table at night, dark lighting",
+      "sample_id": "000000000130"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000130.jpg",
+      "src_prompt": "a toy figure of naruto standing on a table",
+      "edit_prompt": "a toy figure of naruto standing on a table in winter, covered in snow",
+      "sample_id": "000000000130"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000131.jpg",
+      "src_prompt": "a swan swimming in a pond with its head out the water",
+      "edit_prompt": "a swan swimming in a pool with its wings under the water",
+      "sample_id": "000000000131"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000131.jpg",
+      "src_prompt": "a swan swimming in a pond with its head out the water",
+      "edit_prompt": "a swan swimming in a pond with its head out the water at night, dark lighting",
+      "sample_id": "000000000131"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000131.jpg",
+      "src_prompt": "a swan swimming in a pond with its head out the water",
+      "edit_prompt": "a swan swimming in a pond with its head out the water in winter, covered in snow",
+      "sample_id": "000000000131"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000132.jpg",
+      "src_prompt": "a little girl wearing sunglasses and a gray shirt leaning against a wall",
+      "edit_prompt": "a little girl wearing hat and a gray dress leaning against a wall",
+      "sample_id": "000000000132"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000132.jpg",
+      "src_prompt": "a little girl wearing sunglasses and a gray shirt leaning against a wall",
+      "edit_prompt": "a little girl wearing sunglasses and a gray shirt leaning against a wall at night, dark lighting",
+      "sample_id": "000000000132"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000132.jpg",
+      "src_prompt": "a little girl wearing sunglasses and a gray shirt leaning against a wall",
+      "edit_prompt": "a little girl wearing sunglasses and a gray shirt leaning against a wall in winter, covered in snow",
+      "sample_id": "000000000132"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000133.jpg",
+      "src_prompt": "a lion in the sky with a blue background",
+      "edit_prompt": "a white dog in the sky with a red background",
+      "sample_id": "000000000133"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000133.jpg",
+      "src_prompt": "a lion in the sky with a blue background",
+      "edit_prompt": "a lion in the sky with a blue background at night, dark lighting",
+      "sample_id": "000000000133"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000133.jpg",
+      "src_prompt": "a lion in the sky with a blue background",
+      "edit_prompt": "a lion in the sky with a blue background in winter, covered in snow",
+      "sample_id": "000000000133"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000134.jpg",
+      "src_prompt": "a black and white bird flying in the blue sky",
+      "edit_prompt": "a red and white chicken flying in the pink sky",
+      "sample_id": "000000000134"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000134.jpg",
+      "src_prompt": "a black and white bird flying in the blue sky",
+      "edit_prompt": "a black and white bird flying in the blue sky at night, dark lighting",
+      "sample_id": "000000000134"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000134.jpg",
+      "src_prompt": "a black and white bird flying in the blue sky",
+      "edit_prompt": "a black and white bird flying in the blue sky in winter, covered in snow",
+      "sample_id": "000000000134"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000135.jpg",
+      "src_prompt": "the two people are standing on rocks with a fish",
+      "edit_prompt": "the two old people are sitting on boat with a fish",
+      "sample_id": "000000000135"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000135.jpg",
+      "src_prompt": "the two people are standing on rocks with a fish",
+      "edit_prompt": "the two people are standing on rocks with a fish at night, dark lighting",
+      "sample_id": "000000000135"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000135.jpg",
+      "src_prompt": "the two people are standing on rocks with a fish",
+      "edit_prompt": "the two people are standing on rocks with a fish in winter, covered in snow",
+      "sample_id": "000000000135"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000136.jpg",
+      "src_prompt": "a yellow bird sitting on a branch",
+      "edit_prompt": "a blue parrot sitting on a green branch",
+      "sample_id": "000000000136"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000136.jpg",
+      "src_prompt": "a yellow bird sitting on a branch",
+      "edit_prompt": "a yellow bird sitting on a branch at night, dark lighting",
+      "sample_id": "000000000136"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000136.jpg",
+      "src_prompt": "a yellow bird sitting on a branch",
+      "edit_prompt": "a yellow bird sitting on a branch in winter, covered in snow",
+      "sample_id": "000000000136"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000137.jpg",
+      "src_prompt": "a golden pagoda in the snow",
+      "edit_prompt": "a red pagoda in the heavy rain",
+      "sample_id": "000000000137"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000137.jpg",
+      "src_prompt": "a golden pagoda in the snow",
+      "edit_prompt": "a golden pagoda in the snow at night, dark lighting",
+      "sample_id": "000000000137"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000137.jpg",
+      "src_prompt": "a golden pagoda in the snow",
+      "edit_prompt": "a golden pagoda in the snow in winter, covered in snow",
+      "sample_id": "000000000137"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000138.jpg",
+      "src_prompt": "a cat",
+      "edit_prompt": "a white cat with a hat",
+      "sample_id": "000000000138"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000138.jpg",
+      "src_prompt": "a cat",
+      "edit_prompt": "a cat at night, dark lighting",
+      "sample_id": "000000000138"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000138.jpg",
+      "src_prompt": "a cat",
+      "edit_prompt": "a cat in winter, covered in snow",
+      "sample_id": "000000000138"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000139.jpg",
+      "src_prompt": "a duck standing on a rock near water",
+      "edit_prompt": "a chicken sitting on a board near water",
+      "sample_id": "000000000139"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000139.jpg",
+      "src_prompt": "a duck standing on a rock near water",
+      "edit_prompt": "a duck standing on a rock near water at night, dark lighting",
+      "sample_id": "000000000139"
+    },
+    {
+      "image_rel": "annotation_images/0_random_140/000000000139.jpg",
+      "src_prompt": "a duck standing on a rock near water",
+      "edit_prompt": "a duck standing on a rock near water in winter, covered in snow",
+      "sample_id": "000000000139"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/111000000000.jpg",
+      "src_prompt": "fishes and kelp in the ocean",
+      "edit_prompt": "sharks and flowers in the ocean",
+      "sample_id": "111000000000"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/111000000000.jpg",
+      "src_prompt": "fishes and kelp in the ocean",
+      "edit_prompt": "fishes and kelp in the ocean at night, dark lighting",
+      "sample_id": "111000000000"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/111000000000.jpg",
+      "src_prompt": "fishes and kelp in the ocean",
+      "edit_prompt": "fishes and kelp in the ocean in winter, covered in snow",
+      "sample_id": "111000000000"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/111000000001.jpg",
+      "src_prompt": "a cat wearing a pink hat",
+      "edit_prompt": "a tiger wearing a pink scarf",
+      "sample_id": "111000000001"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/111000000001.jpg",
+      "src_prompt": "a cat wearing a pink hat",
+      "edit_prompt": "a cat wearing a pink hat at night, dark lighting",
+      "sample_id": "111000000001"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/111000000001.jpg",
+      "src_prompt": "a cat wearing a pink hat",
+      "edit_prompt": "a cat wearing a pink hat in winter, covered in snow",
+      "sample_id": "111000000001"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/111000000002.jpg",
+      "src_prompt": "a cute little duck with big eyes",
+      "edit_prompt": "a cute little marmot with big mouth",
+      "sample_id": "111000000002"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/111000000002.jpg",
+      "src_prompt": "a cute little duck with big eyes",
+      "edit_prompt": "a cute little duck with big eyes at night, dark lighting",
+      "sample_id": "111000000002"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/111000000002.jpg",
+      "src_prompt": "a cute little duck with big eyes",
+      "edit_prompt": "a cute little duck with big eyes in winter, covered in snow",
+      "sample_id": "111000000002"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/111000000003.jpg",
+      "src_prompt": "a cute little bunny with big eyes",
+      "edit_prompt": "a cute little pig with big ears",
+      "sample_id": "111000000003"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/111000000003.jpg",
+      "src_prompt": "a cute little bunny with big eyes",
+      "edit_prompt": "a cute little bunny with big eyes at night, dark lighting",
+      "sample_id": "111000000003"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/111000000003.jpg",
+      "src_prompt": "a cute little bunny with big eyes",
+      "edit_prompt": "a cute little bunny with big eyes in winter, covered in snow",
+      "sample_id": "111000000003"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/111000000004.jpg",
+      "src_prompt": "a cartoon painting of a cute owl with a heart on its body",
+      "edit_prompt": "a cartoon painting of a cute cat with a circle on its body",
+      "sample_id": "111000000004"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/111000000004.jpg",
+      "src_prompt": "a cartoon painting of a cute owl with a heart on its body",
+      "edit_prompt": "a cartoon painting of a cute owl with a heart on its body at night, dark lighting",
+      "sample_id": "111000000004"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/111000000004.jpg",
+      "src_prompt": "a cartoon painting of a cute owl with a heart on its body",
+      "edit_prompt": "a cartoon painting of a cute owl with a heart on its body in winter, covered in snow",
+      "sample_id": "111000000004"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/111000000005.jpg",
+      "src_prompt": "a girl and her dog in a field",
+      "edit_prompt": "a boy and his monkey in a field",
+      "sample_id": "111000000005"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/111000000005.jpg",
+      "src_prompt": "a girl and her dog in a field",
+      "edit_prompt": "a girl and her dog in a field at night, dark lighting",
+      "sample_id": "111000000005"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/111000000005.jpg",
+      "src_prompt": "a girl and her dog in a field",
+      "edit_prompt": "a girl and her dog in a field in winter, covered in snow",
+      "sample_id": "111000000005"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/111000000006.jpg",
+      "src_prompt": "cat on the roof at night",
+      "edit_prompt": "dog on the table at night",
+      "sample_id": "111000000006"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/111000000006.jpg",
+      "src_prompt": "cat on the roof at night",
+      "edit_prompt": "cat on the roof at night at night, dark lighting",
+      "sample_id": "111000000006"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/111000000006.jpg",
+      "src_prompt": "cat on the roof at night",
+      "edit_prompt": "cat on the roof at night in winter, covered in snow",
+      "sample_id": "111000000006"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/111000000007.jpg",
+      "src_prompt": "an illustration of a cat sitting on top of a rock",
+      "edit_prompt": "an illustration of a bear sitting on top of a grass",
+      "sample_id": "111000000007"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/111000000007.jpg",
+      "src_prompt": "an illustration of a cat sitting on top of a rock",
+      "edit_prompt": "an illustration of a cat sitting on top of a rock at night, dark lighting",
+      "sample_id": "111000000007"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/111000000007.jpg",
+      "src_prompt": "an illustration of a cat sitting on top of a rock",
+      "edit_prompt": "an illustration of a cat sitting on top of a rock in winter, covered in snow",
+      "sample_id": "111000000007"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/111000000008.jpg",
+      "src_prompt": "a monkey wearing colorful goggles",
+      "edit_prompt": "a man wearing colorful sunglasses",
+      "sample_id": "111000000008"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/111000000008.jpg",
+      "src_prompt": "a monkey wearing colorful goggles",
+      "edit_prompt": "a monkey wearing colorful goggles at night, dark lighting",
+      "sample_id": "111000000008"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/111000000008.jpg",
+      "src_prompt": "a monkey wearing colorful goggles",
+      "edit_prompt": "a monkey wearing colorful goggles in winter, covered in snow",
+      "sample_id": "111000000008"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/111000000009.jpg",
+      "src_prompt": "a painting of a rat with red eyes",
+      "edit_prompt": "a painting of a pig with red tail",
+      "sample_id": "111000000009"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/111000000009.jpg",
+      "src_prompt": "a painting of a rat with red eyes",
+      "edit_prompt": "a painting of a rat with red eyes at night, dark lighting",
+      "sample_id": "111000000009"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/111000000009.jpg",
+      "src_prompt": "a painting of a rat with red eyes",
+      "edit_prompt": "a painting of a rat with red eyes in winter, covered in snow",
+      "sample_id": "111000000009"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/112000000000.jpg",
+      "src_prompt": "a painting of a woman in green dress",
+      "edit_prompt": "a painting of a man in green shirts",
+      "sample_id": "112000000000"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/112000000000.jpg",
+      "src_prompt": "a painting of a woman in green dress",
+      "edit_prompt": "a painting of a woman in green dress at night, dark lighting",
+      "sample_id": "112000000000"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/112000000000.jpg",
+      "src_prompt": "a painting of a woman in green dress",
+      "edit_prompt": "a painting of a woman in green dress in winter, covered in snow",
+      "sample_id": "112000000000"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/112000000001.jpg",
+      "src_prompt": "a beautiful woman with pink dress and garland on head",
+      "edit_prompt": "a beautiful woman with pink coat and hat on head",
+      "sample_id": "112000000001"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/112000000001.jpg",
+      "src_prompt": "a beautiful woman with pink dress and garland on head",
+      "edit_prompt": "a beautiful woman with pink dress and garland on head at night, dark lighting",
+      "sample_id": "112000000001"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/112000000001.jpg",
+      "src_prompt": "a beautiful woman with pink dress and garland on head",
+      "edit_prompt": "a beautiful woman with pink dress and garland on head in winter, covered in snow",
+      "sample_id": "112000000001"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/112000000002.jpg",
+      "src_prompt": "cartoon boy driving a car",
+      "edit_prompt": "cartoon girl driving a taxi",
+      "sample_id": "112000000002"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/112000000002.jpg",
+      "src_prompt": "cartoon boy driving a car",
+      "edit_prompt": "cartoon boy driving a car at night, dark lighting",
+      "sample_id": "112000000002"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/112000000002.jpg",
+      "src_prompt": "cartoon boy driving a car",
+      "edit_prompt": "cartoon boy driving a car in winter, covered in snow",
+      "sample_id": "112000000002"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/112000000003.jpg",
+      "src_prompt": "a girl with black hair and a white shirt is holding a phone",
+      "edit_prompt": "a girl with black hair and a white pants is holding a coffee",
+      "sample_id": "112000000003"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/112000000003.jpg",
+      "src_prompt": "a girl with black hair and a white shirt is holding a phone",
+      "edit_prompt": "a girl with black hair and a white shirt is holding a phone at night, dark lighting",
+      "sample_id": "112000000003"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/112000000003.jpg",
+      "src_prompt": "a girl with black hair and a white shirt is holding a phone",
+      "edit_prompt": "a girl with black hair and a white shirt is holding a phone in winter, covered in snow",
+      "sample_id": "112000000003"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/112000000004.jpg",
+      "src_prompt": "a cartoon girl sitting on a backpack",
+      "edit_prompt": "a cartoon boy sitting on a box",
+      "sample_id": "112000000004"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/112000000004.jpg",
+      "src_prompt": "a cartoon girl sitting on a backpack",
+      "edit_prompt": "a cartoon girl sitting on a backpack at night, dark lighting",
+      "sample_id": "112000000004"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/112000000004.jpg",
+      "src_prompt": "a cartoon girl sitting on a backpack",
+      "edit_prompt": "a cartoon girl sitting on a backpack in winter, covered in snow",
+      "sample_id": "112000000004"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/112000000005.jpg",
+      "src_prompt": "a woman standing under street light in the snow",
+      "edit_prompt": "a man standing under beautiful moon in the snow",
+      "sample_id": "112000000005"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/112000000005.jpg",
+      "src_prompt": "a woman standing under street light in the snow",
+      "edit_prompt": "a woman standing under street light in the snow at night, dark lighting",
+      "sample_id": "112000000005"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/112000000005.jpg",
+      "src_prompt": "a woman standing under street light in the snow",
+      "edit_prompt": "a woman standing under street light in the snow in winter, covered in snow",
+      "sample_id": "112000000005"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/112000000006.jpg",
+      "src_prompt": "a cartoon man sitting at a desk with laptop",
+      "edit_prompt": "a cartoon man sitting at a bench with notebook",
+      "sample_id": "112000000006"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/112000000006.jpg",
+      "src_prompt": "a cartoon man sitting at a desk with laptop",
+      "edit_prompt": "a cartoon man sitting at a desk with laptop at night, dark lighting",
+      "sample_id": "112000000006"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/112000000006.jpg",
+      "src_prompt": "a cartoon man sitting at a desk with laptop",
+      "edit_prompt": "a cartoon man sitting at a desk with laptop in winter, covered in snow",
+      "sample_id": "112000000006"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/112000000007.jpg",
+      "src_prompt": "a woman with a mask and flowers in her hair",
+      "edit_prompt": "a woman with a scarf and crown in her hair",
+      "sample_id": "112000000007"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/112000000007.jpg",
+      "src_prompt": "a woman with a mask and flowers in her hair",
+      "edit_prompt": "a woman with a mask and flowers in her hair at night, dark lighting",
+      "sample_id": "112000000007"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/112000000007.jpg",
+      "src_prompt": "a woman with a mask and flowers in her hair",
+      "edit_prompt": "a woman with a mask and flowers in her hair in winter, covered in snow",
+      "sample_id": "112000000007"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/112000000008.jpg",
+      "src_prompt": "a painting of two women walking on the beach",
+      "edit_prompt": "a painting of two man walking on the grass",
+      "sample_id": "112000000008"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/112000000008.jpg",
+      "src_prompt": "a painting of two women walking on the beach",
+      "edit_prompt": "a painting of two women walking on the beach at night, dark lighting",
+      "sample_id": "112000000008"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/112000000008.jpg",
+      "src_prompt": "a painting of two women walking on the beach",
+      "edit_prompt": "a painting of two women walking on the beach in winter, covered in snow",
+      "sample_id": "112000000008"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/112000000009.jpg",
+      "src_prompt": "an angel with wings and a golden light",
+      "edit_prompt": "an demon with swords and a golden light",
+      "sample_id": "112000000009"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/112000000009.jpg",
+      "src_prompt": "an angel with wings and a golden light",
+      "edit_prompt": "an angel with wings and a golden light at night, dark lighting",
+      "sample_id": "112000000009"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/112000000009.jpg",
+      "src_prompt": "an angel with wings and a golden light",
+      "edit_prompt": "an angel with wings and a golden light in winter, covered in snow",
+      "sample_id": "112000000009"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/113000000000.jpg",
+      "src_prompt": "a gold plated bowl filled with fruit",
+      "edit_prompt": "a gold plated plate filled with candy",
+      "sample_id": "113000000000"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/113000000000.jpg",
+      "src_prompt": "a gold plated bowl filled with fruit",
+      "edit_prompt": "a gold plated bowl filled with fruit at night, dark lighting",
+      "sample_id": "113000000000"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/113000000000.jpg",
+      "src_prompt": "a gold plated bowl filled with fruit",
+      "edit_prompt": "a gold plated bowl filled with fruit in winter, covered in snow",
+      "sample_id": "113000000000"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/113000000001.jpg",
+      "src_prompt": "a pepper on the table",
+      "edit_prompt": "a pear on the floor",
+      "sample_id": "113000000001"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/113000000001.jpg",
+      "src_prompt": "a pepper on the table",
+      "edit_prompt": "a pepper on the table at night, dark lighting",
+      "sample_id": "113000000001"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/113000000001.jpg",
+      "src_prompt": "a pepper on the table",
+      "edit_prompt": "a pepper on the table in winter, covered in snow",
+      "sample_id": "113000000001"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/113000000002.jpg",
+      "src_prompt": "a vase sitting on a table near a window",
+      "edit_prompt": "a plant sitting on a board near a window",
+      "sample_id": "113000000002"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/113000000002.jpg",
+      "src_prompt": "a vase sitting on a table near a window",
+      "edit_prompt": "a vase sitting on a table near a window at night, dark lighting",
+      "sample_id": "113000000002"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/113000000002.jpg",
+      "src_prompt": "a vase sitting on a table near a window",
+      "edit_prompt": "a vase sitting on a table near a window in winter, covered in snow",
+      "sample_id": "113000000002"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/113000000003.jpg",
+      "src_prompt": "a cake with a pink and blue icing",
+      "edit_prompt": "a icecream with a pink and blue stons",
+      "sample_id": "113000000003"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/113000000003.jpg",
+      "src_prompt": "a cake with a pink and blue icing",
+      "edit_prompt": "a cake with a pink and blue icing at night, dark lighting",
+      "sample_id": "113000000003"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/113000000003.jpg",
+      "src_prompt": "a cake with a pink and blue icing",
+      "edit_prompt": "a cake with a pink and blue icing in winter, covered in snow",
+      "sample_id": "113000000003"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/113000000004.jpg",
+      "src_prompt": "a cat and fish in a fish bowl",
+      "edit_prompt": "a dog and frog in a fish bowl",
+      "sample_id": "113000000004"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/113000000004.jpg",
+      "src_prompt": "a cat and fish in a fish bowl",
+      "edit_prompt": "a cat and fish in a fish bowl at night, dark lighting",
+      "sample_id": "113000000004"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/113000000004.jpg",
+      "src_prompt": "a cat and fish in a fish bowl",
+      "edit_prompt": "a cat and fish in a fish bowl in winter, covered in snow",
+      "sample_id": "113000000004"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/113000000005.jpg",
+      "src_prompt": "a chair and lamp",
+      "edit_prompt": "a sofa and umbrella",
+      "sample_id": "113000000005"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/113000000005.jpg",
+      "src_prompt": "a chair and lamp",
+      "edit_prompt": "a chair and lamp at night, dark lighting",
+      "sample_id": "113000000005"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/113000000005.jpg",
+      "src_prompt": "a chair and lamp",
+      "edit_prompt": "a chair and lamp in winter, covered in snow",
+      "sample_id": "113000000005"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/113000000006.jpg",
+      "src_prompt": "a woman's face is framed in a large photo on a wall",
+      "edit_prompt": "a woman's hands is framed in a large painting on a wall",
+      "sample_id": "113000000006"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/113000000006.jpg",
+      "src_prompt": "a woman's face is framed in a large photo on a wall",
+      "edit_prompt": "a woman's face is framed in a large photo on a wall at night, dark lighting",
+      "sample_id": "113000000006"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/113000000006.jpg",
+      "src_prompt": "a woman's face is framed in a large photo on a wall",
+      "edit_prompt": "a woman's face is framed in a large photo on a wall in winter, covered in snow",
+      "sample_id": "113000000006"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/113000000007.jpg",
+      "src_prompt": "a gold potted plant on a wooden table",
+      "edit_prompt": "a gold potted flower on a wooden bench",
+      "sample_id": "113000000007"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/113000000007.jpg",
+      "src_prompt": "a gold potted plant on a wooden table",
+      "edit_prompt": "a gold potted plant on a wooden table at night, dark lighting",
+      "sample_id": "113000000007"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/113000000007.jpg",
+      "src_prompt": "a gold potted plant on a wooden table",
+      "edit_prompt": "a gold potted plant on a wooden table in winter, covered in snow",
+      "sample_id": "113000000007"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/113000000008.jpg",
+      "src_prompt": "a teacup and saucer with a spoon and a fork",
+      "edit_prompt": "a cake and saucer with a teaspoon and a knife",
+      "sample_id": "113000000008"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/113000000008.jpg",
+      "src_prompt": "a teacup and saucer with a spoon and a fork",
+      "edit_prompt": "a teacup and saucer with a spoon and a fork at night, dark lighting",
+      "sample_id": "113000000008"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/113000000008.jpg",
+      "src_prompt": "a teacup and saucer with a spoon and a fork",
+      "edit_prompt": "a teacup and saucer with a spoon and a fork in winter, covered in snow",
+      "sample_id": "113000000008"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/113000000009.jpg",
+      "src_prompt": "a vase with sunflowers and pears on a table",
+      "edit_prompt": "a vase with roses and apples on a table",
+      "sample_id": "113000000009"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/113000000009.jpg",
+      "src_prompt": "a vase with sunflowers and pears on a table",
+      "edit_prompt": "a vase with sunflowers and pears on a table at night, dark lighting",
+      "sample_id": "113000000009"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/113000000009.jpg",
+      "src_prompt": "a vase with sunflowers and pears on a table",
+      "edit_prompt": "a vase with sunflowers and pears on a table in winter, covered in snow",
+      "sample_id": "113000000009"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/114000000000.jpg",
+      "src_prompt": "stars, coulds, and a moon over the ocean",
+      "edit_prompt": "stars, birds, and a sun over the ocean",
+      "sample_id": "114000000000"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/114000000000.jpg",
+      "src_prompt": "stars, coulds, and a moon over the ocean",
+      "edit_prompt": "stars, coulds, and a moon over the ocean at night, dark lighting",
+      "sample_id": "114000000000"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/114000000000.jpg",
+      "src_prompt": "stars, coulds, and a moon over the ocean",
+      "edit_prompt": "stars, coulds, and a moon over the ocean in winter, covered in snow",
+      "sample_id": "114000000000"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/114000000001.jpg",
+      "src_prompt": "a cartoon bear playing golf on a green field",
+      "edit_prompt": "a cartoon rabbit playing tennis on a green field",
+      "sample_id": "114000000001"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/114000000001.jpg",
+      "src_prompt": "a cartoon bear playing golf on a green field",
+      "edit_prompt": "a cartoon bear playing golf on a green field at night, dark lighting",
+      "sample_id": "114000000001"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/114000000001.jpg",
+      "src_prompt": "a cartoon bear playing golf on a green field",
+      "edit_prompt": "a cartoon bear playing golf on a green field in winter, covered in snow",
+      "sample_id": "114000000001"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/114000000002.jpg",
+      "src_prompt": "a painting of a castle and trees in the middle of a lake",
+      "edit_prompt": "a painting of a church and clouds in the middle of a lake",
+      "sample_id": "114000000002"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/114000000002.jpg",
+      "src_prompt": "a painting of a castle and trees in the middle of a lake",
+      "edit_prompt": "a painting of a castle and trees in the middle of a lake at night, dark lighting",
+      "sample_id": "114000000002"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/114000000002.jpg",
+      "src_prompt": "a painting of a castle and trees in the middle of a lake",
+      "edit_prompt": "a painting of a castle and trees in the middle of a lake in winter, covered in snow",
+      "sample_id": "114000000002"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/114000000003.jpg",
+      "src_prompt": "a car with colorful car cover is parked on the street",
+      "edit_prompt": "a motorcycle with colorful wheels is parked on the street",
+      "sample_id": "114000000003"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/114000000003.jpg",
+      "src_prompt": "a car with colorful car cover is parked on the street",
+      "edit_prompt": "a car with colorful car cover is parked on the street at night, dark lighting",
+      "sample_id": "114000000003"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/114000000003.jpg",
+      "src_prompt": "a car with colorful car cover is parked on the street",
+      "edit_prompt": "a car with colorful car cover is parked on the street in winter, covered in snow",
+      "sample_id": "114000000003"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/114000000004.jpg",
+      "src_prompt": "a blue pyramid with a reflection of mountains in the water",
+      "edit_prompt": "a blue box with a reflection of ship in the water",
+      "sample_id": "114000000004"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/114000000004.jpg",
+      "src_prompt": "a blue pyramid with a reflection of mountains in the water",
+      "edit_prompt": "a blue pyramid with a reflection of mountains in the water at night, dark lighting",
+      "sample_id": "114000000004"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/114000000004.jpg",
+      "src_prompt": "a blue pyramid with a reflection of mountains in the water",
+      "edit_prompt": "a blue pyramid with a reflection of mountains in the water in winter, covered in snow",
+      "sample_id": "114000000004"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/114000000005.jpg",
+      "src_prompt": "a house and people in the woods",
+      "edit_prompt": "a monster and cats in the woods",
+      "sample_id": "114000000005"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/114000000005.jpg",
+      "src_prompt": "a house and people in the woods",
+      "edit_prompt": "a house and people in the woods at night, dark lighting",
+      "sample_id": "114000000005"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/114000000005.jpg",
+      "src_prompt": "a house and people in the woods",
+      "edit_prompt": "a house and people in the woods in winter, covered in snow",
+      "sample_id": "114000000005"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/114000000006.jpg",
+      "src_prompt": "a small cabin on an island in the middle of lake",
+      "edit_prompt": "a small castle on an island in the middle of magma",
+      "sample_id": "114000000006"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/114000000006.jpg",
+      "src_prompt": "a small cabin on an island in the middle of lake",
+      "edit_prompt": "a small cabin on an island in the middle of lake at night, dark lighting",
+      "sample_id": "114000000006"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/114000000006.jpg",
+      "src_prompt": "a small cabin on an island in the middle of lake",
+      "edit_prompt": "a small cabin on an island in the middle of lake in winter, covered in snow",
+      "sample_id": "114000000006"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/114000000007.jpg",
+      "src_prompt": "a woman in a dress standing in front of a spaceship",
+      "edit_prompt": "a woman in a coat standing in front of a eagle",
+      "sample_id": "114000000007"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/114000000007.jpg",
+      "src_prompt": "a woman in a dress standing in front of a spaceship",
+      "edit_prompt": "a woman in a dress standing in front of a spaceship at night, dark lighting",
+      "sample_id": "114000000007"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/114000000007.jpg",
+      "src_prompt": "a woman in a dress standing in front of a spaceship",
+      "edit_prompt": "a woman in a dress standing in front of a spaceship in winter, covered in snow",
+      "sample_id": "114000000007"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/114000000008.jpg",
+      "src_prompt": "a futuristic city with cars and people walking in the street",
+      "edit_prompt": "a futuristic city with rocket and cats walking in the street",
+      "sample_id": "114000000008"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/114000000008.jpg",
+      "src_prompt": "a futuristic city with cars and people walking in the street",
+      "edit_prompt": "a futuristic city with cars and people walking in the street at night, dark lighting",
+      "sample_id": "114000000008"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/114000000008.jpg",
+      "src_prompt": "a futuristic city with cars and people walking in the street",
+      "edit_prompt": "a futuristic city with cars and people walking in the street in winter, covered in snow",
+      "sample_id": "114000000008"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/114000000009.jpg",
+      "src_prompt": "the jungle with a beautiful waterfall and plants",
+      "edit_prompt": "the jungle with a star river and flowers",
+      "sample_id": "114000000009"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/114000000009.jpg",
+      "src_prompt": "the jungle with a beautiful waterfall and plants",
+      "edit_prompt": "the jungle with a beautiful waterfall and plants at night, dark lighting",
+      "sample_id": "114000000009"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/114000000009.jpg",
+      "src_prompt": "the jungle with a beautiful waterfall and plants",
+      "edit_prompt": "the jungle with a beautiful waterfall and plants in winter, covered in snow",
+      "sample_id": "114000000009"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/121000000000.jpg",
+      "src_prompt": "an orange cat play with a black and white cat in the grass",
+      "edit_prompt": "an orange dog play with a black and white ball in the grass",
+      "sample_id": "121000000000"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/121000000000.jpg",
+      "src_prompt": "an orange cat play with a black and white cat in the grass",
+      "edit_prompt": "an orange cat play with a black and white cat in the grass at night, dark lighting",
+      "sample_id": "121000000000"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/121000000000.jpg",
+      "src_prompt": "an orange cat play with a black and white cat in the grass",
+      "edit_prompt": "an orange cat play with a black and white cat in the grass in winter, covered in snow",
+      "sample_id": "121000000000"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/121000000001.jpg",
+      "src_prompt": "a cat sitting next to a mirror",
+      "edit_prompt": "a tiger sitting next to a window",
+      "sample_id": "121000000001"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/121000000001.jpg",
+      "src_prompt": "a cat sitting next to a mirror",
+      "edit_prompt": "a cat sitting next to a mirror at night, dark lighting",
+      "sample_id": "121000000001"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/121000000001.jpg",
+      "src_prompt": "a cat sitting next to a mirror",
+      "edit_prompt": "a cat sitting next to a mirror in winter, covered in snow",
+      "sample_id": "121000000001"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/121000000002.jpg",
+      "src_prompt": "a horse with long hair in a grass field",
+      "edit_prompt": "a zebra with long tail in a grass field",
+      "sample_id": "121000000002"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/121000000002.jpg",
+      "src_prompt": "a horse with long hair in a grass field",
+      "edit_prompt": "a horse with long hair in a grass field at night, dark lighting",
+      "sample_id": "121000000002"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/121000000002.jpg",
+      "src_prompt": "a horse with long hair in a grass field",
+      "edit_prompt": "a horse with long hair in a grass field in winter, covered in snow",
+      "sample_id": "121000000002"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/121000000003.jpg",
+      "src_prompt": "a white bulldog is walking on the grass",
+      "edit_prompt": "a white rat is walking on the grass",
+      "sample_id": "121000000003"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/121000000003.jpg",
+      "src_prompt": "a white bulldog is walking on the grass",
+      "edit_prompt": "a white bulldog is walking on the grass at night, dark lighting",
+      "sample_id": "121000000003"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/121000000003.jpg",
+      "src_prompt": "a white bulldog is walking on the grass",
+      "edit_prompt": "a white bulldog is walking on the grass in winter, covered in snow",
+      "sample_id": "121000000003"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/121000000004.jpg",
+      "src_prompt": "a blue and white bird sits on a branch",
+      "edit_prompt": "a blue and white butterfly sits on a flower",
+      "sample_id": "121000000004"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/121000000004.jpg",
+      "src_prompt": "a blue and white bird sits on a branch",
+      "edit_prompt": "a blue and white bird sits on a branch at night, dark lighting",
+      "sample_id": "121000000004"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/121000000004.jpg",
+      "src_prompt": "a blue and white bird sits on a branch",
+      "edit_prompt": "a blue and white bird sits on a branch in winter, covered in snow",
+      "sample_id": "121000000004"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/121000000005.jpg",
+      "src_prompt": "a squirrel is sitting on top of a wooden fence",
+      "edit_prompt": "a rabbit is sitting on top of a wooden desk",
+      "sample_id": "121000000005"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/121000000005.jpg",
+      "src_prompt": "a squirrel is sitting on top of a wooden fence",
+      "edit_prompt": "a squirrel is sitting on top of a wooden fence at night, dark lighting",
+      "sample_id": "121000000005"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/121000000005.jpg",
+      "src_prompt": "a squirrel is sitting on top of a wooden fence",
+      "edit_prompt": "a squirrel is sitting on top of a wooden fence in winter, covered in snow",
+      "sample_id": "121000000005"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/121000000006.jpg",
+      "src_prompt": "a dog sitting on the beach with a body of water in the background",
+      "edit_prompt": "a wolf sitting on the board with a body of water in the background",
+      "sample_id": "121000000006"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/121000000006.jpg",
+      "src_prompt": "a dog sitting on the beach with a body of water in the background",
+      "edit_prompt": "a dog sitting on the beach with a body of water in the background at night, dark lighting",
+      "sample_id": "121000000006"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/121000000006.jpg",
+      "src_prompt": "a dog sitting on the beach with a body of water in the background",
+      "edit_prompt": "a dog sitting on the beach with a body of water in the background in winter, covered in snow",
+      "sample_id": "121000000006"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/121000000007.jpg",
+      "src_prompt": "a fluffy cat with yellow eyes sitting on a wooden floor",
+      "edit_prompt": "a fluffy panda with yellow mouth sitting on a wooden floor",
+      "sample_id": "121000000007"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/121000000007.jpg",
+      "src_prompt": "a fluffy cat with yellow eyes sitting on a wooden floor",
+      "edit_prompt": "a fluffy cat with yellow eyes sitting on a wooden floor at night, dark lighting",
+      "sample_id": "121000000007"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/121000000007.jpg",
+      "src_prompt": "a fluffy cat with yellow eyes sitting on a wooden floor",
+      "edit_prompt": "a fluffy cat with yellow eyes sitting on a wooden floor in winter, covered in snow",
+      "sample_id": "121000000007"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/121000000008.jpg",
+      "src_prompt": "a butterfly on a leaf in the garden",
+      "edit_prompt": "a parrot on a flower in the garden",
+      "sample_id": "121000000008"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/121000000008.jpg",
+      "src_prompt": "a butterfly on a leaf in the garden",
+      "edit_prompt": "a butterfly on a leaf in the garden at night, dark lighting",
+      "sample_id": "121000000008"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/121000000008.jpg",
+      "src_prompt": "a butterfly on a leaf in the garden",
+      "edit_prompt": "a butterfly on a leaf in the garden in winter, covered in snow",
+      "sample_id": "121000000008"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/121000000009.jpg",
+      "src_prompt": "a bird is standing on top of a rock",
+      "edit_prompt": "a owl is standing on top of a diamond",
+      "sample_id": "121000000009"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/121000000009.jpg",
+      "src_prompt": "a bird is standing on top of a rock",
+      "edit_prompt": "a bird is standing on top of a rock at night, dark lighting",
+      "sample_id": "121000000009"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/121000000009.jpg",
+      "src_prompt": "a bird is standing on top of a rock",
+      "edit_prompt": "a bird is standing on top of a rock in winter, covered in snow",
+      "sample_id": "121000000009"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/122000000000.jpg",
+      "src_prompt": "a photo of couples wearing shirts dancing together",
+      "edit_prompt": "a photo of robots wearing dress dancing together",
+      "sample_id": "122000000000"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/122000000000.jpg",
+      "src_prompt": "a photo of couples wearing shirts dancing together",
+      "edit_prompt": "a photo of couples wearing shirts dancing together at night, dark lighting",
+      "sample_id": "122000000000"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/122000000000.jpg",
+      "src_prompt": "a photo of couples wearing shirts dancing together",
+      "edit_prompt": "a photo of couples wearing shirts dancing together in winter, covered in snow",
+      "sample_id": "122000000000"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/122000000001.jpg",
+      "src_prompt": "spiderman on the roof",
+      "edit_prompt": "robot on the desk",
+      "sample_id": "122000000001"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/122000000001.jpg",
+      "src_prompt": "spiderman on the roof",
+      "edit_prompt": "spiderman on the roof at night, dark lighting",
+      "sample_id": "122000000001"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/122000000001.jpg",
+      "src_prompt": "spiderman on the roof",
+      "edit_prompt": "spiderman on the roof in winter, covered in snow",
+      "sample_id": "122000000001"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/122000000002.jpg",
+      "src_prompt": "a woman in a coat holding a camera",
+      "edit_prompt": "a woman in a shirt holding a phone",
+      "sample_id": "122000000002"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/122000000002.jpg",
+      "src_prompt": "a woman in a coat holding a camera",
+      "edit_prompt": "a woman in a coat holding a camera at night, dark lighting",
+      "sample_id": "122000000002"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/122000000002.jpg",
+      "src_prompt": "a woman in a coat holding a camera",
+      "edit_prompt": "a woman in a coat holding a camera in winter, covered in snow",
+      "sample_id": "122000000002"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/122000000003.jpg",
+      "src_prompt": "a woman wearing sunglasses sitting in the grass with a book",
+      "edit_prompt": "a woman wearing hat sitting in the grass with a ipad",
+      "sample_id": "122000000003"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/122000000003.jpg",
+      "src_prompt": "a woman wearing sunglasses sitting in the grass with a book",
+      "edit_prompt": "a woman wearing sunglasses sitting in the grass with a book at night, dark lighting",
+      "sample_id": "122000000003"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/122000000003.jpg",
+      "src_prompt": "a woman wearing sunglasses sitting in the grass with a book",
+      "edit_prompt": "a woman wearing sunglasses sitting in the grass with a book in winter, covered in snow",
+      "sample_id": "122000000003"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/122000000004.jpg",
+      "src_prompt": "a woman in black dress leaning against a car",
+      "edit_prompt": "a woman in black coat leaning against a wall",
+      "sample_id": "122000000004"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/122000000004.jpg",
+      "src_prompt": "a woman in black dress leaning against a car",
+      "edit_prompt": "a woman in black dress leaning against a car at night, dark lighting",
+      "sample_id": "122000000004"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/122000000004.jpg",
+      "src_prompt": "a woman in black dress leaning against a car",
+      "edit_prompt": "a woman in black dress leaning against a car in winter, covered in snow",
+      "sample_id": "122000000004"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/122000000005.jpg",
+      "src_prompt": "a woman sitting on a bench using her phone",
+      "edit_prompt": "a woman sitting on a sofa using her ipad",
+      "sample_id": "122000000005"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/122000000005.jpg",
+      "src_prompt": "a woman sitting on a bench using her phone",
+      "edit_prompt": "a woman sitting on a bench using her phone at night, dark lighting",
+      "sample_id": "122000000005"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/122000000005.jpg",
+      "src_prompt": "a woman sitting on a bench using her phone",
+      "edit_prompt": "a woman sitting on a bench using her phone in winter, covered in snow",
+      "sample_id": "122000000005"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/122000000006.jpg",
+      "src_prompt": "an old man playing an electric guitar on a street",
+      "edit_prompt": "an old man playing an electric bass on a street",
+      "sample_id": "122000000006"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/122000000006.jpg",
+      "src_prompt": "an old man playing an electric guitar on a street",
+      "edit_prompt": "an old man playing an electric guitar on a street at night, dark lighting",
+      "sample_id": "122000000006"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/122000000006.jpg",
+      "src_prompt": "an old man playing an electric guitar on a street",
+      "edit_prompt": "an old man playing an electric guitar on a street in winter, covered in snow",
+      "sample_id": "122000000006"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/122000000007.jpg",
+      "src_prompt": "a woman sitting in a folding chair near a waterfall",
+      "edit_prompt": "a girl sitting in a blue rock near a waterfall",
+      "sample_id": "122000000007"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/122000000007.jpg",
+      "src_prompt": "a woman sitting in a folding chair near a waterfall",
+      "edit_prompt": "a woman sitting in a folding chair near a waterfall at night, dark lighting",
+      "sample_id": "122000000007"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/122000000007.jpg",
+      "src_prompt": "a woman sitting in a folding chair near a waterfall",
+      "edit_prompt": "a woman sitting in a folding chair near a waterfall in winter, covered in snow",
+      "sample_id": "122000000007"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/122000000008.jpg",
+      "src_prompt": "a woman and a horse",
+      "edit_prompt": "a man and a cow",
+      "sample_id": "122000000008"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/122000000008.jpg",
+      "src_prompt": "a woman and a horse",
+      "edit_prompt": "a woman and a horse at night, dark lighting",
+      "sample_id": "122000000008"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/122000000008.jpg",
+      "src_prompt": "a woman and a horse",
+      "edit_prompt": "a woman and a horse in winter, covered in snow",
+      "sample_id": "122000000008"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/122000000009.jpg",
+      "src_prompt": "a woman sitting at a bar with a glass of wine, with a lamp on the table",
+      "edit_prompt": "a woman sitting at a bar with a glass of milk, with a mushroom on the table",
+      "sample_id": "122000000009"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/122000000009.jpg",
+      "src_prompt": "a woman sitting at a bar with a glass of wine, with a lamp on the table",
+      "edit_prompt": "a woman sitting at a bar with a glass of wine, with a lamp on the table at night, dark lighting",
+      "sample_id": "122000000009"
+    },
+    {
+      "image_rel": "annotation_images/1_change_object_80/122000000009.jpg",
+      "src_prompt": "a woman sitting at a bar with a glass of wine, with a lamp on the table",
+      "edit_prompt": "a woman sitting at a bar with a glass of wine, with a lamp on the table in winter, covered in snow",
+      "sample_id": "122000000009"
+    }
+  ]
+}

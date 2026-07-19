@@ -122,6 +122,8 @@ secrets/
 # --- Dataset cache (tải lại bằng scripts/create_piebench_subset.py) ---
 data/.hf_pie_bench_pp/
 data/PIE-Bench-subset20/
+data/PIE-Bench-auto200/annotation_images/
+# Giữ manifest nhẹ (jobs / MANIFEST / mapping) khi có — ảnh nặng bỏ
 
 # --- Google Drive sync rác (nếu sync folder project) ---
 .gdrive/

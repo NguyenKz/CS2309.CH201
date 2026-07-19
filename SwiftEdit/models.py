@@ -274,22 +274,27 @@ class IPSBV2Model(torch.nn.Module):
                 block_id = int(name[len("down_blocks.")])
                 hidden_size = self.unet.config.block_out_channels[block_id]
             if cross_attention_dim is None:
-                attn_procs[name] = AttnProcessor().to(device)
+                attn_procs[name] = AttnProcessor()
+                attn_procs[name] = attn_procs[name].to(device)
             else:
                 # this is for cross-attention
                 layer_name = name.split(".processor")[0]
                 weights = {
-                    "to_k_ip.weight": unet_sd[layer_name + ".to_k.weight"],
-                    "to_v_ip.weight": unet_sd[layer_name + ".to_v.weight"],
+                    "to_k_ip.weight": unet_sd[layer_name + ".to_k.weight"].to(
+                        dtype=self.weight_dtype
+                    ),
+                    "to_v_ip.weight": unet_sd[layer_name + ".to_v.weight"].to(
+                        dtype=self.weight_dtype
+                    ),
                 }
                 if self.with_ip_mask_controller:
                     attn_procs[name] = IPAttnProcessor2_0WithIPMaskController(
                         hidden_size=hidden_size, cross_attention_dim=cross_attention_dim
-                    ).to(device)
+                    ).to(device=device, dtype=self.weight_dtype)
                 else:
                     attn_procs[name] = IPAttnProcessor(
                         hidden_size=hidden_size, cross_attention_dim=cross_attention_dim
-                    ).to(device)
+                    ).to(device=device, dtype=self.weight_dtype)
                 attn_procs[name].load_state_dict(weights)
 
         self.unet.set_attn_processor(attn_procs)
@@ -303,7 +308,6 @@ class IPSBV2Model(torch.nn.Module):
 
         ip_sd = torch.load(ip_model_path, map_location="cpu", weights_only=True)
         if self.weight_dtype != torch.float32:
-            # Đồng bộ dtype module trống (image_proj / phần IP) trước khi nạp state.
             self.image_proj_model = self.image_proj_model.to(dtype=self.weight_dtype)
             ip_sd = {
                 k: (v.to(dtype=self.weight_dtype) if torch.is_floating_point(v) else v)
@@ -311,7 +315,16 @@ class IPSBV2Model(torch.nn.Module):
             }
         self.load_state_dict(ip_sd)
         del ip_sd
-        # self.load_ip_adapter(path_ckpt_ip)
+
+        # Ép lại toàn bộ UNet + IP Linear về weight_dtype (fix Half != float trên Colab).
+        if self.weight_dtype != torch.float32:
+            self.unet = self.unet.to(dtype=self.weight_dtype)
+            self.image_proj_model = self.image_proj_model.to(dtype=self.weight_dtype)
+            for proc in self.unet.attn_processors.values():
+                for attr in ("to_k_ip", "to_v_ip"):
+                    mod = getattr(proc, attr, None)
+                    if mod is not None:
+                        setattr(proc, attr, mod.to(dtype=self.weight_dtype))
 
         # alpha_t/sigma_t giữ fp32 (không đụng).
         if self.channels_last:

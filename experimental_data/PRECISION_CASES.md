@@ -1,45 +1,57 @@
 # Kiểm kê case precision — CS2309 SwiftEdit
 
-> Cập nhật: 2026-07-19. Mục tiêu: biết **đã có số liệu** vs **còn thiếu** trước khi chạy thêm trên Colab.
+> Cập nhật: 2026-07-19 (workflow chọn version + merge local).
 
-## Ma trận case
+## Hệ quy chiếu thống nhất
 
-| # | Case | Cách làm | Dataset / quy mô | Tốc độ | VRAM | PSNR vs fp32 | Disk weights | Trạng thái |
-|---|------|----------|------------------|--------|------|--------------|--------------|------------|
-| 1 | Full **FP32** | native dtype | Colab T4, 200×3=600 | có | có | reference | fp32 ~10GB | **ĐỦ** — [`quality_speed_bench_2026-06-17`](./quality_speed_bench_2026-06-17/) |
-| 2 | **FP16 compute** (cast trên GPU, disk vẫn fp32) | `dtype=fp16` + channels_last + cache | Colab T4, 600 | có (1.70×) | −42% | 48.6 dB | không giảm | **ĐỦ** — cùng thư mục 2026-06-17 (`improved_fp16_cache`) |
-| 3 | **FP8** weight-only | torchao sau load | Colab T4, 600 | có | −46% | 6.0 dB (hỏng) | không giảm | **ĐỦ** (biết là fail) — 2026-06-17 |
-| 4 | **FP4** weight-only (runtime) | bitsandbytes sau load fp32→fp16 | Colab T4, 600 | có | −48.5% | 21.7 dB | không giảm | **ĐỦ** — 2026-06-17 |
-| 5 | **FP16 disk** (nén checkpoint) | convert safetensors fp16 + `torch_dtype` load | Mac MPS smoke 2 job | có (MPS) | peak load −47% (MPS) | ~51 dB (smoke) | **−49.5%** | **ĐỦ smoke** — [`precision_disk_vram_2026-07-19_promptfix`](./precision_disk_vram_2026-07-19_promptfix/); **THIẾU** cùng dataset 200×3 trên T4 |
-| 6 | **FP4 from fp16 disk** | load weights_fp16 rồi `quant=fp4` | — | — | — | — | dùng tree fp16 | **THIẾU** (Colab chưa chạy xong / lỗi) |
+- Dataset / jobs: [`data/jobs_june17.json`](../data/jobs_june17.json) (200×3)
+- Mỗi lần Colab **chỉ chạy configs bạn chọn** → 1 `bundle.zip`
+- So sánh cuối **local** khi đủ data: `python scripts/compare_precision_runs.py`
+- Baseline chất lượng: ảnh `baseline_fp32` (có thể chạy riêng 1 session `--configs fp32`)
 
-Bổ sung Mac nhỏ: [`fp16_benchmark_2026-06-14`](./fp16_benchmark_2026-06-14/) — FP16 compute trên MPS (không phải disk).
+## Catalog (picker)
 
-## Kết luận kiểm kê
+| Alias | Config | Disk | EditCache |
+|-------|--------|------|-----------|
+| `fp32` | `baseline_fp32` | fp32 | off |
+| `fp16` | `improved_fp16_cache` | fp32 | on |
+| `fp8` | `improved_fp8_cache` | fp32 | on |
+| `fp4` | `improved_fp4_cache` | fp32 | on |
+| `fp16_weight` | `fp16_disk` | **fp16** | on |
+| `fp4_weight` | `fp4_from_fp16` | **fp16** → quant fp4 | on |
 
-**Đã đủ để viết phần “precision compute / quant runtime”** (case 1–4) từ báo cáo 2026-06-17.
+Cell notebook:
 
-**Chưa đủ cho “nén checkpoint trên disk”:**
+1. **Chọn** `SELECT` (True/False từng alias)
+2. **Ensure weights** — chỉ convert/link khi có `*_weight`
+3. **Eval** → tải `bundle.zip`
 
-1. **Case 5 trên Colab T4, cùng (hoặc tương đương) dataset bench cũ** — để so VRAM CUDA + tốc độ với case 2.
-2. **Case 6** `fp4_from_fp16` trên T4 — so với case 4 (fp4 từ weights fp32 disk).
-3. **Báo cáo tổng hợp một bảng** gộp case 1–6 (script so sánh local — xem `scripts/compare_precision_runs.py`).
+## Export mỗi run (`precision_run_<stamp>_<configs>/`)
 
-**Không cần chạy lại case 1 (FP32)** — dùng ảnh/CSV 2026-06-17 làm mốc (khi dataset khớp) hoặc so PSNR chỉ giữa các config trong cùng một run mới.
+| File | Nội dung |
+|------|----------|
+| `inputs/jobs.json` + `inputs/images/` | input (prompt + ảnh nguồn) |
+| `edited_images/<config>/` | output PNG theo `job_id` |
+| `quality.csv` | duration, cache hit/miss, VRAM/job, PSNR nếu có fp32 trong cùng run |
+| `memory.csv` | peak sau load / warmup |
+| `disk.csv` | dung lượng cây weights |
+| `run_meta.json` / `inventory.json` | `jobs_hash` để join các run |
+| `bundle.zip` | toàn bộ thư mục |
 
-## Kế hoạch chạy tiếp (Colab) — tiết kiệm disk
+## Số liệu June17 cũ
 
-```
-configs mặc định: fp16_disk,fp4_from_fp16
-(không baseline_fp32)
-→ convert/lấy weights_fp16 → eval → bundle.zip → tải về
-→ local: compare_precision_runs.py + viết report
-```
+Giữ tham khảo trong `quality_speed_bench_2026-06-17/` nhưng **không** trộn vào báo cáo cuối nếu bạn không tin (script merge chỉ đọc `precision_run_*` mới cùng `jobs_hash`).
 
-## File bằng chứng chính
+## Bug dtype đã fix
 
-| Run | Vai trò |
-|-----|---------|
-| `quality_speed_bench_2026-06-17/` | Case 1–4 đầy đủ T4 |
-| `precision_disk_vram_2026-07-19_promptfix/` | Case 5 smoke Mac (prompt đúng) |
-| `precision_disk_vram_2026-07-19/` | Case 5 smoke **prompt sai** — chỉ để học lỗi, không dùng số liệu báo cáo chất lượng |
+`Half != float` tại IP `to_k_ip` khi load fp16 disk — đã ép dtype trong `SwiftEdit/models.py`. Cần pull code mới trước khi eval.
+
+## Tối ưu tải weights (Colab)
+
+| Trường hợp | Hành vi |
+|------------|---------|
+| Chỉ `*_weight` + Drive fp16 | Symlink Drive — **không** tải Qualcomm |
+| Cần fp32 + Drive fp32 | Symlink Drive |
+| Bắt buộc tải Qualcomm | `curl…\|tar` stream — **không** giữ `.part` + `.tar.gz` (tránh ~50GB→xóa 40GB) |
+
+Script: `scripts/prepare_colab_weights.py` · notebook set `SKIP_QUALCOMM_IN_SETUP=True`.

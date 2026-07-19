@@ -6,6 +6,21 @@
 
 ---
 
+## 0. Trạng thái — PAUSED (2026-07-19)
+
+**Tạm dừng đóng góp tinh chỉnh SwiftEdit-RT** (FP4 / xFormers / ToMe / TensorRT / compile). Đủ hướng đã wire hoặc xếp hạng để đo; **không implement thêm** tối ưu cho đến khi có đánh giá từ số liệu.
+
+| Bước tiếp | Việc | Ghi chú |
+|-----------|------|---------|
+| 1 | User chạy hết test Colab → gom `bundle.zip` | Các config đã chọn (`fp32`, `fp16_weight`, `fp4_*`, `fp16_weight_xformers`, …) |
+| 2 | `compare_precision_runs.py` + **viết đánh giá** phần precision/RT | fp16 = baseline; FP4 / xFormers = ablation trên T4 |
+| 3 | Sau đánh giá: phase **ứng dụng** — app xóa vật thể nhỏ | **Chưa scaffold / chưa code** trong giai đoạn này |
+
+- **Không làm lúc pause:** B3 ToMe, giai đoạn C TensorRT/TinyVAE (trừ khi mở lại sau đánh giá).
+- **xFormers (B2):** code đã có; Colab quan sát latency/VRAM ≈ `fp16_weight` (ARaM path không đi MEA) — ghi vào báo cáo khi có bundle.
+
+---
+
 ## 1. Quyết định về FP4
 
 **Dừng phát triển FP4 như hướng tối ưu chính trên T4.** Giữ code/config hiện có chỉ để ablation / số liệu âm trên báo cáo.
@@ -68,24 +83,25 @@ Thang: Đơn giản 1–5 (5 = dễ nhất), Hiệu quả 1–5 (5 = tiềm năn
 - [ ] Hoàn tất / ghi rõ: bundle `fp4_weight` đủ việc báo cáo **hoặc** dùng số June17 `improved_fp4_cache` làm chứng cứ đã có; không bắt buộc chạy thêm nếu quota Colab hết.
 - [ ] Không thêm luồng save/load checkpoint FP4.
 
-### Giai đoạn B — Quick wins trên T4 (ưu tiên code tiếp theo)
+### Giai đoạn B — Quick wins trên T4 (**PAUSED** — không code thêm)
 
-| Bước | Việc | Tiêu chí xong |
-|------|------|----------------|
-| B1 | Audit attention backend | Ghi backend trước/sau |
-| B2 | **`fp16_weight_xformers`** (`fp16_disk_xformers`) | Catalog + notebook + MEA wire — **đã code 2026-07-19**; chờ bundle Colab so `fp16_weight` |
-| B3 | Inject ToMe (`tomesd`) với vài `ratio` | Bảng ratio → speed / VRAM / PSNR |
-| B4 | Chọn combo ổn định làm “improved-RT” | Bundle + compare local |
+| Bước | Việc | Trạng thái |
+|------|------|------------|
+| B1 | Audit attention backend | Ghi khi viết đánh giá (SDP vs xFormers / ARaM einsum) |
+| B2 | **`fp16_weight_xformers`** | Code xong; quan sát Colab ≈ fp16; chờ bundle đủ → đánh giá |
+| B3 | ToMe (`tomesd`) | **Paused** — không implement lúc này |
+| B4 | Chọn combo “improved-RT” | Sau khi có đánh giá từ số liệu |
 
-**Chạy Colab B2:** SELECT `fp16_weight_xformers` (cùng cây `swiftedit_weights_fp16` như `fp16_weight`). So s/edit, VRAM peak, PSNR vs cùng `jobs_hash`.
-
-### Giai đoạn C — Nặng hơn (chỉ nếu còn thời gian đề tài)
+### Giai đoạn C — Nặng hơn (**PAUSED**)
 
 | Bước | Việc |
 |------|------|
-| C1 | PoC TensorRT/ONNX **một** UNet (không IP) → đo latency |
-| C2 | Mở rộng gen UNet + IP nếu C1 có lợi ≥ ~20% |
-| C3 | TinyVAE ablation riêng (không trộn vào mặc định RT) |
+| C1–C3 | TensorRT / TinyVAE | **Paused** — chỉ mở lại nếu đánh giá phần precision còn thiếu tốc độ và còn thời gian đề tài |
+
+### Sau pause (thứ tự)
+
+1. Đủ bundle → báo cáo / đánh giá phần này.
+2. Phase app: **xóa vật thể nhỏ** (kỳ vọng UI đơn giản; **chưa làm code**).
 
 ---
 

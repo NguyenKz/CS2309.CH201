@@ -1,7 +1,8 @@
 # Kiểm kê case precision — CS2309 SwiftEdit
 
 > Cập nhật: 2026-07-19 (`fp16_weight_xformers` thêm; FP4 = ablation).  
-> **Quyết định FP4:** dừng làm hướng tối ưu chính trên T4 — xem [`FP4_DECISION_AND_NEXT_PLAN.md`](./FP4_DECISION_AND_NEXT_PLAN.md).
+> **Quyết định FP4:** dừng làm hướng tối ưu chính trên T4 — xem [`FP4_DECISION_AND_NEXT_PLAN.md`](./FP4_DECISION_AND_NEXT_PLAN.md).  
+> **PAUSED tinh chỉnh RT (2026-07-19):** không thêm ToMe/TensorRT/…; chờ đủ `bundle.zip` → `compare_precision_runs.py` → **viết đánh giá** phần này. Phase sau (ngoài scope precision): app **xóa vật thể nhỏ** — chưa scaffold.
 
 ## Hệ quy chiếu thống nhất
 

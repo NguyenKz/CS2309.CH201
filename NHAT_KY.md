@@ -9,6 +9,7 @@
 
 | Ngày       | Giai đoạn           | Công việc                                                                                            | Kết quả / Ghi chú                                                                                                                                                                                                                                                                                                                                      | Môi trường                                |
 | ---------- | ------------------- | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------- |
+| 2026-07-19 | 4e                  | Pause tinh chỉnh RT; note hướng app xóa vật thể                                                      | Dừng FP4/xFormers/ToMe/TensorRT cho đến khi đủ bundle + viết đánh giá precision; app object-removal = phase sau (chưa code); ghi `FP4_DECISION` §0 + PRECISION_CASES                                                                                                                                                                                    | Mac (tài liệu); Colab (user test)         |
 | 2026-07-19 | 4e                  | Thêm `fp16_weight_xformers` (xFormers MEA trên FP16 disk)                           | Config mới `fp16_disk_xformers`; giữ nguyên `fp16_weight`; MEA qua Diffusers (inverse) + `efficient_attention` (gen self-attn); notebook SELECT mặc định xformers; chờ bundle T4                                                                                                                                                                     | Mac (code); Colab T4 (chờ eval)           |
 | 2026-07-19 | 4e                  | Đóng sổ FP4 trên T4; xếp hạng hướng RT tiếp theo                                                     | Dừng FP4 làm tối ưu chính (ablation âm); không lưu checkpoint FP4; baseline fp16+EditCache; plan xFormers→ToMe→TensorRT tại `experimental_data/FP4_DECISION_AND_NEXT_PLAN.md`                                                                                                                                                                          | Mac (tài liệu); Colab T4 (quan sát)       |
 | 2026-07-19 | 4e                  | Precision picker: workflow 3 lần + `fp4_weight` (fp4_from_fp16) end-to-end trên notebook             | Catalog/eval alias `fp4_weight`→quant=fp4; notebook lần 3 reuse fp16 + bitsandbytes; PRECISION_CASES workflow fp32→fp16_weight→fp4_weight; chờ bundle T4 full 600 để ghi số liệu so sánh cuối                                                                                                                                                         | Mac (code/docs); Colab T4 (user eval)     |
@@ -42,6 +43,28 @@
 ## Chi tiết theo phiên làm việc
 
 *(Các entry chi tiết xuất hiện bên dưới, mới nhất ở trên cùng.)*
+
+### 2026-07-19 — [4e] Pause tinh chỉnh RT; hướng app tiếp theo
+
+**Môi trường:** Mac (tài liệu); Colab T4 (user chạy hết test)
+
+**Công việc đã làm:**
+
+- Chốt **PAUSED** đóng góp tinh chỉnh (FP4 / xFormers / ToMe / TensorRT): đủ hướng để đo; không implement thêm
+- Note: sau đủ bundle → viết **đánh giá** phần precision/RT; phase sau = app **xóa vật thể nhỏ** (chưa scaffold)
+- Cập nhật [`experimental_data/FP4_DECISION_AND_NEXT_PLAN.md`](./experimental_data/FP4_DECISION_AND_NEXT_PLAN.md) §0 + [`PRECISION_CASES.md`](./experimental_data/PRECISION_CASES.md)
+
+**Kết quả:**
+
+- Tài liệu ghi rõ: đang chờ số liệu / thinking; không mở ToMe/TRT lúc này
+
+**Bước tiếp theo:**
+
+- User hoàn tất Colab + tải bundle
+- Local: `compare_precision_runs.py` → viết đánh giá phần này
+- Sau đó mới bàn app object removal
+
+---
 
 ### 2026-07-19 — [4e] Thêm fp16_weight_xformers (xFormers MEA)
 

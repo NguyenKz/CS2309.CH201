@@ -9,6 +9,7 @@
 
 | Ngày       | Giai đoạn           | Công việc                                                                                            | Kết quả / Ghi chú                                                                                                                                                                                                                                                                                                                                      | Môi trường                                |
 | ---------- | ------------------- | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------- |
+| 2026-07-19 | 4e                  | Precision picker: workflow 3 lần + `fp4_weight` (fp4_from_fp16) end-to-end trên notebook             | Catalog/eval alias `fp4_weight`→quant=fp4; notebook lần 3 reuse fp16 + bitsandbytes; PRECISION_CASES workflow fp32→fp16_weight→fp4_weight; chờ bundle T4 full 600 để ghi số liệu so sánh cuối                                                                                                                                                         | Mac (code/docs); Colab T4 (user eval)     |
 | 2026-07-19 | 4e                  | Phase A: checkpoint fp16 trên disk + eval disk/memory/PSNR (Mac); luồng Colab Drive sẵn sàng         | Disk −49.5% (9.79→4.94 GiB); peak load MPS 12366→6567 MB; PSNR_vs_fp32 mean 51.4 dB; scripts convert/eval + notebook Drive; bundle experimental_data/precision_disk_vram_2026-07-19/                                                                                                    | Mac MPS; torch 2.12.0                     |
 | 2026-07-03 | 1                   | Notebook diffusion-from-scratch 01→04; QA F\_theta/SBv2/pipeline                                     | 4 notebook + 4 script; QA §1–3: 15 câu; pipeline 1+1 (F\_theta + SBv2)                                                                                                                                                                                                                                                                                 | Mac; học lý thuyết + notebook .venv       |
 | 2026-06-18 | 5                   | Rà soát toàn bộ tiến độ đề tài; cập nhật README (mục Tiến trình hiện tại), SwiftEdit\_DeTai §8.2     | 33/80 task (\~41%); SwiftEdit-RT mạnh (2400 edit Colab, fp16+cache khuyến nghị); thiếu báo cáo GĐ5, ablation, slide; ưu tiên: báo cáo → ablation → slide                                                                                                                                                                                               | Mac M4; tài liệu                          |
@@ -39,6 +40,26 @@
 ## Chi tiết theo phiên làm việc
 
 *(Các entry chi tiết xuất hiện bên dưới, mới nhất ở trên cùng.)*
+
+### 2026-07-19 — [4e] Precision picker: fp4_weight (lần 3)
+
+**Môi trường:** Mac (code/docs); Colab T4 (user chạy eval)
+
+**Công việc đã làm:**
+
+- Xác nhận `fp4_weight` → `fp4_from_fp16` (`quant=fp4`, cần fp16 disk)
+- Notebook: workflow 3 lần; SELECT mặc định `fp4_weight`; check bitsandbytes khi chọn fp4
+- Cập nhật [`experimental_data/PRECISION_CASES.md`](./experimental_data/PRECISION_CASES.md)
+
+**Kết quả:**
+
+- Pipeline code sẵn sàng cho lần 3 trên T4 (reuse fp16 sau lần 2, không convert lại nếu đã có)
+- Chưa có số liệu full 600 edit — chờ `bundle.zip` Colab
+
+**Bước tiếp theo:**
+
+- Colab: `SELECT fp4_weight`, `MAX_JOBS=600` → bundle
+- Local: `compare_precision_runs.py` với bundle fp32 + fp16_weight + fp4_weight
 
 ### 2026-07-19 — [4e] Phase A: fp16 disk + eval Mac MPS
 

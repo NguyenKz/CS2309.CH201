@@ -958,6 +958,7 @@ Hướng chính được chọn để đào sâu là **C13 — SwiftEdit-RT: Rea
 
 | Ngày       | Giai đoạn           | Công việc                                                | Kết quả / Ghi chú                                                        |
 |---|---|---|---|
+| 2026-07-19 | 4e | Precision picker: workflow 3 lần + `fp4_weight` end-to-end | Catalog/eval `fp4_weight`→quant=fp4; notebook lần 3; PRECISION_CASES; chờ bundle T4 600 (Mac code/docs; Colab T4) |
 | 2026-07-03 | 1 | Notebook diffusion-from-scratch 01→04; QA F_theta/SBv2/pipeline | 4 notebook + 4 script; QA §1–3: 15 câu; pipeline 1+1 (F_theta + SBv2) (Mac; học lý thuyết + notebook .venv) |
 | 2026-06-18 | 5 | Rà soát toàn bộ tiến độ đề tài; cập nhật README (mục Tiến trình hiện tại), SwiftEdit_DeTai §8.2 | 33/80 task (~41%); SwiftEdit-RT mạnh (2400 edit Colab, fp16+cache khuyến nghị); thiếu báo cáo GĐ5, ablation, slide; ưu tiên: báo cáo → ablation → slide (Mac M4; tài liệu) |
 | 2026-06-17 | 4e | Benchmark precision fp32/fp16/fp8/fp4 (200×3×4 config, Colab T4) | fp16+cache khuyến nghị: 1.70×/1.82×, VRAM −42.1%, PSNR 48.6dB; fp8 1.92× nhưng PSNR 6.0dB (hỏng); fp4 VRAM −48.5%, PSNR 21.7dB; RUN_ID 20260617-0336-bb4785; experimental_data/quality_speed_bench_2026-06-17/ (Colab Tesla T4; torch 2.11; git 1a6706c) |

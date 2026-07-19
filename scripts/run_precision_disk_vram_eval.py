@@ -17,6 +17,7 @@ import csv
 import gc
 import hashlib
 import json
+import os
 import platform
 import shutil
 import statistics
@@ -31,6 +32,17 @@ from pathlib import Path
 import numpy as np
 import torch
 from PIL import Image
+
+# T4 16GB: hạn chế thread CPU — tránh spike RAM/VRAM khi eval tuần tự.
+os.environ.setdefault("OMP_NUM_THREADS", "1")
+os.environ.setdefault("MKL_NUM_THREADS", "1")
+os.environ.setdefault("OPENBLAS_NUM_THREADS", "1")
+os.environ.setdefault("NUMEXPR_NUM_THREADS", "1")
+torch.set_num_threads(1)
+try:
+    torch.set_num_interop_threads(1)
+except RuntimeError:
+    pass
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
@@ -74,7 +86,12 @@ def _sync(device: str) -> None:
 def _free(device: str) -> None:
     gc.collect()
     if device.startswith("cuda") and torch.cuda.is_available():
+        torch.cuda.synchronize()
         torch.cuda.empty_cache()
+        try:
+            torch.cuda.ipc_collect()
+        except Exception:
+            pass
     elif device.startswith("mps") and torch.backends.mps.is_available():
         torch.mps.empty_cache()
 
@@ -387,7 +404,12 @@ def main() -> int:
     from models import AuxiliaryModel, InverseModel, IPSBV2Model
 
     device = get_device()
-    print(f"device={device} configs={config_names}")
+    # Eval tuần tự 1 config → xong mới load config khác (không song song — OOM T4 16GB).
+    print(
+        f"device={device} configs={config_names} "
+        f"(sequential only, OMP/MKL threads=1, VRAM~16GB safe)",
+        flush=True,
+    )
     print(f"out={out_dir}")
 
     # disk inventory (luôn đo cả 2 cây nếu tồn tại)
@@ -636,7 +658,9 @@ def main() -> int:
             print(f"  [{cname}] {j['job_id']} {dt:.2f}s cache={cache_state} PSNR={psnr_s}")
 
         del inv, aux, ip, cache
+        inv = aux = ip = cache = None
         _free(device)
+        print(f"=== done {cname} — freed VRAM before next config ===", flush=True)
 
     if not quality_rows:
         print("Không có quality rows.", file=sys.stderr)

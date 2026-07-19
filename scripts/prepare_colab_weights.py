@@ -101,13 +101,13 @@ def main() -> int:
     parser.add_argument(
         "--allow-qualcomm-download",
         action="store_true",
-        default=True,
-        help="Cho phép tải Qualcomm nếu thiếu fp32 (mặc định bật, stream không giữ archive)",
+        default=False,
+        help="Cho phép tải Qualcomm tại prepare (mặc định TẮT — để setup_colab tải 1 lần)",
     )
     parser.add_argument(
         "--no-qualcomm-download",
         action="store_true",
-        help="Cấm tải Qualcomm — fail nếu Drive/local thiếu",
+        help="(tương thích) luôn cấm tải ở prepare",
     )
     parser.add_argument(
         "--allow-convert",
@@ -125,8 +125,7 @@ def main() -> int:
     names = resolve_config_names(args.configs)
     need_fp16 = needs_fp16_disk(names)
     need_fp32 = any(CONFIGS[n]["weights"] == "fp32" for n in names)
-    # convert trên Colab cũng cần fp32 nguồn
-    allow_dl = args.allow_qualcomm_download and not args.no_qualcomm_download
+    allow_dl = bool(args.allow_qualcomm_download) and not args.no_qualcomm_download
     allow_convert = args.allow_convert and not args.no_convert
 
     print("configs:", ", ".join(names))
@@ -155,8 +154,10 @@ def main() -> int:
         elif need_fp32 or (need_fp16 and not _tree_ok(args.local_fp16)):
             if not allow_dl:
                 print(
-                    "Thiếu fp32 và --no-qualcomm-download. "
-                    "Upload Drive hoặc bỏ cờ này.",
+                    "Thiếu fp32 tại local/Drive.\n"
+                    "→ Chạy lại cell setup với SKIP_QUALCOMM_IN_SETUP=False "
+                    "(tải 1 mạch trong setup — nhanh hơn tách sang prepare).\n"
+                    "Hoặc upload Drive fp32, hoặc thêm --allow-qualcomm-download.",
                     file=sys.stderr,
                 )
                 return 1

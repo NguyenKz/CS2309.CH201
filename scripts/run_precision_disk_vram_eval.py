@@ -590,7 +590,10 @@ def main() -> int:
         )
 
         last_sample: str | None = None
-        for j in jobs:
+        n_jobs = len(jobs)
+        t_jobs0 = time.perf_counter()
+        print(f"  >>> eval {cname}: {n_jobs} jobs (progress mỗi job)", flush=True)
+        for ji, j in enumerate(jobs, start=1):
             # cache miss khi đổi ảnh (hoặc tắt cache)
             if cache is not None and j["sample_id"] != last_sample:
                 cache_state = "miss"
@@ -654,8 +657,18 @@ def main() -> int:
                     "out_png": str(out_png.relative_to(out_dir)),
                 }
             )
+            elapsed = time.perf_counter() - t_jobs0
+            avg = elapsed / ji
+            remain = avg * (n_jobs - ji)
+            pct = 100.0 * ji / n_jobs
+            eta_m, eta_s = divmod(int(remain), 60)
             psnr_s = f"{psnr_ref:.2f}" if psnr_ref is not None else "n/a"
-            print(f"  [{cname}] {j['job_id']} {dt:.2f}s cache={cache_state} PSNR={psnr_s}")
+            print(
+                f"  [{cname}] {ji}/{n_jobs} ({pct:5.1f}%)  "
+                f"{j['job_id']}  {dt:.2f}s  cache={cache_state}  PSNR={psnr_s}  "
+                f"ETA {eta_m}m{eta_s:02d}s",
+                flush=True,
+            )
 
         del inv, aux, ip, cache
         inv = aux = ip = cache = None

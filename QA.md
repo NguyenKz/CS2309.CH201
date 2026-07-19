@@ -39,7 +39,7 @@ Tài liệu liên quan: [Overview](./SwiftEdit_Overview.md) · [Đề tài](./Sw
 | 3 | [Inversion & Noise](#3-inversion--noise) | 5 |
 | 4 | [Mask & ARaM](#4-mask--aram) | 3 |
 | 5 | [Đánh giá & PieBench](#5-đánh-giá--piebench) | 1 |
-| 6 | [Triển khai Mac / Colab](#6-triển-khai-mac--colab) | 5 |
+| 6 | [Triển khai Mac / Colab](#6-triển-khai-mac--colab) | 7 |
 | 7 | [Chỉnh sửa & Style](#7-chỉnh-sửa--style) | 2 |
 | 8 | [Chưa phân loại](#8-chưa-phân-loại) | 1 |
 
@@ -404,6 +404,33 @@ Tài liệu liên quan: [Overview](./SwiftEdit_Overview.md) · [Đề tài](./Sw
 *MPS vs CUDA, cài env, weights, OOM, runtime, …*
 
 <!-- qa:insert -->
+### Q: Tại sao đổi sang fp16 compute mà dung lượng checkpoint trên disk gần như không đổi?
+
+**Ngày:** 2026-07-19  
+**Chủ đề:** #fp16 #weights #disk #vram #safetensors
+
+**Trả lời (tóm tắt):**
+- `dtype=fp16` trong `InverseModel`/`IPSBV2Model` ép tensor trên GPU sau khi đọc file — không rewrite file `.safetensors`/`.bin` trên đĩa.
+- Checkpoint Qualcomm (~3.2–3.3GB mỗi thư mục UNet/IP) vẫn lưu precision gốc (thường fp32/bf16 tùy file).
+- Muốn giảm disk: phải convert + `save_pretrained` (hoặc tool safetensors) rồi trỏ path mới; load với `torch_dtype=fp16`.
+- Muốn giảm peak VRAM lúc load: tránh nạp fp32 rồi mới `.to(fp16)`; load thẳng fp16 hoặc quant (bnb) đúng path.
+
+
+### Q: Có thể tự quantize checkpoint xuống fp16/fp8/fp4 để giảm disk và VRAM khi load weight không? Dễ không? Liên quan GGUF?
+
+**Ngày:** 2026-07-19  
+**Chủ đề:** #quantization #fp16 #fp4 #gguf #vram #weights #swiftedit-rt
+
+**Trả lời (tóm tắt):**
+- Ba lớp khác nhau — dễ lẫn:
+- 1) Compute fp16 (`.to(fp16)`): đã có; giảm VRAM lúc chạy, nhưng file trên disk vẫn có thể là fp32 → peak VRAM lúc load có thể gần bằng fp32.
+- 2) Lưu checkpoint fp16/safetensors: khả thi cao, khá dễ với diffusers (`save_pretrained` + `torch_dtype=fp16`); disk ~−50%; load với `torch_dtype=fp16` giảm peak lúc nạp. Không phải \"quantize sâu\".
+- 3) Weight-only fp8/fp4 lúc runtime: repo ĐÃ có `quantize_unet()` (torchao fp8 / bitsandbytes fp4) SAU `from_pretrained` — giảm VRAM sau khi nén, nhưng peak load vẫn gần full weights (không giảm disk trừ khi tự save format quant).
+- Kết quả bench Colab T4 (2026-06-17): fp16+cache sweet spot (VRAM −42%, PSNR ~48.6dB); fp8 hỏng (PSNR ~6); fp4 VRAM −48.5% nhưng PSNR ~21.7dB.
+- GGUF: format/tooling chủ yếu LLM (llama.cpp). Không phải đường chuẩn cho UNet Diffusers/SwiftEdit. ComfyUI có GGUF SD thử nghiệm nhưng khác stack — không “chạy tool → dùng luôn” với `models.py`.
+- Độ dễ: lưu fp16 disk = dễ; runtime fp4 = đã code sẵn; lưu fp4/GGUF production = khó / ít lợi so rủi ro chất lượng với one-step editor.
+
+
 ### Q: Nên ưu tiên các hướng tăng tốc SwiftEdit-RT theo thứ tự nào?
 
 **Ngày:** 2026-06-05

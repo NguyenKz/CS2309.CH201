@@ -1,0 +1,3 @@
+config,n_edits,seconds_mean,psnr_vs_fp32_mean,psnr_vs_fp32_min,peak_alloc_mb_after_load,driver_used_mb_after_load,map_to_prev_bench
+baseline_fp32,4,31.396,99.0,99.0,12366.27,13008.45,baseline_fp32 (quality_speed_bench_2026-06-17)
+fp16_disk,4,5.342,51.425,48.494,6567.03,7163.12,gần improved_fp16_cache nhưng weights fp16 trên disk + torch_dtype load

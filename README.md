@@ -17,6 +17,7 @@ Tài liệu: [`SwiftEdit_Overview.md`](./SwiftEdit_Overview.md) · [`SwiftEdit_D
 | Notebook | Mở |
 |----------|-----|
 | Benchmark tốc độ & chất lượng (fp32/fp16/fp8/fp4) | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/NguyenKz/CS2309.CH201/blob/main/notebooks/CS2309_SwiftEdit_quality_speed_bench.ipynb) |
+| Precision disk/VRAM (fp16 disk + fp4) | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/NguyenKz/CS2309.CH201/blob/main/notebooks/CS2309_SwiftEdit_precision_disk_vram.ipynb) |
 | Thực nghiệm giai đoạn 3 (ablation + PIE-Bench) | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/NguyenKz/CS2309.CH201/blob/main/notebooks/CS2309_SwiftEdit_phase3.ipynb) |
 | Test nhanh pipeline | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/NguyenKz/CS2309.CH201/blob/main/notebooks/CS2309_SwiftEdit_test.ipynb) |
 | **WebUI Gradio** (edit + xóa vật thể) | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/NguyenKz/CS2309.CH201/blob/main/notebooks/CS2309_SwiftEdit_webui.ipynb) |
@@ -219,6 +220,7 @@ Chi tiết: [Mục 4.2 đề tài](./SwiftEdit_DeTai_CS2309.md#42-google-colab--
 | Hạ tầng | Mac M4 MPS + Colab T4 chạy end-to-end; 3 notebook + scripts eval |
 | **SwiftEdit-RT** (hướng đào sâu) | fp16 + cache + channels_last; benchmark **2400 edit** Colab (fp32/fp16/fp8/fp4) |
 | Benchmark Colab T4 | fp16+cache **khuyến nghị**: 1.70×, VRAM −42%, PSNR 48.6 dB — [`quality_speed_bench_2026-06-17/`](./experimental_data/quality_speed_bench_2026-06-17/) |
+| fp16 **trên disk** (Mac Phase A) | Disk −49.5%; peak load MPS −47%; PSNR_vs_fp32 51.4 dB — [`precision_disk_vram_2026-07-19/`](./experimental_data/precision_disk_vram_2026-07-19/) |
 | PIE-Bench Mac | 20 mẫu (2/loại × 10 loại); CLIP-Whole 23.02 — [`piebench_subset20_2026-06-14/`](./experimental_data/piebench_subset20_2026-06-14/) |
 | Demo | Gradio fp16+cache + tab xóa vật thể — [`app_gradio.py`](./scripts/app_gradio.py) · notebook [`CS2309_SwiftEdit_webui.ipynb`](./notebooks/CS2309_SwiftEdit_webui.ipynb) |
 | Runtime 3 cột | Mac MPS ~30s / Colab T4 ~1.3–2.9s / Paper A100 ~0.23s |

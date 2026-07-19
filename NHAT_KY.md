@@ -9,6 +9,7 @@
 
 | Ngày       | Giai đoạn           | Công việc                                                                                            | Kết quả / Ghi chú                                                                                                                                                                                                                                                                                                                                      | Môi trường                                |
 | ---------- | ------------------- | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------- |
+| 2026-07-19 | 4e                  | Phase A: checkpoint fp16 trên disk + eval disk/memory/PSNR (Mac); luồng Colab Drive sẵn sàng         | Disk −49.5% (9.79→4.94 GiB); peak load MPS 12366→6567 MB; PSNR_vs_fp32 mean 51.4 dB; scripts convert/eval + notebook Drive; bundle experimental_data/precision_disk_vram_2026-07-19/                                                                                                    | Mac MPS; torch 2.12.0                     |
 | 2026-07-03 | 1                   | Notebook diffusion-from-scratch 01→04; QA F\_theta/SBv2/pipeline                                     | 4 notebook + 4 script; QA §1–3: 15 câu; pipeline 1+1 (F\_theta + SBv2)                                                                                                                                                                                                                                                                                 | Mac; học lý thuyết + notebook .venv       |
 | 2026-06-18 | 5                   | Rà soát toàn bộ tiến độ đề tài; cập nhật README (mục Tiến trình hiện tại), SwiftEdit\_DeTai §8.2     | 33/80 task (\~41%); SwiftEdit-RT mạnh (2400 edit Colab, fp16+cache khuyến nghị); thiếu báo cáo GĐ5, ablation, slide; ưu tiên: báo cáo → ablation → slide                                                                                                                                                                                               | Mac M4; tài liệu                          |
 | 2026-06-17 | 4e                  | TBenchmark precision fp32/fp16/fp8/fp4 (200×3×4 config, Colab T4)                                    | fp16+cache khuyến nghị: 1.70×/1.82×, VRAM −42.1%, PSNR 48.6dB; fp8 1.92× nhưng PSNR 6.0dB (hỏng); fp4 VRAM −48.5%, PSNR 21.7dB; RUN\_ID 20260617-0336-bb4785; experimental\_data/quality\_speed\_bench\_2026-06-17/                                                                                                                                    | Colab Tesla T4; torch 2.11; git 1a6706c   |
@@ -38,6 +39,29 @@
 ## Chi tiết theo phiên làm việc
 
 *(Các entry chi tiết xuất hiện bên dưới, mới nhất ở trên cùng.)*
+
+### 2026-07-19 — [4e] Phase A: fp16 disk + eval Mac MPS
+
+**Môi trường:** Mac MPS; torch 2.12.0
+
+**Công việc đã làm:**
+
+- `scripts/convert_weights_fp16.py` — xuất UNet inverse + SBv2 + IP-Adapter → `SwiftEdit/swiftedit_weights_fp16/`
+- Patch `models.py`: `from_pretrained(..., torch_dtype=...)` + cast IP state_dict
+- `scripts/run_precision_disk_vram_eval.py` — đo disk/memory/PSNR, xuất CSV + `COMPARE_WITH_PREV.md` + `bundle.zip`
+- `scripts/link_weights_fp16_drive.py` + notebook `CS2309_SwiftEdit_precision_disk_vram.ipynb` (Phase B Colab)
+
+**Kết quả:**
+
+- Disk UNet+IP: **9.79 → 4.94 GiB (−49.5%)**
+- Peak load (MPS): fp32 **12366 MB** → fp16_disk **6567 MB**
+- PSNR vs fp32: mean **51.4 dB** (min 48.5) trên 2×2 edits
+- Thời gian edit mean: fp32 ~31s → fp16_disk ~5.3s (MPS)
+
+**Bước tiếp theo:**
+
+- Nén/upload `swiftedit_weights_fp16` lên Drive `MyDrive/CS2309/`
+- Phase B Colab T4: `--configs baseline_fp32,fp16_disk,fp4_from_fp16` + tải `bundle.zip`
 
 ### 2026-07-03 — \[1] Học diffusion-from-scratch + QA F\_theta/SBv2/pipeline
 

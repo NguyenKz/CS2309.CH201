@@ -35,7 +35,9 @@ ENV/
 
 # --- SwiftEdit: checkpoint Qualcomm (~9.6 GB, tải bằng scripts/download_swiftedit_weights.sh) ---
 SwiftEdit/swiftedit_weights/
+SwiftEdit/swiftedit_weights_fp16/
 swiftedit_weights/
+swiftedit_weights_fp16/
 
 # Archive tải weights (thường nằm trong SwiftEdit/)
 SwiftEdit/swiftedit_weights.tar.gz

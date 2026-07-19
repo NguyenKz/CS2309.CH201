@@ -157,9 +157,12 @@ class InverseModel:
             self.device, dtype=torch.float32
         )
 
+        # torch_dtype lúc from_pretrained: giảm peak RAM/VRAM so với nạp fp32 rồi .to(fp16).
         self.unet_inverse = UNet2DConditionModel.from_pretrained(
-            pretrained_model_name_path, subfolder="unet_ema"
-        ).to(self.device, dtype=self.weight_dtype)
+            pretrained_model_name_path,
+            subfolder="unet_ema",
+            torch_dtype=self.weight_dtype,
+        ).to(self.device)
         if channels_last:
             self.unet_inverse = self.unet_inverse.to(memory_format=torch.channels_last)
 
@@ -236,7 +239,8 @@ class IPSBV2Model(torch.nn.Module):
         self.weight_dtype = resolve_dtype(dtype)
         self.channels_last = channels_last
         self.unet = UNet2DConditionModel.from_pretrained(
-            pretrained_model_name_path
+            pretrained_model_name_path,
+            torch_dtype=self.weight_dtype,
         ).to(self.device)
         self.unet.eval()
         self.aux_model = aux_model
@@ -297,16 +301,19 @@ class IPSBV2Model(torch.nn.Module):
         self.sigma_t = ((1 - alphas_cumprod[self.timestep]) ** 0.5).view(-1, 1, 1, 1)
         del alphas_cumprod
 
-        self.load_state_dict(
-            torch.load(ip_model_path, map_location="cpu", weights_only=True)
-        )
+        ip_sd = torch.load(ip_model_path, map_location="cpu", weights_only=True)
+        if self.weight_dtype != torch.float32:
+            # Đồng bộ dtype module trống (image_proj / phần IP) trước khi nạp state.
+            self.image_proj_model = self.image_proj_model.to(dtype=self.weight_dtype)
+            ip_sd = {
+                k: (v.to(dtype=self.weight_dtype) if torch.is_floating_point(v) else v)
+                for k, v in ip_sd.items()
+            }
+        self.load_state_dict(ip_sd)
+        del ip_sd
         # self.load_ip_adapter(path_ckpt_ip)
 
-        # Áp dtype/memory-format SAU khi load weight (fp32) để chỉ ép kiểu 1 lần.
-        # alpha_t/sigma_t là tensor thuộc tính (không phải param) -> giữ fp32 cho math ổn định.
-        if self.weight_dtype != torch.float32:
-            self.unet = self.unet.to(dtype=self.weight_dtype)
-            self.image_proj_model = self.image_proj_model.to(dtype=self.weight_dtype)
+        # alpha_t/sigma_t giữ fp32 (không đụng).
         if self.channels_last:
             self.unet = self.unet.to(memory_format=torch.channels_last)
 

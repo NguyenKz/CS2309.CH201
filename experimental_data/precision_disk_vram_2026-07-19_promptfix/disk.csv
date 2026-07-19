@@ -1,0 +1,3 @@
+label,path,bytes,gib,exists
+swiftedit_weights_fp32,/Users/nguyenkz/Documents/code/CS2309.CH201/SwiftEdit/swiftedit_weights,10510454865,9.7886,True
+swiftedit_weights_fp16,/Users/nguyenkz/Documents/code/CS2309.CH201/SwiftEdit/swiftedit_weights_fp16,5306526265,4.9421,True

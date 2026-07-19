@@ -1,0 +1,35 @@
+{
+  "timestamp_utc": "2026-07-19T07:43:49.286148+00:00",
+  "phase": "A_mac",
+  "device": "mps",
+  "platform": "macOS-26.5.2-arm64-arm-64bit",
+  "python": "3.12.10",
+  "torch": "2.12.0",
+  "git_commit": "ad83671",
+  "configs": [
+    "baseline_fp32",
+    "fp16_disk"
+  ],
+  "n_images": 2,
+  "edits_per_image": 1,
+  "n_jobs": 2,
+  "jobs": [
+    {
+      "image": "/Users/nguyenkz/Documents/code/CS2309.CH201/data/PIE-Bench-smoke/annotation_images/0_random_140/smoke_dog.jpg",
+      "src": "dog",
+      "edit": "dog with mouth opened"
+    },
+    {
+      "image": "/Users/nguyenkz/Documents/code/CS2309.CH201/data/PIE-Bench-smoke/annotation_images/0_random_140/smoke_woman.jpg",
+      "src": "woman",
+      "edit": "Taylor Swift"
+    }
+  ],
+  "weights_fp32": "/Users/nguyenkz/Documents/code/CS2309.CH201/SwiftEdit/swiftedit_weights",
+  "weights_fp16": "/Users/nguyenkz/Documents/code/CS2309.CH201/SwiftEdit/swiftedit_weights_fp16",
+  "disk_fp32_bytes": 10510454865,
+  "disk_fp16_bytes": 5306526265,
+  "disk_save_pct": 49.511925666787015,
+  "out_dir": "experimental_data/precision_disk_vram_2026-07-19_promptfix",
+  "compare_with": "experimental_data/quality_speed_bench_2026-06-17/"
+}

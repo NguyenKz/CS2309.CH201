@@ -6,14 +6,15 @@ Xuất thư mục experimental_data/precision_disk_vram_<date>/ gồm:
   run_meta.json, report.md, edited_images/, COMPARE_WITH_PREV.md,
   bundle.zip (tải về để so báo cáo)
 
-Ví dụ Mac (Phase A):
+Ví dụ Mac (Phase A — đã có baseline):
   python scripts/run_precision_disk_vram_eval.py \\
-      --configs baseline_fp32,fp16_disk --n-images 4 --edits-per-image 3
+      --configs baseline_fp32,fp16_disk --n-images 2
 
-Colab T4 (Phase B — thêm fp4):
+Colab T4 (Phase B — KHÔNG chạy lại FP32):
   python scripts/run_precision_disk_vram_eval.py \\
-      --configs baseline_fp32,fp16_disk,fp4_from_fp16 \\
-      --weights-fp16 /content/drive/MyDrive/.../swiftedit_weights_fp16
+      --configs fp16_disk,fp4_from_fp16 \\
+      --weights-fp16 /content/.../swiftedit_weights_fp16
+  # Config đầu tiên = reference PSNR nội bộ (fp16_disk); so FP32 lấy từ báo cáo 2026-06-17.
 """
 
 from __future__ import annotations
@@ -232,8 +233,9 @@ def main() -> int:
     parser.add_argument(
         "--configs",
         type=str,
-        default="baseline_fp32,fp16_disk",
-        help="CSV: baseline_fp32,fp16_disk[,fp4_from_fp16]",
+        default="fp16_disk,fp4_from_fp16",
+        help="CSV. Mặc định bỏ baseline_fp32 (đã có số 2026-06-17). "
+        "Thêm baseline_fp32 nếu muốn PSNR vs fp32 trong cùng run.",
     )
     parser.add_argument("--n-images", type=int, default=4)
     parser.add_argument("--edits-per-image", type=int, default=3)
@@ -311,10 +313,28 @@ def main() -> int:
     )
 
     if "fp16_disk" in config_names or "fp4_from_fp16" in config_names:
-        if not (args.weights_fp16 / "sbv2_0.5").is_dir():
+        need = [
+            args.weights_fp16 / "sbv2_0.5",
+            args.weights_fp16 / "inverse_ckpt-120k" / "unet_ema",
+            args.weights_fp16 / "ip_adapter_ckpt-90k" / "ip_adapter.bin",
+        ]
+        missing = [str(p) for p in need if not p.exists()]
+        if missing:
             print(
-                f"Thiếu weights fp16 tại {args.weights_fp16} — chạy:\n"
-                f"  python scripts/convert_weights_fp16.py",
+                "Thiếu weights fp16 — Colab thường lỗi chỗ này (exit 1):\n  - "
+                + "\n  - ".join(missing)
+                + "\nChạy convert hoặc link Drive:\n"
+                f"  python scripts/convert_weights_fp16.py --dst {args.weights_fp16}\n"
+                f"  python scripts/link_weights_fp16_drive.py --drive-dir <DRIVE_FP16>",
+                file=sys.stderr,
+            )
+            return 1
+
+    if "baseline_fp32" in config_names:
+        if not (args.weights_fp32 / "sbv2_0.5").is_dir():
+            print(
+                f"Thiếu weights fp32 tại {args.weights_fp32} (cần cho baseline_fp32).\n"
+                "Hoặc bỏ baseline khỏi --configs (khuyến nghị Phase B).",
                 file=sys.stderr,
             )
             return 1
@@ -349,6 +369,11 @@ def main() -> int:
     memory_rows: list[dict] = []
     quality_rows: list[dict] = []
     ref_images: dict[tuple[int, int], Image.Image] = {}
+    # Config đầu = reference nội bộ khi không có baseline_fp32
+    ref_config_name = (
+        "baseline_fp32" if "baseline_fp32" in config_names else config_names[0]
+    )
+    print(f"PSNR reference config: {ref_config_name}")
 
     for cname in config_names:
         if cname not in cfg_map:
@@ -464,7 +489,7 @@ def main() -> int:
             pil.save(out_png)
 
             key = (ji, 0)
-            if cname == "baseline_fp32":
+            if cname == ref_config_name:
                 ref_images[key] = pil.copy()
                 psnr, mse = 99.0, 0.0
             else:
@@ -483,15 +508,19 @@ def main() -> int:
                     "src_prompt": src_p,
                     "edit_prompt": edit_p,
                     "seconds": round(dt, 3),
-                    "psnr_vs_fp32": round(psnr, 4) if psnr == psnr else None,
-                    "mse_vs_fp32": mse,
+                    "psnr_vs_ref": round(psnr, 4) if psnr == psnr else None,
+                    "psnr_vs_fp32": round(psnr, 4)
+                    if (psnr == psnr and ref_config_name == "baseline_fp32")
+                    else None,
+                    "ref_config": ref_config_name,
+                    "mse_vs_ref": mse,
                     "peak_alloc_mb": round(peak_ed, 2) if peak_ed is not None else None,
                     "out_png": str(out_png.relative_to(out_dir)),
                 }
             )
             print(
                 f"  [{cname}] job{ji} {ipath.name}: {dt:.2f}s "
-                f"PSNR_vs_fp32={psnr:.2f} | '{src_p}' → '{edit_p}'"
+                f"PSNR_vs_{ref_config_name}={psnr:.2f} | '{src_p}' → '{edit_p}'"
                 if psnr == psnr
                 else f"  [{cname}] job{ji} {ipath.name}: {dt:.2f}s"
             )
@@ -499,12 +528,10 @@ def main() -> int:
         del inv, aux, ip
         _free(device)
 
-    # Ensure baseline first for refs — if user ran only fp16, warn
-    if "baseline_fp32" not in config_names and quality_rows:
-        print(
-            "Cảnh báo: không có baseline_fp32 trong --configs → cột psnr_vs_fp32 có thể NaN.",
-            file=sys.stderr,
-        )
+    # Ensure refs exist
+    if not quality_rows:
+        print("Không có quality rows — kiểm tra jobs/mapping.", file=sys.stderr)
+        return 1
 
     _write_csv(out_dir / "memory.csv", memory_rows)
     _write_csv(out_dir / "quality.csv", quality_rows)
@@ -516,15 +543,16 @@ def main() -> int:
         ms = [r for r in memory_rows if r["config"] == cname and r["phase"] == "after_load"]
         if not qs and not ms:
             continue
-        psnrs = [r["psnr_vs_fp32"] for r in qs if r["psnr_vs_fp32"] is not None]
+        psnrs = [r["psnr_vs_ref"] for r in qs if r.get("psnr_vs_ref") is not None]
         secs = [r["seconds"] for r in qs]
         summary_rows.append(
             {
                 "config": cname,
                 "n_edits": len(qs),
                 "seconds_mean": round(statistics.mean(secs), 3) if secs else None,
-                "psnr_vs_fp32_mean": round(statistics.mean(psnrs), 3) if psnrs else None,
-                "psnr_vs_fp32_min": round(min(psnrs), 3) if psnrs else None,
+                "psnr_vs_ref_mean": round(statistics.mean(psnrs), 3) if psnrs else None,
+                "psnr_vs_ref_min": round(min(psnrs), 3) if psnrs else None,
+                "ref_config": ref_config_name,
                 "peak_alloc_mb_after_load": ms[0]["peak_alloc_mb"] if ms else None,
                 "driver_used_mb_after_load": ms[0]["driver_used_mb"] if ms else None,
                 "map_to_prev_bench": PREV_BENCH_HINT.get(cname, ""),
@@ -550,6 +578,7 @@ def main() -> int:
         "disk_fp32_bytes": fp32_b,
         "disk_fp16_bytes": fp16_b,
         "disk_save_pct": disk_save_pct,
+        "ref_config": ref_config_name,
         "out_dir": str(out_dir),
         "compare_with": "experimental_data/quality_speed_bench_2026-06-17/",
     }
@@ -591,15 +620,18 @@ def main() -> int:
         )
     lines += [
         "",
-        "## Quality vs baseline_fp32 (cùng ảnh + prompt)",
+        "## Quality vs reference (cùng ảnh + prompt)",
         "",
-        "| Config | n | seconds_mean | PSNR↑ mean | PSNR min | map → bench cũ |",
+        f"Reference config: `{ref_config_name}` "
+        f"({'= fp32 trong run' if ref_config_name == 'baseline_fp32' else 'không chạy lại FP32 — PSNR nội bộ; so FP32 dùng báo cáo 2026-06-17'})",
+        "",
+        "| Config | n | seconds_mean | PSNR↑ mean vs ref | PSNR min | map → bench cũ |",
         "|---|---:|---:|---:|---:|---|",
     ]
     for r in summary_rows:
         lines.append(
             f"| {r['config']} | {r['n_edits']} | {r['seconds_mean']} | "
-            f"{r['psnr_vs_fp32_mean']} | {r['psnr_vs_fp32_min']} | {r['map_to_prev_bench']} |"
+            f"{r['psnr_vs_ref_mean']} | {r['psnr_vs_ref_min']} | {r['map_to_prev_bench']} |"
         )
     lines += [
         "",
@@ -638,7 +670,7 @@ def main() -> int:
     ]
     for r in summary_rows:
         compare.append(
-            f"- **{r['config']}**: PSNR_vs_fp32_mean={r['psnr_vs_fp32_mean']}, "
+            f"- **{r['config']}**: PSNR_vs_{ref_config_name}_mean={r['psnr_vs_ref_mean']}, "
             f"peak_load_mb={r['peak_alloc_mb_after_load']}, n={r['n_edits']}"
         )
     compare += [

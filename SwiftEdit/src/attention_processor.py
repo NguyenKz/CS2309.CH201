@@ -16,6 +16,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 from einops import rearrange, repeat
 
+from src.efficient_attention import attention as efficient_attention
+
 class AttnProcessor2_0(torch.nn.Module):
     r"""
     Processor for implementing scaled dot-product attention (enabled by default if you're using PyTorch 2.0).
@@ -82,10 +84,9 @@ class AttnProcessor2_0(torch.nn.Module):
         key = key.view(batch_size, -1, attn.heads, head_dim).transpose(1, 2)
         value = value.view(batch_size, -1, attn.heads, head_dim).transpose(1, 2)
 
-        # the output of sdp = (batch, num_heads, seq_len, head_dim)
-        # TODO: add support for attn.scale when we move to Torch 2.1
-        hidden_states = F.scaled_dot_product_attention(
-            query, key, value, attn_mask=attention_mask, dropout_p=0.0, is_causal=False
+        # the output of sdp / xFormers MEA = (batch, num_heads, seq_len, head_dim)
+        hidden_states = efficient_attention(
+            query, key, value, attn_mask=attention_mask
         )
 
         hidden_states = hidden_states.transpose(1, 2).reshape(batch_size, -1, attn.heads * head_dim)
@@ -193,10 +194,9 @@ class IPAttnProcessor2_0(torch.nn.Module):
         key = key.view(batch_size, -1, attn.heads, head_dim).transpose(1, 2)
         value = value.view(batch_size, -1, attn.heads, head_dim).transpose(1, 2)
 
-        # the output of sdp = (batch, num_heads, seq_len, head_dim)
-        # TODO: add support for attn.scale when we move to Torch 2.1
-        hidden_states = F.scaled_dot_product_attention(
-            query, key, value, attn_mask=attention_mask, dropout_p=0.0, is_causal=False
+        # the output of sdp / xFormers MEA = (batch, num_heads, seq_len, head_dim)
+        hidden_states = efficient_attention(
+            query, key, value, attn_mask=attention_mask
         )
 
         hidden_states = hidden_states.transpose(1, 2).reshape(batch_size, -1, attn.heads * head_dim)
@@ -209,11 +209,7 @@ class IPAttnProcessor2_0(torch.nn.Module):
         ip_key = ip_key.view(batch_size, -1, attn.heads, head_dim).transpose(1, 2)
         ip_value = ip_value.view(batch_size, -1, attn.heads, head_dim).transpose(1, 2)
 
-        # the output of sdp = (batch, num_heads, seq_len, head_dim)
-        # TODO: add support for attn.scale when we move to Torch 2.1
-        ip_hidden_states = F.scaled_dot_product_attention(
-            query, ip_key, ip_value, attn_mask=None, dropout_p=0.0, is_causal=False
-        )
+        ip_hidden_states = efficient_attention(query, ip_key, ip_value, attn_mask=None)
         with torch.no_grad():
             self.attn_map = query @ ip_key.transpose(-2, -1).softmax(dim=-1)
             #print(self.attn_map.shape)

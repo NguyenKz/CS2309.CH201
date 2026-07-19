@@ -39,7 +39,7 @@ Tài liệu liên quan: [Overview](./SwiftEdit_Overview.md) · [Đề tài](./Sw
 | 3 | [Inversion & Noise](#3-inversion--noise) | 5 |
 | 4 | [Mask & ARaM](#4-mask--aram) | 3 |
 | 5 | [Đánh giá & PieBench](#5-đánh-giá--piebench) | 1 |
-| 6 | [Triển khai Mac / Colab](#6-triển-khai-mac--colab) | 7 |
+| 6 | [Triển khai Mac / Colab](#6-triển-khai-mac--colab) | 10 |
 | 7 | [Chỉnh sửa & Style](#7-chỉnh-sửa--style) | 2 |
 | 8 | [Chưa phân loại](#8-chưa-phân-loại) | 1 |
 
@@ -404,6 +404,47 @@ Tài liệu liên quan: [Overview](./SwiftEdit_Overview.md) · [Đề tài](./Sw
 *MPS vs CUDA, cài env, weights, OOM, runtime, …*
 
 <!-- qa:insert -->
+### Q: fp16_weight_xformers khác fp16_weight thế nào?
+
+**Ngày:** 2026-07-19  
+**Chủ đề:** #xformers #fp16 #swiftedit-rt #colab
+
+**Trả lời (tóm tắt):**
+- Cùng cây weights fp16 trên disk + EditCache; không đổi precision.
+- fp16_weight_xformers bật xFormers Memory-Efficient Attention.
+- Inverse UNet: Diffusers enable_xformers_memory_efficient_attention.
+- Gen UNet: self-attn (và nhánh không ARaM controller) dùng xformers.ops; không ghi đè IP processors.
+- Cross-attn có mask controller vẫn einsum (ARaM) — MEA không đụng nhánh đó.
+- Alias: fp16_weight_xformers → config fp16_disk_xformers; fp16_weight vẫn giữ nguyên.
+
+
+### Q: Sau khi dừng FP4 trên T4, nên thử hướng nén/tăng tốc nào tiếp (xếp theo đơn giản × hiệu quả)?
+
+**Ngày:** 2026-07-19  
+**Chủ đề:** #xformers #tome #tensorrt #swiftedit-rt #colab
+
+**Trả lời (tóm tắt):**
+- Giữ baseline FP16 + EditCache (và fp16_weight nếu cần disk).
+- Hạng nhanh: (1) xFormers Memory-Efficient Attention — T4 hỗ trợ MEA.
+- (2) Token Merging / tomesd — tune ratio, đo PSNR.
+- Tiếp: torch.compile, TinyVAE ablation riêng.
+- Nặng hơn: TensorRT FP16 cho UNet (effort cao, sau khi 1–2 có số).
+- Không lưu checkpoint FP4 trên disk nếu runtime không thắng.
+- Chi tiết: experimental_data/FP4_DECISION_AND_NEXT_PLAN.md
+
+
+### Q: Vì sao FP4 (bitsandbytes) không phải giải pháp nén đúng nghĩa cho SwiftEdit trên Tesla T4?
+
+**Ngày:** 2026-07-19  
+**Chủ đề:** #fp4 #quantization #t4 #colab #swiftedit-rt
+
+**Trả lời (tóm tắt):**
+- T4 (Turing) không có native FP4: weight FP4 phải dequant sang FP16 rồi mới MatMul.
+- UNet ảnh thường compute-bound → chi phí dequant triệt lợi đọc VRAM ít hơn → tốc độ ≈ fp16.
+- Repo chỉ quant nn.Linear (bỏ Conv/VAE/CLIP) nên VRAM giảm hạn chế trong khi PSNR tụt mạnh (~21.7 vs ~48.6 của fp16).
+- Kết luận đề tài: dừng tối ưu FP4 trên T4; giữ làm ablation âm; baseline = FP16 + EditCache.
+
+
 ### Q: Tại sao đổi sang fp16 compute mà dung lượng checkpoint trên disk gần như không đổi?
 
 **Ngày:** 2026-07-19  

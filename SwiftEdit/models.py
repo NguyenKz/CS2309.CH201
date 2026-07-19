@@ -17,6 +17,22 @@ from src.mask_ip_controller import *
 from src.attention_processor import AttnProcessor2_0 as AttnProcessor
 from src.attention_processor import IPAttnProcessor2_0 as IPAttnProcessor
 from src.mask_attention_processor import IPAttnProcessor2_0WithIPMaskController
+from src.efficient_attention import set_use_xformers
+
+
+def apply_xformers_mea(inverse_unet=None, enabled=True):
+    """Bật xFormers Memory-Efficient Attention.
+
+    - Inverse UNet: Diffusers `enable_xformers_memory_efficient_attention()` (không IP).
+    - Gen UNet (IP processors): flag trong `src.efficient_attention` — không ghi đè processors.
+    Khi enabled=False: tắt flag custom (gọi trước mỗi config eval).
+    """
+    set_use_xformers(bool(enabled))
+    if not enabled:
+        return
+    if inverse_unet is not None:
+        inverse_unet.enable_xformers_memory_efficient_attention()
+
 
 class _NullTimer:
     """Timer giả: dùng khi gen_img được gọi mà không truyền StageTimer."""
@@ -146,6 +162,7 @@ class InverseModel:
         device="cuda",
         channels_last=False,
         quant=None,
+        use_xformers=False,
     ):
         self.weight_dtype = resolve_dtype(dtype)
 
@@ -172,6 +189,9 @@ class InverseModel:
         self.unet_inverse = quantize_unet(
             self.unet_inverse, quant, self.device, self.compute_dtype
         )
+
+        if use_xformers:
+            apply_xformers_mea(self.unet_inverse, enabled=True)
 
         self.unet_inverse.eval()
         self.tokenizer = AutoTokenizer.from_pretrained(self.model_name, subfolder="tokenizer")
@@ -233,6 +253,7 @@ class IPSBV2Model(torch.nn.Module):
         dtype="fp32",
         channels_last=False,
         quant=None,
+        use_xformers=False,
     ):
         super().__init__()
         self.device = device
@@ -335,6 +356,13 @@ class IPSBV2Model(torch.nn.Module):
         self.compute_dtype = self.weight_dtype
         # Lượng tử hóa weight-only (fp8/fp4) SAU khi đã nạp IP-adapter + ép dtype/format.
         self.unet = quantize_unet(self.unet, quant, self.device, self.compute_dtype)
+
+        # Flag MEA cho self-attn + nhánh không controller; không ghi đè IP processors.
+        if use_xformers:
+            apply_xformers_mea(None, enabled=True)
+        else:
+            # Tránh config trước (xformers) làm dính flag sang config sau.
+            apply_xformers_mea(None, enabled=False)
 
     def load_ip_adapter(self, path_ckpt_ip):
 

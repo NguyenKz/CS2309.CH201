@@ -14,3 +14,7 @@ einops
 packaging
 
 ipywidgets
+
+# Tuỳ chọn Colab CUDA (precision fp16_weight_xformers / quant fp4):
+#   pip install xformers
+#   pip install bitsandbytes

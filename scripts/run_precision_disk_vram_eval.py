@@ -60,6 +60,7 @@ PREV_BENCH_HINT = {
     "improved_fp8_cache": "quality_speed_bench improved_fp8_cache",
     "improved_fp4_cache": "quality_speed_bench improved_fp4_cache",
     "fp16_disk": "disk fp16 + EditCache (mới vs June17)",
+    "fp16_disk_xformers": "fp16_disk + xFormers MEA (mới)",
     "fp4_from_fp16": "disk fp16 → quant fp4 + EditCache (mới vs June17)",
 }
 
@@ -401,7 +402,7 @@ def main() -> int:
 
     sys.path.insert(0, str(ROOT / "SwiftEdit"))
     from infer import EditCache, edit_image, get_device
-    from models import AuxiliaryModel, InverseModel, IPSBV2Model
+    from models import AuxiliaryModel, InverseModel, IPSBV2Model, apply_xformers_mea
 
     device = get_device()
     # Eval tuần tự 1 config → xong mới load config khác (không song song — OOM T4 16GB).
@@ -477,6 +478,7 @@ def main() -> int:
     for cname in config_names:
         meta = CONFIGS[cname]
         quant = meta["quant"]
+        use_xf = bool(meta.get("use_xformers"))
         if meta["needs_cuda_quant"] and not device.startswith("cuda"):
             print(f"SKIP {cname} — cần CUDA", file=sys.stderr)
             memory_rows.append(
@@ -491,6 +493,20 @@ def main() -> int:
                 }
             )
             continue
+        if meta.get("needs_cuda_xformers") and not device.startswith("cuda"):
+            print(f"SKIP {cname} — xFormers cần CUDA", file=sys.stderr)
+            memory_rows.append(
+                {
+                    "config": cname,
+                    "phase": "skipped",
+                    "device": device,
+                    "peak_alloc_mb": None,
+                    "driver_used_mb": None,
+                    "load_seconds": None,
+                    "note": "requires CUDA for xformers",
+                }
+            )
+            continue
 
         wroot = (
             args.weights_fp16 if meta["weights"] == "fp16" else args.weights_fp32
@@ -499,18 +515,25 @@ def main() -> int:
         ch_last = bool(meta["channels_last"] and device.startswith("cuda"))
         print(
             f"\n=== {cname} weights={wroot.name} dtype={meta['dtype']} "
-            f"quant={quant} cache={meta['use_cache']} ==="
+            f"quant={quant} cache={meta['use_cache']} xformers={use_xf} ==="
         )
+        # Reset flag MEA giữa các config (tránh dính từ lần trước).
+        apply_xformers_mea(None, enabled=False)
         _free(device)
         _reset_peak(device)
         t_load0 = time.perf_counter()
         try:
+            if use_xf:
+                import xformers  # noqa: F401
+
+                print(f"xformers {getattr(xformers, '__version__', '?')}", flush=True)
             inv = InverseModel(
                 str(wroot / "inverse_ckpt-120k"),
                 device=device,
                 dtype=meta["dtype"],
                 channels_last=ch_last,
                 quant=quant,
+                use_xformers=use_xf,
             )
             aux = AuxiliaryModel(device=device, dtype=meta["dtype"])
             ip = IPSBV2Model(
@@ -522,10 +545,12 @@ def main() -> int:
                 dtype=meta["dtype"],
                 channels_last=ch_last,
                 quant=quant,
+                use_xformers=use_xf,
             )
         except Exception as e:
             print(f"SKIP {cname} load fail: {e}", file=sys.stderr)
             traceback.print_exc()
+            apply_xformers_mea(None, enabled=False)
             memory_rows.append(
                 {
                     "config": cname,

@@ -9,6 +9,8 @@
 
 | Ngày       | Giai đoạn           | Công việc                                                                                            | Kết quả / Ghi chú                                                                                                                                                                                                                                                                                                                                      | Môi trường                                |
 | ---------- | ------------------- | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------- |
+| 2026-07-19 | 4e                  | Thêm `fp16_weight_xformers` (xFormers MEA trên FP16 disk)                           | Config mới `fp16_disk_xformers`; giữ nguyên `fp16_weight`; MEA qua Diffusers (inverse) + `efficient_attention` (gen self-attn); notebook SELECT mặc định xformers; chờ bundle T4                                                                                                                                                                     | Mac (code); Colab T4 (chờ eval)           |
+| 2026-07-19 | 4e                  | Đóng sổ FP4 trên T4; xếp hạng hướng RT tiếp theo                                                     | Dừng FP4 làm tối ưu chính (ablation âm); không lưu checkpoint FP4; baseline fp16+EditCache; plan xFormers→ToMe→TensorRT tại `experimental_data/FP4_DECISION_AND_NEXT_PLAN.md`                                                                                                                                                                          | Mac (tài liệu); Colab T4 (quan sát)       |
 | 2026-07-19 | 4e                  | Precision picker: workflow 3 lần + `fp4_weight` (fp4_from_fp16) end-to-end trên notebook             | Catalog/eval alias `fp4_weight`→quant=fp4; notebook lần 3 reuse fp16 + bitsandbytes; PRECISION_CASES workflow fp32→fp16_weight→fp4_weight; chờ bundle T4 full 600 để ghi số liệu so sánh cuối                                                                                                                                                         | Mac (code/docs); Colab T4 (user eval)     |
 | 2026-07-19 | 4e                  | Phase A: checkpoint fp16 trên disk + eval disk/memory/PSNR (Mac); luồng Colab Drive sẵn sàng         | Disk −49.5% (9.79→4.94 GiB); peak load MPS 12366→6567 MB; PSNR_vs_fp32 mean 51.4 dB; scripts convert/eval + notebook Drive; bundle experimental_data/precision_disk_vram_2026-07-19/                                                                                                    | Mac MPS; torch 2.12.0                     |
 | 2026-07-03 | 1                   | Notebook diffusion-from-scratch 01→04; QA F\_theta/SBv2/pipeline                                     | 4 notebook + 4 script; QA §1–3: 15 câu; pipeline 1+1 (F\_theta + SBv2)                                                                                                                                                                                                                                                                                 | Mac; học lý thuyết + notebook .venv       |
@@ -40,6 +42,53 @@
 ## Chi tiết theo phiên làm việc
 
 *(Các entry chi tiết xuất hiện bên dưới, mới nhất ở trên cùng.)*
+
+### 2026-07-19 — [4e] Thêm fp16_weight_xformers (xFormers MEA)
+
+**Môi trường:** Mac (code); Colab T4 (user chạy eval)
+
+**Công việc đã làm:**
+
+- Catalog: `fp16_disk_xformers` + alias `fp16_weight_xformers` (**không** đụng `fp16_weight` / `fp16_disk`)
+- `src/efficient_attention.py` + wire AttnProcessor/IP (self-attn); Inverse dùng Diffusers `enable_xformers_*`
+- Không gọi Diffusers enable trên gen UNet (tránh ghi đè IP processors / ARaM)
+- Notebook SELECT mặc định `fp16_weight_xformers`; pip install xformers khi chọn
+
+**Kết quả:**
+
+- Code sẵn sàng đo so với `fp16_weight` cùng cây disk fp16
+- Cross-attn có mask controller vẫn einsum (ARaM) — MEA chủ yếu inverse + self-attn gen
+
+**Bước tiếp theo:**
+
+- Colab: SELECT `fp16_weight_xformers`, `MAX_JOBS=600` → bundle
+- So với bundle `fp16_weight`: s/edit, VRAM, PSNR
+
+---
+
+### 2026-07-19 — [4e] Đóng sổ FP4; xếp hạng hướng RT tiếp theo
+
+**Môi trường:** Mac (tài liệu); Colab T4 (quan sát GPU RAM ~10.5GB lúc `fp4_weight`)
+
+**Công việc đã làm:**
+
+- Tiếp nhận phản biện: bitsandbytes FP4 trên Turing không native; dequant → tốc độ ≈ fp16
+- Ghi quyết định + plan: [`experimental_data/FP4_DECISION_AND_NEXT_PLAN.md`](./experimental_data/FP4_DECISION_AND_NEXT_PLAN.md)
+- Cập nhật PRECISION_CASES (case 6 = ablation âm), PRECISION_QUANT context, HUONG_PHAT_TRIEN (thêm xFormers/ToMe; đánh dấu dừng FP4)
+- QA: vì sao FP4 fail trên T4; thứ tự thử sau FP4
+
+**Kết quả:**
+
+- **Dừng** tối ưu FP4 trên T4; không lưu checkpoint FP4 trên disk
+- Baseline vận hành: **FP16 + EditCache** (`fp16` / `fp16_weight`)
+- Xếp hạng tiếp: xFormers MEA → ToMe → (tuỳ chọn) TensorRT FP16
+
+**Bước tiếp theo:**
+
+- Audit attention backend trên Colab (SDP / xFormers)
+- Thử xFormers rồi ToMe; đo s/edit, VRAM, PSNR so fp16+cache
+
+---
 
 ### 2026-07-19 — [4e] Precision picker: fp4_weight (lần 3)
 

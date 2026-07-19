@@ -83,9 +83,12 @@ Tối ưu tốc độ suy luận của SwiftEdit mà không train lại và khô
 | 2 | Profiler latency theo module | Cao | Không | Bắt buộc để chứng minh |
 | 3 | Cache latent/image/source embedding | Cao | Không nếu cache đúng | ✅ 2026-06-14: cùng ảnh+src, tiết kiệm ~9.93s/edit (gen_image_embeds −11.5s, vae_encode −0.95s); embed deterministic; `EditCache` trong infer.py |
 | 4 | `channels_last` + fp16/bf16 | Trung bình | Thấp | ✅ 2026-06-14 (Mac M4/MPS): fp16 ~3.3× (nguội) → ~7× (chạy liên tục, fp32 bị throttle); PSNR ~45dB vs fp32, không NaN/đen; VAE giữ fp32; channels_last +~5% |
-| 5 | `torch.compile` | Trung bình | Thấp | Có warmup/compile overhead — bước tiếp theo |
-| 6 | TinyVAE/TAESD | Trung bình | Trung bình | Có thể nhanh hơn nhưng đổi màu/chi tiết |
-| 7 | TensorRT/Core ML/quantization | Thấp-trung bình | Thấp-trung bình | Hướng dài hơn |
+| 5 | xFormers Memory-Efficient Attention (T4) | Cao | Thấp | T4 hỗ trợ MEA (không FlashAttn v2). Ưu tiên sau fp16+cache — xem `experimental_data/FP4_DECISION_AND_NEXT_PLAN.md` |
+| 6 | Token Merging (ToMe / `tomesd`) | Cao | Trung bình (tune `ratio`) | Combo nhanh với fp16; đo PSNR theo ratio |
+| 7 | `torch.compile` | Trung bình | Thấp | Có warmup/compile overhead |
+| 8 | TinyVAE/TAESD | Trung bình | Trung bình | Có thể nhanh hơn nhưng đổi màu/chi tiết; ablation riêng |
+| 9 | TensorRT FP16 (2× UNet) | Thấp | Thấp–trung bình nếu giữ FP16 | Effort cao; làm sau khi xFormers/ToMe có số |
+| — | bitsandbytes FP4 Linear-only trên T4 | — | — | **Dừng làm hướng tối ưu** (2026-07-19): không native FP4 trên Turing; tốc độ ≈ fp16, PSNR kém — chỉ giữ ablation âm |
 
 **Kết quả tối ưu đã đo (Mac M4 / MPS, steady-state):**
 

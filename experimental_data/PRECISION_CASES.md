@@ -1,6 +1,7 @@
 # Kiểm kê case precision — CS2309 SwiftEdit
 
-> Cập nhật: 2026-07-19 (workflow 3 lần: fp32 → fp16_weight → fp4_weight).
+> Cập nhật: 2026-07-19 (`fp16_weight_xformers` thêm; FP4 = ablation).  
+> **Quyết định FP4:** dừng làm hướng tối ưu chính trên T4 — xem [`FP4_DECISION_AND_NEXT_PLAN.md`](./FP4_DECISION_AND_NEXT_PLAN.md).
 
 ## Hệ quy chiếu thống nhất
 
@@ -14,8 +15,9 @@
 | Lần | SELECT | Prepare | Ghi chú |
 |-----|--------|---------|---------|
 | 1 | `fp32` | verify sau setup tải Qualcomm | Reference PSNR + thời gian/VRAM |
-| 2 | `fp16_weight` | có fp32 → **convert** cây fp16 (một lần) | Disk ~½; VRAM ~bằng fp16 compute |
-| 3 | `fp4_weight` | **reuse** fp16 nếu đã có | Load fp16 disk → quant **fp4** (bitsandbytes, CUDA) |
+| 2 | `fp16_weight` | có fp32 → **convert** cây fp16 (một lần) | Disk ~½; VRAM ~bằng fp16 compute — **giữ nguyên** |
+| 3 | `fp16_weight_xformers` | **reuse** cùng cây fp16 | xFormers MEA; so trực tiếp với lần 2 |
+| (tuỳ chọn) | `fp4_weight` | reuse fp16 | Ablation âm trên T4; không ưu tiên |
 
 Cùng `MAX_JOBS=600`. Không bật nhiều config một lúc trên T4.
 
@@ -23,27 +25,31 @@ Notebook: [`notebooks/CS2309_SwiftEdit_precision_disk_vram.ipynb`](../notebooks/
 
 ## Catalog (picker)
 
-| Alias | Config | Disk | EditCache |
-|-------|--------|------|-----------|
-| `fp32` | `baseline_fp32` | fp32 | off |
-| `fp16` | `improved_fp16_cache` | fp32 | on |
-| `fp8` | `improved_fp8_cache` | fp32 | on |
-| `fp4` | `improved_fp4_cache` | fp32 | on |
-| `fp16_weight` | `fp16_disk` | **fp16** | on |
-| `fp4_weight` | `fp4_from_fp16` | **fp16** → quant fp4 | on |
+| Alias | Config | Disk | EditCache | xFormers |
+|-------|--------|------|-----------|----------|
+| `fp32` | `baseline_fp32` | fp32 | off | off |
+| `fp16` | `improved_fp16_cache` | fp32 | on | off |
+| `fp8` | `improved_fp8_cache` | fp32 | on | off |
+| `fp4` | `improved_fp4_cache` | fp32 | on | off |
+| `fp16_weight` | `fp16_disk` | **fp16** | on | off |
+| `fp16_weight_xformers` | `fp16_disk_xformers` | **fp16** | on | **on** |
+| `fp4_weight` | `fp4_from_fp16` | **fp16** → quant fp4 | on | off |
 
 ## Ma trận case
 
 | # | Case | Status |
 |---|------|--------|
-| 1 | Full FP32 | Chạy picker `fp32` (đừng trộn số June17 cũ nếu không tin) |
+| 1 | Full FP32 | Chạy picker `fp32` |
 | 2 | FP16 compute + cache | Alias `fp16` (disk vẫn fp32) |
 | 3 | FP8 + cache | Alias `fp8` — T4 thường chất lượng kém |
 | 4 | FP4 compute + cache | Alias `fp4` — quant từ disk fp32 |
-| 5 | FP16 **disk** | Alias `fp16_weight` — VRAM ~ fp16; tối ưu disk/load |
-| 6 | FP4 from fp16 disk | Alias `fp4_weight` — pipeline sẵn; chờ bundle full 600 để ghi số liệu cuối |
+| 5 | FP16 **disk** | Alias `fp16_weight` — baseline disk/load (**không xóa**) |
+| 6 | FP4 from fp16 disk | Alias `fp4_weight` — **ablation âm trên T4** |
+| 7 | FP16 disk + xFormers MEA | Alias `fp16_weight_xformers` — cùng weight với case 5; đo Δ tốc độ/VRAM |
 
-Kỳ vọng case 6 vs case 5: VRAM thấp hơn (weight-only fp4); disk dùng chung cây fp16; chất lượng/PSNR trade-off (so ảnh fp32 qua merge local).
+**Case 7:** inverse UNet dùng Diffusers xFormers; gen UNet: self-attn + nhánh không ARaM controller qua `xformers.ops.memory_efficient_attention` (không ghi đè IP processors). Cross-attn có mask controller vẫn einsum (ARaM).
+
+**Case 6 (FP4):** Linear-only FP4 không nhanh hơn fp16 trên T4; baseline vận hành case 5 hoặc 7.
 
 ## Export mỗi run (`precision_run_<stamp>_<configs>/`)
 
@@ -64,5 +70,5 @@ Kỳ vọng case 6 vs case 5: VRAM thấp hơn (weight-only fp4); disk dùng chu
 ## Tải weights
 
 - Lần 1: Qualcomm trong **setup** (curl nhanh, xóa `.part` sau extract).
-- Lần 2–3 `*_weight`: không tải lại Qualcomm nếu đã có fp32; convert/reuse fp16 tại prepare.
+- Lần 2–3 `*_weight` / `fp16_weight_xformers`: không tải lại Qualcomm nếu đã có fp32; convert/reuse fp16 tại prepare.
 - Script: [`scripts/prepare_colab_weights.py`](../scripts/prepare_colab_weights.py).

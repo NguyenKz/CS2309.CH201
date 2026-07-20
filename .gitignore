@@ -129,3 +129,6 @@ data/PIE-Bench-auto200/annotation_images/
 .gdrive/
 *.gdoc
 *.gsheet
+
+
+test_data/

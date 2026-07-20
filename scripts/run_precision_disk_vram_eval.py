@@ -158,6 +158,12 @@ def _jobs_hash(jobs: list[dict]) -> str:
     return hashlib.sha256(blob.encode("utf-8")).hexdigest()[:16]
 
 
+def _job_seed(base_seed: int, job_id: str) -> int:
+    """Seed deterministic theo job_id — mọi config cùng base + job_id → cùng VAE sample."""
+    h = hashlib.sha256(f"{base_seed}:{job_id}".encode()).digest()
+    return int.from_bytes(h[:8], "big") % (2**63 - 1)
+
+
 def _jobs_from_june17_manifest(
     manifest: Path, *, max_jobs: int | None
 ) -> list[dict]:
@@ -376,6 +382,12 @@ def main() -> int:
     parser.add_argument("--out", type=Path, default=None)
     parser.add_argument("--src-p", type=str, default=None)
     parser.add_argument("--edit-p", type=str, default=None)
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=250101049,
+        help="Base seed eval; mỗi job = hash(base, job_id). 0 = tắt (legacy, không khuyến nghị).",
+    )
     args = parser.parse_args()
 
     if args.list_configs:
@@ -464,6 +476,11 @@ def main() -> int:
                 j["edit_prompt"] = args.edit_p
 
     jhash = _jobs_hash(jobs)
+    eval_seed = None if args.seed == 0 else int(args.seed)
+    if eval_seed is not None:
+        print(f"eval_seed(base)={eval_seed} — per-job hash(base, job_id)", flush=True)
+    else:
+        print("eval_seed=off (legacy — PSNR cross-config không công bằng)", flush=True)
     _copy_inputs(jobs, out_dir)
 
     memory_rows: list[dict] = []
@@ -585,6 +602,7 @@ def main() -> int:
 
         # warmup
         wj = jobs[0]
+        w_seed = _job_seed(eval_seed, wj["job_id"]) if eval_seed is not None else None
         _ = edit_image(
             str(wj["image"]),
             wj["src_prompt"],
@@ -596,6 +614,7 @@ def main() -> int:
             scale_non_edit=1.0,
             mask_threshold=0.5,
             cache=cache,
+            seed=w_seed,
         )
         _sync(device)
         if cache is not None:
@@ -630,6 +649,7 @@ def main() -> int:
 
             _reset_peak(device)
             t0 = time.perf_counter()
+            j_seed = _job_seed(eval_seed, j["job_id"]) if eval_seed is not None else None
             res = edit_image(
                 str(j["image"]),
                 j["src_prompt"],
@@ -641,6 +661,7 @@ def main() -> int:
                 scale_non_edit=1.0,
                 mask_threshold=0.5,
                 cache=cache,
+                seed=j_seed,
             )
             _sync(device)
             dt = time.perf_counter() - t0
@@ -740,6 +761,8 @@ def main() -> int:
         "schema": "precision_run_v1",
         "jobs_hash": jhash,
         "jobs_source": jobs_src,
+        "eval_seed_base": eval_seed,
+        "eval_seed_scheme": "sha256(base:job_id)[:8] mod 2^63-1" if eval_seed else None,
         "n_jobs": len(jobs),
         "configs_requested": config_names,
         "configs_with_quality_rows": sorted({r["config"] for r in quality_rows}),
@@ -775,6 +798,8 @@ def main() -> int:
         "n_jobs": len(jobs),
         "jobs_hash": jhash,
         "jobs_source": jobs_src,
+        "eval_seed_base": eval_seed,
+        "eval_seed_scheme": "sha256(base:job_id)[:8] mod 2^63-1" if eval_seed else None,
         "weights_fp32": str(args.weights_fp32),
         "weights_fp16": str(args.weights_fp16),
         "disk_fp32_bytes": fp32_b,
@@ -795,6 +820,8 @@ def main() -> int:
         f"- Device: `{device}` | torch `{meta['torch']}` | git `{meta['git_commit']}`",
         f"- Configs: {', '.join(f'`{c}`' for c in config_names)}",
         f"- Jobs: **{len(jobs)}** | `jobs_hash={jhash}`",
+        f"- Eval seed (base): `{eval_seed}`"
+        + (" — per-job `hash(base, job_id)`" if eval_seed else " — **off (legacy)**"),
         f"- PSNR in-run vs: `{ref_config_name or 'n/a — so fp32 lúc merge local'}`",
         "",
         "## Disk",

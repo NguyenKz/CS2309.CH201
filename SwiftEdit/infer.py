@@ -45,8 +45,25 @@ def get_device():
 def to_binary(pix, threshold=0.5):
     if float(pix) > threshold:
         return 1.0
-    else:
-        return 0.0
+    return 0.0
+
+
+def make_generator(device, seed: int) -> torch.Generator:
+    """Generator cho VAE sample — MPS dùng CPU generator (ổn định hơn)."""
+    gen_device = "cpu" if str(device).startswith("mps") else device
+    gen = torch.Generator(device=gen_device)
+    gen.manual_seed(int(seed))
+    return gen
+
+
+def apply_job_seed(seed: int | None, device) -> torch.Generator | None:
+    """Cố định RNG cho một job eval (None = giữ hành vi cũ không seed)."""
+    if seed is None:
+        return None
+    torch.manual_seed(int(seed))
+    if torch.cuda.is_available() and str(device).startswith("cuda"):
+        torch.cuda.manual_seed_all(int(seed))
+    return make_generator(device, int(seed))
 
 
 class EditCache:
@@ -92,6 +109,7 @@ def edit_image(
     mask_threshold=0.5,
     cache=None,
     user_mask=None,
+    seed=None,
 ):
     """
         Save keysteps to file.
@@ -101,8 +119,10 @@ def edit_image(
             + cache: EditCache tùy chọn — tái dùng latent/embedding khi cùng ảnh+source prompt.
             + user_mask: mask người dùng vẽ (2D/3D). Nếu có, ghi đè self-guided mask —
               dùng cho xóa/chỉnh vật thể theo vùng khoanh tay.
+            + seed: RNG cố định cho job (VAE encode .sample). None = không set (legacy).
     """
     device = inverse_model.device
+    vae_gen = apply_job_seed(seed, device)
     timer = StageTimer(device, label=f"{src_p}->{edit_p}")
     mid_timestep = torch.ones((1,), dtype=torch.int64, device=device) * 500
     final_timestep = torch.ones((1,), dtype=torch.int64, device=device) * 999
@@ -122,7 +142,7 @@ def edit_image(
         else:
             latents = inverse_model.vae.encode(
                 processed_image.to(inverse_model.vae.dtype)
-            ).latent_dist.sample()
+            ).latent_dist.sample(generator=vae_gen)
             latents = latents * inverse_model.vae.config.scaling_factor
             if cache is not None:
                 cache.latents = latents

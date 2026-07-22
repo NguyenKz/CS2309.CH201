@@ -55,6 +55,178 @@ REMOVAL_EXAMPLE_PROMPTS = [
 
 _VAGUE_EDIT_PROMPTS = {"empty background", "background", "empty", ""}
 
+BRUSH_REFRESH_JS = r"""
+() => {
+  const findButton = (root, name) => Array.from(root.querySelectorAll("button")).find(
+    (button) => (button.getAttribute("aria-label") || button.textContent || "")
+      .trim().toLowerCase() === name
+  );
+
+  const refreshBrush = () => {
+    const root = document.querySelector("#mask-editor");
+    const image = root?.querySelector("img");
+    if (!root || !image || !image.currentSrc) return;
+    const textureKey = [
+      image.currentSrc,
+      image.naturalWidth,
+      image.naturalHeight,
+      root.clientWidth,
+      root.clientHeight,
+    ].join(":");
+    if (image.dataset.brushTextureKey === textureKey) return;
+    const erase = findButton(root, "erase");
+    const brush = findButton(root, "brush");
+    if (!erase || !brush) return;
+    image.dataset.brushTextureKey = textureKey;
+    // Gradio 5 chỉ recreate brush textures khi draw/erase mode thay đổi.
+    erase.click();
+    requestAnimationFrame(() => brush.click());
+  };
+
+  const scheduleRefresh = () => {
+    window.setTimeout(refreshBrush, 80);
+    window.setTimeout(refreshBrush, 250);
+  };
+
+  const syncBrushSize = () => {
+    const root = document.querySelector("#mask-editor");
+    if (!root) return;
+    const slider = Array.from(root.querySelectorAll('input[type="range"]')).find(
+      (input) => input.min === "1" && input.max === "100"
+    );
+    if (!slider) return;
+    root.dataset.brushSize = slider.value;
+    if (slider.dataset.liveMaskBound === "1") return;
+    slider.dataset.liveMaskBound = "1";
+    const update = () => {
+      root.dataset.brushSize = slider.value;
+    };
+    slider.addEventListener("input", update);
+    slider.addEventListener("change", update);
+  };
+
+  const setupLivePreview = () => {
+    const root = document.querySelector("#mask-editor");
+    if (!root || root.dataset.liveMaskBound === "1") return;
+    const baseCanvas = () => Array.from(root.querySelectorAll("canvas"))
+      .find((canvas) => !canvas.classList.contains("live-mask-preview"));
+    if (!baseCanvas()) return;
+    root.dataset.liveMaskBound = "1";
+    root.style.position = "relative";
+
+    const overlay = document.createElement("canvas");
+    overlay.className = "live-mask-preview";
+    overlay.style.position = "absolute";
+    overlay.style.pointerEvents = "none";
+    overlay.style.zIndex = "50";
+    root.appendChild(overlay);
+    let drawing = false;
+    let lastPoint = null;
+
+    const syncOverlay = () => {
+      const base = baseCanvas();
+      if (!base) return null;
+      const baseRect = base.getBoundingClientRect();
+      const rootRect = root.getBoundingClientRect();
+      const ratio = window.devicePixelRatio || 1;
+      overlay.style.left = `${baseRect.left - rootRect.left}px`;
+      overlay.style.top = `${baseRect.top - rootRect.top}px`;
+      overlay.style.width = `${baseRect.width}px`;
+      overlay.style.height = `${baseRect.height}px`;
+      const width = Math.max(1, Math.round(baseRect.width * ratio));
+      const height = Math.max(1, Math.round(baseRect.height * ratio));
+      if (overlay.width !== width || overlay.height !== height) {
+        overlay.width = width;
+        overlay.height = height;
+      }
+      const context = overlay.getContext("2d");
+      context.setTransform(ratio, 0, 0, ratio, 0, 0);
+      return { baseRect, context };
+    };
+
+    const brushIsActive = () => {
+      const brush = findButton(root, "brush");
+      return !!brush && brush.classList.contains("highlight");
+    };
+    const pointFor = (event, rect) => ({
+      x: event.clientX - rect.left,
+      y: event.clientY - rect.top,
+    });
+    const brushWidth = () => {
+      const zoomText = Array.from(root.querySelectorAll("span"))
+        .map((span) => span.textContent.trim())
+        .find((text) => /^\d+%$/.test(text));
+      const zoom = zoomText ? Number.parseFloat(zoomText) / 100 : 1;
+      const size = Number.parseFloat(root.dataset.brushSize || "28");
+      return Math.max(2, size * zoom);
+    };
+    const inside = (event, rect) => (
+      event.clientX >= rect.left && event.clientX <= rect.right
+      && event.clientY >= rect.top && event.clientY <= rect.bottom
+    );
+    const drawSegment = (from, to, context) => {
+      context.strokeStyle = "rgba(255, 0, 0, 0.5)";
+      context.fillStyle = "rgba(255, 0, 0, 0.5)";
+      context.lineWidth = brushWidth();
+      context.lineCap = "round";
+      context.lineJoin = "round";
+      context.beginPath();
+      context.moveTo(from.x, from.y);
+      context.lineTo(to.x, to.y);
+      context.stroke();
+    };
+
+    root.addEventListener("pointerdown", (event) => {
+      const synced = syncOverlay();
+      if (!synced || !brushIsActive() || !inside(event, synced.baseRect)) return;
+      drawing = true;
+      lastPoint = pointFor(event, synced.baseRect);
+      drawSegment(lastPoint, lastPoint, synced.context);
+    }, true);
+    root.addEventListener("pointermove", (event) => {
+      if (!drawing || !lastPoint) return;
+      const synced = syncOverlay();
+      if (!synced) return;
+      const nextPoint = pointFor(event, synced.baseRect);
+      drawSegment(lastPoint, nextPoint, synced.context);
+      lastPoint = nextPoint;
+    }, true);
+    const finish = () => {
+      if (!drawing) return;
+      drawing = false;
+      lastPoint = null;
+      window.setTimeout(() => {
+        const context = overlay.getContext("2d");
+        context.clearRect(0, 0, overlay.width, overlay.height);
+      }, 120);
+    };
+    root.addEventListener("pointerup", finish, true);
+    root.addEventListener("pointercancel", finish, true);
+    new ResizeObserver(syncOverlay).observe(root);
+    syncOverlay();
+  };
+
+  new MutationObserver(() => {
+    scheduleRefresh();
+    syncBrushSize();
+    setupLivePreview();
+  }).observe(document.body, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: ["src"],
+  });
+  window.addEventListener("resize", () => {
+    scheduleRefresh();
+    syncBrushSize();
+    setupLivePreview();
+  });
+  scheduleRefresh();
+  syncBrushSize();
+  setupLivePreview();
+}
+"""
+
 
 def _sync(device) -> None:
     d = str(device)
@@ -526,7 +698,11 @@ def build_app(dtype: str):
         )
         return _unletterbox(tensor_to_pil(res), lb_meta), mask_prev, info
 
-    with gr.Blocks(title="SwiftEdit-RT Demo", theme=gr.themes.Soft()) as demo:
+    with gr.Blocks(
+        title="SwiftEdit-RT Demo",
+        theme=gr.themes.Soft(),
+        js=BRUSH_REFRESH_JS,
+    ) as demo:
         gr.Markdown(
             "# SwiftEdit-RT — Chỉnh sửa & xóa vật thể bằng prompt (one-step)\n"
             f"Inference tăng tốc bằng **fp16 + channels_last + cache** "
@@ -547,7 +723,11 @@ def build_app(dtype: str):
                             label="Ảnh hiện tại — tô mask vùng cần sửa",
                             type="numpy",
                             height=420,
-                            brush=gr.Brush(colors=["#ff0000"], default_size=28),
+                            elem_id="mask-editor",
+                            brush=gr.Brush(
+                                colors=["rgba(255, 0, 0, 0.5)"],
+                                default_size=28,
+                            ),
                             layers=False,
                             transforms=[],
                         )
@@ -687,7 +867,10 @@ def build_app(dtype: str):
                         rm_editor = gr.ImageEditor(
                             label="Khoanh vùng vật thể cần xóa (dùng cọ)",
                             type="numpy", height=360,
-                            brush=gr.Brush(colors=["#ff0000"], default_size=28),
+                            brush=gr.Brush(
+                                colors=["rgba(255, 0, 0, 0.5)"],
+                                default_size=28,
+                            ),
                             layers=False, transforms=[],
                         )
                         rm_src = gr.Textbox(

@@ -482,8 +482,12 @@ Sau mỗi task xong, báo agent *"xong task X.Y"* để đánh `[x]` README + gh
 - [x] Gradio: upload ảnh + nhập prompt — `scripts/app_gradio.py`
 - [x] Hiển thị ảnh output + thời gian suy luận (kèm dtype + trạng thái cache)
 - [x] Chạy local trên Mac (fp16 + channels_last + EditCache); self-test OK ~7.8s edit đầu
+- [x] Workflow multi-turn: sinh tuần tự 3 candidate từ cùng snapshot, hiển thị ngay từng ảnh, Regen, chọn ảnh để commit, Undo và chỉnh tiếp
+- [x] Hybrid local composite: giữ master full-resolution, chỉ thay vùng mask; global edit có cảnh báo giới hạn 512×512
+- [x] Inpaint masked ROI kiểu A1111: user tô mask; hệ thống tự tạo crop vuông có context, infer 512×512 và chỉ blend vùng mask về master full-resolution
+- [x] Benchmark 5 lượt Naive vs Hybrid: PSNR ngoài mask 30.09 dB vs vô hạn; SSIM 0.8353 vs 0.9592; LPIPS 0.0575 vs 0.0119
 
-> **Chạy demo:** `python scripts/app_gradio.py` (mặc định fp16 trên MPS), mở `http://127.0.0.1:7860`. Dùng cùng 1 ảnh + source prompt rồi đổi edit prompt để thấy cache tăng tốc.
+> **Chạy demo:** `python scripts/app_gradio.py` (mặc định fp16 trên MPS), mở `http://127.0.0.1:7860`. Dữ liệu benchmark: `experimental_data/multiturn_hybrid_2026-07-22_144313/`.
 
 ### 4g. SAM 3 mask quality analysis (optional, không phải hướng chính)
 

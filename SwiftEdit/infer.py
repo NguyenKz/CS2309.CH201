@@ -110,6 +110,9 @@ def edit_image(
     cache=None,
     user_mask=None,
     seed=None,
+    source_latent=None,
+    latent_jitter_strength=0.0,
+    return_details=False,
 ):
     """
         Save keysteps to file.
@@ -120,6 +123,9 @@ def edit_image(
             + user_mask: mask người dùng vẽ (2D/3D). Nếu có, ghi đè self-guided mask —
               dùng cho xóa/chỉnh vật thể theo vùng khoanh tay.
             + seed: RNG cố định cho job (VAE encode .sample). None = không set (legacy).
+            + source_latent: latent sạch đã scale từ lượt trước; bỏ VAE encode khi có.
+            + latent_jitter_strength: nhiễu nhỏ có seed để tạo candidate từ source_latent.
+            + return_details: trả dict gồm image, clean_latent và mask cho multi-turn app.
     """
     device = inverse_model.device
     vae_gen = apply_job_seed(seed, device)
@@ -137,7 +143,19 @@ def edit_image(
 
     # Predict inverted noise — latent VAE chỉ phụ thuộc ảnh nguồn -> cache được
     with timer.stage("vae_encode"):
-        if cache is not None and cache.latents is not None:
+        if source_latent is not None:
+            latents = source_latent.to(device=device, dtype=inverse_model.vae.dtype)
+            if latent_jitter_strength > 0:
+                # MPS dùng CPU generator để seed ổn định; tạo noise CPU rồi chuyển device.
+                jitter_device = "cpu" if str(device).startswith("mps") else latents.device
+                jitter = torch.randn(
+                    latents.shape,
+                    generator=vae_gen,
+                    device=jitter_device,
+                    dtype=latents.dtype,
+                ).to(latents.device)
+                latents = latents + float(latent_jitter_strength) * jitter
+        elif cache is not None and cache.latents is not None:
             latents = cache.latents
         else:
             latents = inverse_model.vae.encode(
@@ -192,17 +210,29 @@ def edit_image(
         mask12, scale_text_hiddenstate=scale_ta, scale_ip_fg=scale_edit, scale_ip_bg=scale_non_edit
     )
     ip_sb_model.set_controller(mask_controller, where=["mid_blocks", "up_blocks"])
-    res_gen_img, _ = ip_sb_model.gen_img(
+    gen_result = ip_sb_model.gen_img(
         pil_image=pil_img_cond,
         prompts=[src_p, edit_p],
         noise=input_sb,
         return_noise_image=False,
+        return_clean_latent=return_details,
         timer=timer,
         embed_cache=(cache.gen_embed_cache if cache is not None else None),
     )
+    if return_details:
+        res_gen_img, _, clean_latent = gen_result
+    else:
+        res_gen_img, _ = gen_result
 
     timer.dump(extra={"img_path": img_path})
 
+    if return_details:
+        return {
+            "image": res_gen_img,
+            "clean_latent": clean_latent.detach(),
+            "mask": mask12.detach(),
+            "source_latent": latents.detach(),
+        }
     return res_gen_img
 
 

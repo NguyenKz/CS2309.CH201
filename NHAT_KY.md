@@ -9,6 +9,7 @@
 
 | Ngày       | Giai đoạn           | Công việc                                                                                            | Kết quả / Ghi chú                                                                                                                                                                                                                                                                                                                                      | Môi trường                                |
 | ---------- | ------------------- | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------- |
+| 2026-07-22 | 4f                  | Hybrid Multi-turn Editing: 3 candidate, Regen/Pick/Undo và local full-resolution composite          | Inference trả clean latent + mask; latent jitter 0.05 tạo khác biệt pairwise MAE ~0.012; benchmark 5 lượt: PSNR ngoài mask Naive 30.09 dB vs Hybrid vô hạn, SSIM 0.8353 vs 0.9592, LPIPS 0.0575 vs 0.0119; UI Gradio render OK                                                                 | Mac M4 (MPS); fp16; gradio 5.50           |
 | 2026-07-19 | 4e                  | Pause tinh chỉnh RT; note hướng app xóa vật thể                                                      | Dừng FP4/xFormers/ToMe/TensorRT cho đến khi đủ bundle + viết đánh giá precision; app object-removal = phase sau (chưa code); ghi `FP4_DECISION` §0 + PRECISION_CASES                                                                                                                                                                                    | Mac (tài liệu); Colab (user test)         |
 | 2026-07-19 | 4e                  | Thêm `fp16_weight_xformers` (xFormers MEA trên FP16 disk)                           | Config mới `fp16_disk_xformers`; giữ nguyên `fp16_weight`; MEA qua Diffusers (inverse) + `efficient_attention` (gen self-attn); notebook SELECT mặc định xformers; chờ bundle T4                                                                                                                                                                     | Mac (code); Colab T4 (chờ eval)           |
 | 2026-07-19 | 4e                  | Đóng sổ FP4 trên T4; xếp hạng hướng RT tiếp theo                                                     | Dừng FP4 làm tối ưu chính (ablation âm); không lưu checkpoint FP4; baseline fp16+EditCache; plan xFormers→ToMe→TensorRT tại `experimental_data/FP4_DECISION_AND_NEXT_PLAN.md`                                                                                                                                                                          | Mac (tài liệu); Colab T4 (quan sát)       |
@@ -43,6 +44,32 @@
 ## Chi tiết theo phiên làm việc
 
 *(Các entry chi tiết xuất hiện bên dưới, mới nhất ở trên cùng.)*
+
+### 2026-07-22 — [4f] Hybrid Multi-turn Editing giữ chất lượng qua nhiều lượt
+
+**Môi trường:** Mac M4 (MPS); fp16; Gradio 5.50
+
+**Công việc đã làm:**
+
+- Thêm phiên chỉnh sửa có master full-resolution, history, Undo và batch candidate bất biến.
+- Thêm workflow sinh tuần tự 3 candidate trong một background task dùng chung cache; UI hiển thị ngay từng ảnh, hỗ trợ Regen, chọn ảnh để commit rồi tiếp tục chỉnh.
+- Thay resize/letterbox toàn ảnh bằng masked ROI kiểu A1111: user tô mask, backend tự tạo crop vuông có context để infer 512×512, rồi chỉ blend vùng mask về master; pixel ngoài mask không đổi.
+- Mở rộng inference để trả clean latent, source latent và mask; thêm latent jitter có seed.
+- Ánh xạ mask latent về ảnh gốc và chỉ composite vùng local edit; global edit được đánh dấu giới hạn 512×512.
+- Thêm unit test và script benchmark Naive so với Hybrid qua 5 vòng VAE.
+
+**Kết quả:**
+
+- VAE seed riêng tạo khác biệt quá nhỏ (pairwise MAE 0.0007–0.0013); latent jitter 0.05 đạt khoảng 0.012.
+- Sau 5 lượt, Naive đạt PSNR ngoài mask 30.09 dB, SSIM 0.8353, LPIPS 0.0575.
+- Hybrid giữ nguyên pixel ngoài mask (PSNR vô hạn), SSIM 0.9592 và LPIPS 0.0119.
+- Unit test 5/5 pass; UI có đủ Tạo 3 kết quả, Regen, Pick và Undo.
+
+**Bước tiếp theo:**
+
+- Test thủ công thêm nhiều prompt và kích thước ảnh; chỉ dùng global mode khi chấp nhận giới hạn 512×512.
+
+---
 
 ### 2026-07-19 — [4e] Pause tinh chỉnh RT; hướng app tiếp theo
 

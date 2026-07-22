@@ -14,6 +14,7 @@ Chạy:
 from __future__ import annotations
 
 import argparse
+import hashlib
 import sys
 import tempfile
 import time
@@ -24,12 +25,35 @@ import numpy as np
 import torch
 from PIL import Image
 
+from hybrid_editing import (
+    Candidate,
+    EditSession,
+    SquareROI,
+    commit_candidate,
+    crop_mask,
+    crop_square,
+    ensure_session,
+    hybrid_composite,
+    paste_square,
+    square_roi_from_mask,
+    undo_session,
+)
+
 ROOT = Path(__file__).resolve().parent.parent
+
+EDIT_SIZE = 512
 
 EXAMPLE_PROMPTS = [
     ["a slanted mountain bicycle on the road in front of a building",
      "a slanted rusty mountain motorcycle in front of a fence"],
 ]
+
+REMOVAL_EXAMPLE_PROMPTS = [
+    ["a cat wearing headphones on a gray background",
+     "a cat on a plain gray background"],
+]
+
+_VAGUE_EDIT_PROMPTS = {"empty background", "background", "empty", ""}
 
 
 def _sync(device) -> None:
@@ -46,6 +70,91 @@ def tensor_to_pil(t: torch.Tensor) -> Image.Image:
         t = t[-1]
     arr = t.clamp(0, 1).permute(1, 2, 0).float().cpu().numpy()
     return Image.fromarray((arr * 255).astype(np.uint8))
+
+
+def image_editor_value(image: Image.Image) -> dict:
+    image = image.convert("RGB")
+    return {"background": image, "layers": [], "composite": image}
+
+
+def _letterbox_meta(img: Image.Image, size: int = EDIT_SIZE) -> dict:
+    """Metadata pad/scale để đưa ảnh gốc vào canvas vuông `size` và khôi phục sau."""
+    w, h = img.size
+    if w == size and h == size:
+        return {"pad": (0, 0), "content_size": (size, size), "orig_size": (w, h)}
+    scale = size / max(w, h)
+    cw, ch = int(round(w * scale)), int(round(h * scale))
+    left = (size - cw) // 2
+    top = (size - ch) // 2
+    return {"pad": (left, top), "content_size": (cw, ch), "orig_size": (w, h)}
+
+
+def _letterbox_image(img: Image.Image, size: int = EDIT_SIZE) -> tuple[Image.Image, dict]:
+    img = img.convert("RGB")
+    meta = _letterbox_meta(img, size)
+    w, h = meta["orig_size"]
+    if w == size and h == size:
+        return img.copy(), meta
+    cw, ch = meta["content_size"]
+    left, top = meta["pad"]
+    resized = img.resize((cw, ch), Image.Resampling.LANCZOS)
+    canvas = Image.new("RGB", (size, size), (127, 127, 127))
+    canvas.paste(resized, (left, top))
+    return canvas, meta
+
+
+def _letterbox_mask(mask: np.ndarray, meta: dict, size: int = EDIT_SIZE) -> np.ndarray:
+    m = Image.fromarray((np.clip(mask, 0, 1) * 255).astype(np.uint8))
+    cw, ch = meta["content_size"]
+    left, top = meta["pad"]
+    if m.size == (cw, ch):
+        resized = m
+    else:
+        resized = m.resize((cw, ch), Image.Resampling.NEAREST)
+    canvas = np.zeros((size, size), np.float32)
+    canvas[top : top + ch, left : left + cw] = (np.asarray(resized) > 127).astype(np.float32)
+    return canvas
+
+
+def _unletterbox(img: Image.Image, meta: dict, size: int = EDIT_SIZE) -> Image.Image:
+    left, top = meta["pad"]
+    cw, ch = meta["content_size"]
+    orig_size = meta["orig_size"]
+    if img.size != (size, size):
+        img = img.resize((size, size), Image.Resampling.LANCZOS)
+    cropped = img.crop((left, top, left + cw, top + ch))
+    if cropped.size == orig_size:
+        return cropped
+    return cropped.resize(orig_size, Image.Resampling.LANCZOS)
+
+
+def _model_image_cache_path(image_path: str) -> Path:
+    p = Path(image_path)
+    st = p.stat()
+    key = hashlib.sha256(f"{p.resolve()}:{st.st_mtime_ns}:{st.st_size}".encode()).hexdigest()[:24]
+    return Path(tempfile.gettempdir()) / "swiftedit_demo" / f"{key}.png"
+
+
+def _prepare_model_image(image_path: str) -> tuple[str, dict]:
+    """Letterbox ảnh gốc → file 512×512 ổn định cho infer + EditCache."""
+    orig = Image.open(image_path).convert("RGB")
+    boxed, meta = _letterbox_image(orig, EDIT_SIZE)
+    cache_path = _model_image_cache_path(image_path)
+    cache_path.parent.mkdir(parents=True, exist_ok=True)
+    boxed.save(cache_path)
+    return str(cache_path), meta
+
+
+def _prepare_roi_image(session: EditSession, roi: SquareROI) -> tuple[str, Image.Image]:
+    """Cắt ROI vuông và lưu proxy 512×512 ổn định cho một candidate batch."""
+    crop = crop_square(session.master, roi)
+    model_image = crop.resize((EDIT_SIZE, EDIT_SIZE), Image.Resampling.LANCZOS)
+    arr = np.asarray(crop)
+    key = hashlib.sha256(arr.tobytes()).hexdigest()[:24]
+    cache_path = Path(tempfile.gettempdir()) / "swiftedit_demo" / f"roi_{key}.png"
+    cache_path.parent.mkdir(parents=True, exist_ok=True)
+    model_image.save(cache_path)
+    return str(cache_path), crop
 
 
 def extract_editor_mask(editor_value):
@@ -70,7 +179,47 @@ def extract_editor_mask(editor_value):
             mask = np.maximum(mask, (la.sum(-1) > 0).astype(np.float32))
         elif la.ndim == 2:
             mask = np.maximum(mask, (la > 0).astype(np.float32))
+    # Gradio đôi khi ghi nét vẽ vào composite thay vì layers (layers=False).
+    if mask.sum() < 1:
+        composite = editor_value.get("composite")
+        if composite is not None:
+            comp = np.asarray(composite)
+            if comp.shape[:2] == (h, w):
+                diff = np.abs(
+                    comp[..., :3].astype(np.float32) - bg[..., :3].astype(np.float32)
+                ).sum(-1)
+                mask = (diff > 8).astype(np.float32)
     return Image.fromarray(bg[..., :3].astype(np.uint8)), mask
+
+
+def _align_mask_to_image(mask: np.ndarray, meta: dict) -> np.ndarray:
+    """Đưa mask người dùng vào cùng letterbox 512×512 với ảnh inference."""
+    return _letterbox_mask(mask, meta, EDIT_SIZE)
+
+
+def _removal_prompt_hints(src_p: str, edit_p: str) -> str:
+    hints: list[str] = []
+    src = (src_p or "").strip()
+    edit = (edit_p or "").strip()
+    if len(src.split()) < 4:
+        hints.append(
+            "source prompt quá ngắn — mô tả **toàn bộ ảnh** "
+            "(người/vật + nền), không chỉ vùng cần xóa"
+        )
+    if edit.lower() in _VAGUE_EDIT_PROMPTS:
+        hints.append(
+            "edit prompt quá chung — mô tả **nền thay thế cụ thể** "
+            "(vd: `plain white banner`, `blue sky and green trees`)"
+        )
+    if any(k in edit.lower() for k in ("text", "letter", "word", "chữ", "banner")) or \
+       any(k in src.lower() for k in ("text", "letter", "word", "chữ", "banner")):
+        hints.append(
+            "xóa **chữ/typography** thường không hiệu quả — SwiftEdit không phải inpainting chuyên dụng; "
+            "thử vật thể rời (tai nghe, chai, biển báo) hoặc LaMa sau này"
+        )
+    if not hints:
+        return ""
+    return "  \n⚠️ **Gợi ý:** " + " · ".join(hints)
 
 
 def build_app(dtype: str):
@@ -107,13 +256,14 @@ def build_app(dtype: str):
         if not edit_p or not edit_p.strip():
             raise gr.Error("Vui lòng nhập Edit prompt.")
         active_cache = cache if use_cache else None
-        hit = use_cache and active_cache is not None and active_cache._img_path == image_path \
+        model_path, lb_meta = _prepare_model_image(image_path)
+        hit = use_cache and active_cache is not None and active_cache._img_path == model_path \
             and active_cache._src_p == src_p
 
         _sync(device)
         t0 = time.perf_counter()
         res = edit_image(
-            image_path, src_p or "", edit_p,
+            model_path, src_p or "", edit_p,
             inverse_model, aux_model, ip_sb_model,
             scale_edit=scale_edit, scale_non_edit=scale_non_edit,
             mask_threshold=mask_threshold, cache=active_cache,
@@ -123,13 +273,218 @@ def build_app(dtype: str):
 
         note = "cache hit (cùng ảnh + source prompt)" if hit else (
             "cache nạp mới" if use_cache else "không dùng cache")
+        orig_w, orig_h = lb_meta["orig_size"]
         info = (
             f"**Thời gian:** {dt:.2f}s  \n"
             f"**Thiết bị:** `{device}` | **dtype:** `{dtype}`"
             f"{' + channels_last' if channels_last else ''} (VAE fp32)  \n"
+            f"**Kích thước gốc:** {orig_w}×{orig_h} (infer letterbox {EDIT_SIZE}×{EDIT_SIZE})  \n"
             f"**Cache:** {note}"
         )
-        return tensor_to_pil(res), info
+        return _unletterbox(tensor_to_pil(res), lb_meta), info
+
+    def reset_edit_session(image_path, src_p):
+        if not image_path:
+            return None, None, "Tải ảnh để bắt đầu phiên chỉnh sửa."
+        session = ensure_session(None, image_path, src_p or "")
+        w, h = session.master.size
+        return (
+            session,
+            image_editor_value(session.master),
+            f"**Ảnh hiện tại:** {w}×{h} · lượt 0",
+        )
+
+    def generate_candidate_batch(
+        image_path,
+        src_p,
+        edit_p,
+        scale_edit,
+        scale_non_edit,
+        mask_threshold,
+        roi_padding_percent,
+        mask_blur,
+        latent_strategy,
+        editor_value,
+        session,
+    ):
+        if not image_path:
+            raise gr.Error("Vui lòng tải lên ảnh nguồn.")
+        if not edit_p or not edit_p.strip():
+            raise gr.Error("Vui lòng nhập Edit prompt.")
+        session = ensure_session(session, image_path, src_p or "")
+        session.source_prompt = (src_p or session.source_prompt).strip()
+        _, mask = extract_editor_mask(editor_value)
+        if mask is None or mask.sum() < 1:
+            raise gr.Error("Chưa tô mask. Hãy dùng cọ tô vùng cần sửa trên ảnh hiện tại.")
+        if mask.shape[::-1] != session.master.size:
+            mask = np.asarray(
+                Image.fromarray((mask * 255).astype(np.uint8)).resize(
+                    session.master.size,
+                    Image.Resampling.NEAREST,
+                ),
+                dtype=np.float32,
+            ) / 255.0
+        try:
+            roi = square_roi_from_mask(
+                mask,
+                padding_ratio=float(roi_padding_percent) / 100.0,
+            )
+        except ValueError as exc:
+            raise gr.Error(str(exc)) from exc
+        model_path, source_crop = _prepare_roi_image(session, roi)
+        source_mask = crop_mask(mask, roi)
+        model_user_mask = np.asarray(
+            source_mask.resize((EDIT_SIZE, EDIT_SIZE), Image.Resampling.NEAREST),
+            dtype=np.float32,
+        ) / 255.0
+        batch_cache = EditCache()
+        candidates: list[Candidate] = []
+        candidate_images = [None, None, None]
+        batch_seed = 250101049 + session.turn * 10000 + session.batch_index * 3
+        session.batch_index += 1
+        session.candidates = []
+        use_latent_strategy = latent_strategy == "latent"
+        # Mỗi lượt encode master hiện tại đúng một lần. Không nối trực tiếp clean_latent
+        # đã chọn vì local composite làm latent đó không còn khớp pixel master ngoài mask.
+        batch_source_latent = None
+
+        yield (
+            *candidate_images,
+            gr.skip(),
+            f"**Batch {session.batch_index}:** đang sinh candidate 1/3 theo thứ tự…",
+            session,
+        )
+        _sync(device)
+        t0 = time.perf_counter()
+        for index in range(3):
+            candidate_started = time.perf_counter()
+            seed = batch_seed + index
+            # Giữ cache embedding, nhưng mỗi candidate baseline phải VAE sample bằng seed riêng.
+            if batch_source_latent is None:
+                batch_cache.latents = None
+            details = edit_image(
+                model_path,
+                session.source_prompt,
+                edit_p.strip(),
+                inverse_model,
+                aux_model,
+                ip_sb_model,
+                scale_edit=scale_edit,
+                scale_non_edit=scale_non_edit,
+                mask_threshold=mask_threshold,
+                cache=batch_cache,
+                seed=seed,
+                user_mask=model_user_mask,
+                source_latent=batch_source_latent,
+                latent_jitter_strength=(0.05 if batch_source_latent is not None else 0.0),
+                return_details=True,
+            )
+            # Batch đầu chưa có latent đã commit: candidate 0 lấy latent source,
+            # candidate 1–2 jitter quanh cùng latent đó để tạo khác biệt rõ hơn.
+            if use_latent_strategy and batch_source_latent is None:
+                batch_source_latent = details["source_latent"][-1:].float().cpu()
+            model_output = tensor_to_pil(details["image"])
+            edited_crop = model_output.resize(
+                (roi.size, roi.size),
+                Image.Resampling.LANCZOS,
+            )
+            composed_crop = hybrid_composite(
+                source_crop,
+                edited_crop,
+                source_mask,
+                mode="local",
+                dilation=0,
+                blur=float(mask_blur),
+            )
+            composed = paste_square(session.master, composed_crop, roi)
+            candidates.append(
+                Candidate(
+                    image=composed,
+                    model_image=model_output,
+                    mask=source_mask,
+                    clean_latent=details["clean_latent"][-1:].float().cpu(),
+                    seed=seed,
+                    mode="masked",
+                    source_prompt=session.source_prompt,
+                    edit_prompt=edit_p.strip(),
+                )
+            )
+            session.candidates = candidates
+            candidate_images[index] = candidates[index].image
+            _sync(device)
+            candidate_elapsed = time.perf_counter() - candidate_started
+            total_elapsed = time.perf_counter() - t0
+            strategy_note = (
+                "encode master 1 lần + latent jitter 0.05"
+                if use_latent_strategy
+                else "VAE seed độc lập"
+            )
+            if index < 2:
+                progress = (
+                    f"Đã có candidate {index + 1}/3 ({candidate_elapsed:.2f}s); "
+                    f"đang sinh candidate {index + 2}/3 trong cùng task…"
+                )
+            else:
+                progress = (
+                    f"Đã đủ 3 candidate trong {total_elapsed:.2f}s. "
+                    "Bấm **Chọn** để commit hoặc **Regen** để tạo batch mới."
+                )
+            modes = ", ".join(candidate.mode for candidate in candidates)
+            mask_coverage = 100 * float(
+                np.asarray(source_mask, dtype=np.float32).mean() / 255.0
+            )
+            info = (
+                f"**Lượt:** {session.turn} · **Batch:** {session.batch_index} · {progress}  \n"
+                f"**ROI:** x={roi.x}, y={roi.y}, {roi.size}×{roi.size} px · "
+                f"mask chiếm {mask_coverage:.1f}% ROI · pixel ngoài mask giữ nguyên  \n"
+                f"**Seeds đã xong:** {batch_seed}–{seed} · **Mode:** {modes} · "
+                f"**Chiến lược:** {strategy_note}"
+            )
+            yield (
+                *candidate_images,
+                gr.skip(),
+                info,
+                session,
+            )
+
+    def pick_candidate(index, session):
+        if session is None or not session.candidates:
+            raise gr.Error("Chưa có candidate để chọn.")
+        selected_seed = session.candidates[int(index)].seed
+        commit_candidate(session, int(index))
+        info = (
+            f"**Đã chọn ảnh {int(index) + 1}.** Ảnh này trở thành master lượt "
+            f"{session.turn}; có thể chỉnh tiếp hoặc Undo. (seed {selected_seed})"
+        )
+        return (
+            image_editor_value(session.master),
+            None,
+            None,
+            None,
+            info,
+            session,
+            session.source_prompt,
+        )
+
+    def undo_edit(session):
+        if session is None:
+            raise gr.Error("Chưa có phiên chỉnh sửa.")
+        had_history = bool(session.history)
+        undo_session(session)
+        info = (
+            f"**Đã quay lại lượt {session.turn}.**"
+            if had_history
+            else "**Không có lượt trước để Undo.**"
+        )
+        return (
+            image_editor_value(session.master),
+            None,
+            None,
+            None,
+            info,
+            session,
+            session.source_prompt,
+        )
 
     def run_removal(editor_value, src_p, edit_p, scale_edit, scale_non_edit, mask_threshold):
         bg, mask = extract_editor_mask(editor_value)
@@ -137,32 +492,39 @@ def build_app(dtype: str):
             raise gr.Error("Vui lòng tải ảnh và khoanh vùng vật thể cần xóa.")
         if mask is None or mask.sum() < 1:
             raise gr.Error("Chưa khoanh vùng nào. Hãy tô lên vật thể cần xóa.")
-        # edit_image cần đường dẫn file -> lưu ảnh nền ra temp.
+        edit_p = (edit_p or "").strip() or "empty background"
+        bg = bg.convert("RGB")
+        lb_meta = _letterbox_meta(bg, EDIT_SIZE)
+        bg512, _ = _letterbox_image(bg, EDIT_SIZE)
+        mask512 = _align_mask_to_image(mask, lb_meta)
         tmp = Path(tempfile.mkdtemp()) / "removal_src.png"
-        bg.resize((512, 512)).save(tmp)
+        bg512.save(tmp)
 
         _sync(device)
         t0 = time.perf_counter()
         res = edit_image(
-            str(tmp), src_p or "", edit_p or "empty background",
+            str(tmp), src_p or "", edit_p,
             inverse_model, aux_model, ip_sb_model,
             scale_edit=scale_edit, scale_non_edit=scale_non_edit,
-            mask_threshold=mask_threshold, user_mask=mask,
+            mask_threshold=mask_threshold, user_mask=mask512,
         )
         _sync(device)
         dt = time.perf_counter() - t0
 
-        # Ảnh mask preview (resize về 512)
-        mask_prev = Image.fromarray((mask * 255).astype(np.uint8)).resize((512, 512))
+        mask_prev = _unletterbox(Image.fromarray((mask512 * 255).astype(np.uint8)), lb_meta)
+        hints = _removal_prompt_hints(src_p, edit_p)
+        orig_w, orig_h = lb_meta["orig_size"]
         info = (
             f"**Thời gian:** {dt:.2f}s  \n"
             f"**Thiết bị:** `{device}` | **dtype:** `{dtype}`"
             f"{' + channels_last' if channels_last else ''} (VAE fp32)  \n"
-            f"**Tỉ lệ vùng khoanh:** {100*mask.mean():.1f}% ảnh  \n"
-            f"_Lưu ý: SwiftEdit là editor ngữ nghĩa, xóa tốt vật nhỏ/vừa; "
-            f"vật lớn chiếm phần lớn khung có thể còn sót._"
+            f"**Kích thước gốc:** {orig_w}×{orig_h} (infer letterbox {EDIT_SIZE}×{EDIT_SIZE})  \n"
+            f"**Tỉ lệ vùng khoanh:** {100*mask512.mean():.1f}% ảnh  \n"
+            f"{hints}\n"
+            f"_Lưu ý: SwiftEdit xóa tốt vật **rời nhỏ/vừa** (tai nghe, lon, biển báo); "
+            f"**chữ trên banner**, vật chiếm gần hết khung thường không sạch._"
         )
-        return tensor_to_pil(res), mask_prev, info
+        return _unletterbox(tensor_to_pil(res), lb_meta), mask_prev, info
 
     with gr.Blocks(title="SwiftEdit-RT Demo", theme=gr.themes.Soft()) as demo:
         gr.Markdown(
@@ -172,13 +534,31 @@ def build_app(dtype: str):
         )
         with gr.Tabs():
             with gr.Tab("Chỉnh sửa bằng prompt"):
+                edit_session = gr.State(value=None)
                 with gr.Row():
                     with gr.Column(scale=1):
                         inp_image = gr.Image(label="Ảnh nguồn", type="filepath", height=320)
-                        inp_src = gr.Textbox(label="Source prompt (mô tả ảnh gốc)",
-                                             placeholder="vd: a mountain bicycle in front of a building")
-                        inp_edit = gr.Textbox(label="Edit prompt (thay đổi mong muốn)",
-                                              placeholder="vd: a rusty motorcycle in front of a fence")
+                        gr.Markdown(
+                            "**Chọn vùng sửa:** dùng cọ tô mask trên *Ảnh hiện tại*. "
+                            "Hệ thống tự tạo crop vuông có context bao quanh mask, "
+                            "sau đó chỉ ghép kết quả vào đúng vùng đã tô."
+                        )
+                        current_image = gr.ImageEditor(
+                            label="Ảnh hiện tại — tô mask vùng cần sửa",
+                            type="numpy",
+                            height=420,
+                            brush=gr.Brush(colors=["#ff0000"], default_size=28),
+                            layers=False,
+                            transforms=[],
+                        )
+                        inp_src = gr.Textbox(
+                            label="Source prompt (mô tả nội dung trong ROI)",
+                            placeholder="vd: a mountain bicycle on the road",
+                        )
+                        inp_edit = gr.Textbox(
+                            label="Edit prompt (nội dung ROI sau khi sửa)",
+                            placeholder="vd: a rusty motorcycle on the road",
+                        )
                         with gr.Accordion("Tùy chọn nâng cao", open=False):
                             sl_edit = gr.Slider(0.0, 1.0, value=0.2, step=0.05,
                                                 label="scale_edit (vùng chỉnh sửa)")
@@ -186,27 +566,121 @@ def build_app(dtype: str):
                                                label="scale_non_edit (giữ nền)")
                             sl_mask = gr.Slider(0.0, 1.0, value=0.5, step=0.05,
                                                 label="mask_threshold")
-                            cb_cache = gr.Checkbox(value=True,
-                                                   label="Dùng cache (nhanh khi đổi edit prompt cùng ảnh)")
-                        btn = gr.Button("Chỉnh sửa ảnh", variant="primary")
+                            roi_padding = gr.Slider(
+                                0,
+                                100,
+                                value=25,
+                                step=5,
+                                label="Context padding quanh mask (%)",
+                            )
+                            mask_blur = gr.Slider(
+                                0,
+                                20,
+                                value=4,
+                                step=1,
+                                label="Mask blur khi ghép (px)",
+                            )
+                            latent_strategy = gr.Radio(
+                                choices=[
+                                    ("Encode 1 lần + latent jitter (khuyến nghị)", "latent"),
+                                    ("VAE seed độc lập (đối chứng)", "baseline"),
+                                ],
+                                value="latent",
+                                label="Chiến lược tạo candidate",
+                            )
+                        with gr.Row():
+                            btn = gr.Button("Tạo 3 kết quả", variant="primary")
+                            regen_btn = gr.Button("Regen 3 kết quả")
+                            undo_btn = gr.Button("Undo")
                     with gr.Column(scale=1):
-                        out_image = gr.Image(label="Ảnh kết quả", height=320)
                         out_info = gr.Markdown()
+                        with gr.Row():
+                            with gr.Column():
+                                candidate_1 = gr.Image(label="Candidate 1", height=230)
+                                pick_1 = gr.Button("Chọn ảnh 1")
+                            with gr.Column():
+                                candidate_2 = gr.Image(label="Candidate 2", height=230)
+                                pick_2 = gr.Button("Chọn ảnh 2")
+                            with gr.Column():
+                                candidate_3 = gr.Image(label="Candidate 3", height=230)
+                                pick_3 = gr.Button("Chọn ảnh 3")
                 gr.Examples(
                     examples=[[p[0], p[1]] for p in EXAMPLE_PROMPTS],
                     inputs=[inp_src, inp_edit],
                     label="Ví dụ prompt",
                 )
+                inp_image.change(
+                    reset_edit_session,
+                    inputs=[inp_image, inp_src],
+                    outputs=[edit_session, current_image, out_info],
+                )
+                candidate_inputs = [
+                    inp_image,
+                    inp_src,
+                    inp_edit,
+                    sl_edit,
+                    sl_non,
+                    sl_mask,
+                    roi_padding,
+                    mask_blur,
+                    latent_strategy,
+                    current_image,
+                    edit_session,
+                ]
+                candidate_outputs = [
+                    candidate_1,
+                    candidate_2,
+                    candidate_3,
+                    current_image,
+                    out_info,
+                    edit_session,
+                ]
                 btn.click(
-                    run_edit,
-                    inputs=[inp_image, inp_src, inp_edit, sl_edit, sl_non, sl_mask, cb_cache],
-                    outputs=[out_image, out_info],
+                    generate_candidate_batch,
+                    inputs=candidate_inputs,
+                    outputs=candidate_outputs,
+                )
+                regen_btn.click(
+                    generate_candidate_batch,
+                    inputs=candidate_inputs,
+                    outputs=candidate_outputs,
+                )
+                pick_outputs = [
+                    current_image,
+                    candidate_1,
+                    candidate_2,
+                    candidate_3,
+                    out_info,
+                    edit_session,
+                    inp_src,
+                ]
+                pick_1.click(
+                    lambda state: pick_candidate(0, state),
+                    inputs=[edit_session],
+                    outputs=pick_outputs,
+                )
+                pick_2.click(
+                    lambda state: pick_candidate(1, state),
+                    inputs=[edit_session],
+                    outputs=pick_outputs,
+                )
+                pick_3.click(
+                    lambda state: pick_candidate(2, state),
+                    inputs=[edit_session],
+                    outputs=pick_outputs,
+                )
+                undo_btn.click(
+                    undo_edit,
+                    inputs=[edit_session],
+                    outputs=pick_outputs,
                 )
 
             with gr.Tab("Xóa vật thể (khoanh vùng)"):
                 gr.Markdown(
                     "Tải ảnh, **dùng cọ tô lên vật thể cần xóa**, rồi mô tả ảnh gốc + nền "
-                    "sau khi xóa. Xóa tốt nhất với vật **nhỏ/vừa**; vật rất lớn có thể còn sót."
+                    "sau khi xóa.\n\n"
+                    "**Phù hợp:** vật rời nhỏ/vừa (tai nghe, lon, biển báo).  \n"
+                    "**Không phù hợp:** chữ/typography trên banner, vật chiếm gần hết khung."
                 )
                 with gr.Row():
                     with gr.Column(scale=1):
@@ -216,16 +690,17 @@ def build_app(dtype: str):
                             brush=gr.Brush(colors=["#ff0000"], default_size=28),
                             layers=False, transforms=[],
                         )
-                        rm_src = gr.Textbox(label="Mô tả ảnh gốc (source prompt)",
-                                            placeholder="vd: a bicycle on the road in front of a building")
+                        rm_src = gr.Textbox(
+                            label="Mô tả ảnh gốc (source prompt)",
+                            placeholder="vd: a woman in a blue dress in front of a white banner",
+                        )
                         rm_edit = gr.Textbox(
                             label="Mô tả vùng sau khi xóa (nền thay thế)",
-                            placeholder="vd: empty asphalt road in front of a building",
-                            value="empty background",
+                            placeholder="vd: plain white banner without text",
                         )
                         with gr.Accordion("Tùy chọn nâng cao", open=False):
-                            rm_sl_edit = gr.Slider(0.0, 1.0, value=0.0, step=0.05,
-                                                   label="scale_edit (0 = bỏ giữ vật thể)")
+                            rm_sl_edit = gr.Slider(0.0, 1.0, value=0.15, step=0.05,
+                                                   label="scale_edit (vùng xóa; thấp = ít giữ vật gốc)")
                             rm_sl_non = gr.Slider(0.0, 2.0, value=1.2, step=0.05,
                                                   label="scale_non_edit (giữ nền)")
                             rm_sl_mask = gr.Slider(0.0, 1.0, value=0.5, step=0.05,
@@ -235,11 +710,19 @@ def build_app(dtype: str):
                         rm_out = gr.Image(label="Ảnh sau khi xóa", height=320)
                         rm_mask = gr.Image(label="Mask vùng khoanh", height=200)
                         rm_info = gr.Markdown()
+                gr.Examples(
+                    examples=[[p[0], p[1]] for p in REMOVAL_EXAMPLE_PROMPTS],
+                    inputs=[rm_src, rm_edit],
+                    label="Ví dụ prompt xóa vật thể",
+                )
                 rm_btn.click(
                     run_removal,
                     inputs=[rm_editor, rm_src, rm_edit, rm_sl_edit, rm_sl_non, rm_sl_mask],
                     outputs=[rm_out, rm_mask, rm_info],
                 )
+    # Một model dùng chung: chỉ chạy một inference task tại một thời điểm.
+    # Generator phía trên yield từng candidate để UI hiển thị ngay khi ảnh hoàn tất.
+    demo.queue(max_size=8, default_concurrency_limit=1)
     return demo, run_edit, run_removal
 
 
@@ -278,7 +761,7 @@ def main() -> int:
             editor_value,
             "a slanted mountain bicycle on the road in front of a building",
             "empty asphalt road in front of a building",
-            0.0, 1.2, 0.5,
+            0.15, 1.2, 0.5,
         )
         out = ROOT / "results" / "app_removal_selftest.png"
         out.parent.mkdir(parents=True, exist_ok=True)

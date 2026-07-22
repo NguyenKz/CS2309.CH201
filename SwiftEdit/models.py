@@ -424,6 +424,7 @@ class IPSBV2Model(torch.nn.Module):
         noise=None,
         scale=1.0,
         return_noise_image=False,
+        return_clean_latent=False,
         timer=None,
         embed_cache=None,
     ):
@@ -485,10 +486,13 @@ class IPSBV2Model(torch.nn.Module):
                 clip_sample_range = self.aux_model.noise_scheduler.config.clip_sample_range
                 pred_original_sample = pred_original_sample.clamp(-clip_sample_range, clip_sample_range)
 
+        # Giữ latent đã scale giống output VAE encoder. Multi-turn editing có thể
+        # tái dùng tensor này mà không cần decode -> encode lại.
+        clean_latent = pred_original_sample
         with timer.stage("gen_vae_decode"):
-            pred_original_sample = pred_original_sample / self.aux_model.vae.config.scaling_factor
+            decode_latent = clean_latent / self.aux_model.vae.config.scaling_factor
             image = (
-                self.aux_model.vae.decode(pred_original_sample.to(dtype=torch.float32)).sample.float() + 1
+                self.aux_model.vae.decode(decode_latent.to(dtype=torch.float32)).sample.float() + 1
             ) / 2
 
         noise_image = None
@@ -499,4 +503,6 @@ class IPSBV2Model(torch.nn.Module):
                     self.aux_model.vae.decode(noise_image.to(dtype=self.aux_model.vae.dtype)).sample.float()
                     + 1
                 ) / 2
+        if return_clean_latent:
+            return image, noise_image, clean_latent
         return image, noise_image

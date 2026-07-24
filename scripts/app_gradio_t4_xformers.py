@@ -6,6 +6,7 @@ Khác `app_gradio.py` (Mac MPS / fp16 compute trên weights FP32):
   - Weights **FP16 trên disk** (`swiftedit_weights_fp16`)
   - Bật **xFormers Memory-Efficient Attention**
   - Ưu tiên **Google Drive**; thiếu thì tải Qualcomm (+ convert fp16 nếu cần)
+  - Mặc định **lưu lại Drive** sau tải/convert (`--save-to-drive`)
 
 Chạy trên Colab (sau khi clone repo + GPU T4):
   from google.colab import drive
@@ -240,6 +241,38 @@ def ensure_xformers() -> str:
         return ver
 
 
+def save_weights_to_drive(local: Path, drive: Path, *, label: str) -> None:
+    """Copy cây weights local → Drive nếu Drive chưa có (tránh tải lại lần sau)."""
+    import shutil
+
+    if local.is_symlink():
+        try:
+            if local.resolve() == drive.resolve():
+                print(f"[t4] {label}: local đã trỏ Drive — bỏ qua lưu.", flush=True)
+                return
+        except OSError:
+            pass
+    if not _tree_ok(local):
+        print(f"[t4] {label}: local chưa OK — bỏ qua lưu Drive.", flush=True)
+        return
+    if _tree_ok(drive):
+        print(f"[t4] {label}: Drive đã có → {drive}", flush=True)
+        return
+    drive.parent.mkdir(parents=True, exist_ok=True)
+    if drive.exists() and not _tree_ok(drive):
+        print(
+            f"[t4] {label}: Drive path tồn tại nhưng thiếu file — không ghi đè: {drive}",
+            flush=True,
+        )
+        return
+    print(
+        f"[t4] {label}: đang copy lên Drive (~GB, có thể lâu)...\n  {local} → {drive}",
+        flush=True,
+    )
+    shutil.copytree(local, drive)
+    print(f"[t4] {label}: đã lưu Drive → {drive}", flush=True)
+
+
 def prepare_fp16_disk_weights(
     *,
     drive_fp16: Path,
@@ -248,8 +281,9 @@ def prepare_fp16_disk_weights(
     local_fp32: Path,
     allow_download: bool,
     allow_convert: bool,
+    save_to_drive: bool,
 ) -> Path:
-    """Drive fp16 → local; thiếu thì tải Qualcomm + convert (nếu cho phép)."""
+    """Drive fp16 → local; thiếu thì tải Qualcomm + convert; tùy chọn lưu lại Drive."""
     cmd = [
         sys.executable,
         "-u",
@@ -276,6 +310,10 @@ def prepare_fp16_disk_weights(
     r = subprocess.run(cmd, cwd=ROOT)
     if r.returncode == 0 and _tree_ok(local_fp16):
         print(f"[t4] fp16 disk OK: {local_fp16}", flush=True)
+        if save_to_drive:
+            save_weights_to_drive(local_fp16, drive_fp16, label="fp16")
+            if _tree_ok(local_fp32):
+                save_weights_to_drive(local_fp32, drive_fp32, label="fp32")
         return local_fp16
 
     # Fallback: tải Qualcomm nếu prepare chưa được phép / thất bại
@@ -326,6 +364,10 @@ def prepare_fp16_disk_weights(
     if not _tree_ok(local_fp16):
         raise RuntimeError(f"Vẫn thiếu fp16 disk tại {local_fp16}")
     print(f"[t4] fp16 disk sẵn sàng: {local_fp16}", flush=True)
+    if save_to_drive:
+        save_weights_to_drive(local_fp16, drive_fp16, label="fp16")
+        if _tree_ok(local_fp32):
+            save_weights_to_drive(local_fp32, drive_fp32, label="fp32")
     return local_fp16
 
 
@@ -584,6 +626,17 @@ def main() -> int:
         action="store_true",
         help="Không convert fp32→fp16 trên Colab",
     )
+    parser.add_argument(
+        "--save-to-drive",
+        action="store_true",
+        default=True,
+        help="Sau khi tải/convert → copy weights lên Drive (mặc định BẬT)",
+    )
+    parser.add_argument(
+        "--no-save-to-drive",
+        action="store_true",
+        help="Không copy weights lên Drive",
+    )
     parser.add_argument("--share", action="store_true", help="Link public Gradio")
     parser.add_argument("--port", type=int, default=7860)
     parser.add_argument(
@@ -595,6 +648,7 @@ def main() -> int:
     args = parser.parse_args()
 
     allow_download = bool(args.allow_download) and not args.no_download
+    save_to_drive = bool(args.save_to_drive) and not args.no_save_to_drive
     # Colab share mặc định nếu không truyền --share từ notebook có thể set env
     if _in_colab() and not args.share and os.environ.get("SWIFTEDIT_GRADIO_SHARE", "1") != "0":
         args.share = True
@@ -608,6 +662,7 @@ def main() -> int:
         local_fp32=args.local_fp32,
         allow_download=allow_download,
         allow_convert=not args.no_convert,
+        save_to_drive=save_to_drive,
     )
 
     demo, run_edit, _run_removal = build_app(weights)

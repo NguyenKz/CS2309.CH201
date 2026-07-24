@@ -10,7 +10,7 @@
 | **Repo gốc** | [Qualcomm-AI-research/SwiftEdit](https://github.com/Qualcomm-AI-research/SwiftEdit) |
 | **Môi trường** | MacBook Air M4 24GB + Google Colab (T4) |
 
-Tài liệu: [`SwiftEdit_Overview.md`](./SwiftEdit_Overview.md) · [`SwiftEdit_DeTai_CS2309.md`](./SwiftEdit_DeTai_CS2309.md) · [`QA.md`](./QA.md) · [`NHAT_KY.md`](./NHAT_KY.md) · [`HUONG_DAN_PUBLICATION_THAC_SI.md`](./HUONG_DAN_PUBLICATION_THAC_SI.md) *(cân nhắc paper / tốt nghiệp thạc sĩ UIT)*
+Tài liệu: [`SwiftEdit_Overview.md`](./SwiftEdit_Overview.md) · [`SwiftEdit_DeTai_CS2309.md`](./SwiftEdit_DeTai_CS2309.md) · [`QA.md`](./QA.md) · [`NHAT_KY.md`](./NHAT_KY.md) · [`report/BAO_CAO_SwiftEdit.md`](./report/BAO_CAO_SwiftEdit.md) · [`report/SLIDE_SwiftEdit.md`](./report/SLIDE_SwiftEdit.md) · [`HUONG_DAN_PUBLICATION_THAC_SI.md`](./HUONG_DAN_PUBLICATION_THAC_SI.md) *(cân nhắc paper / tốt nghiệp thạc sĩ UIT)*
 
 ### Mở notebook trên Google Colab
 
@@ -76,7 +76,7 @@ CS2309.CH201/
 │   ├── CS2309_SwiftEdit_phase3.ipynb
 │   └── CS2309_SwiftEdit_quality_speed_bench.ipynb
 ├── experimental_data/         ← Bằng chứng thực nghiệm (metrics, ảnh mẫu)
-└── (sau này) results/, report/
+└── report/                 # Báo cáo chuyên đề (BAO_CAO_SwiftEdit.md)
 ```
 
 ---
@@ -195,21 +195,22 @@ Chi tiết: [Mục 4.2 đề tài](./SwiftEdit_DeTai_CS2309.md#42-google-colab--
 ## Checklist tổng thể
 
 > Đánh dấu `[x]` khi hoàn thành. Cập nhật file này trong quá trình làm đề tài.
-> Cập nhật tiến độ lần cuối: 2026-07-03 — 35/80 task bắt buộc
+> Cập nhật tiến độ lần cuối: 2026-07-24 — 46/80 task bắt buộc
 
 ### Trạng thái nhanh
 
 | Giai đoạn | Tiến độ |
 |---|---|
-| 1. Lý thuyết | 🔄 Đang làm (3/6) |
+| 1. Lý thuyết | 🔄 Đang làm (4/6) |
 | 2. Setup Mac + Colab | 🔄 Đang làm (11/17) |
 | 3. Thực nghiệm cơ bản | 🔄 Đang làm (6/19) |
 | 4. So sánh & mở rộng | 🔄 Đang làm (10/19) |
-| 5. Báo cáo & nộp | 🔄 Đang làm (5/19) |
+| 5. Báo cáo & nộp | 🔄 Đang làm (15/19) |
 
 
 
-**Tổng:** 35/80 task bắt buộc (~44%) — SwiftEdit-RT đã có số liệu lớn; lý thuyết 3/6; báo cáo và ablation còn thiếu.
+
+**Tổng:** 46/80 task bắt buộc (~58%) — draft báo cáo GĐ5 đã có; còn ablation, slide, baseline.
 
 ### Tiến trình hiện tại (tổng hợp 2026-07-03)
 
@@ -231,11 +232,11 @@ Chi tiết: [Mục 4.2 đề tài](./SwiftEdit_DeTai_CS2309.md#42-google-colab--
 
 | Hạng mục | Trạng thái | Mức ưu tiên |
 |---|---|---|
-| Viết báo cáo GĐ5 | Chưa bắt đầu | **Cao** |
+| Viết báo cáo GĐ5 | Draft xong — [`report/BAO_CAO_SwiftEdit.md`](./report/BAO_CAO_SwiftEdit.md) | Trung bình (chỉnh sửa / slide) |
 | Ablation hyperparameter (`s_y`, `s_edit`, `s_non-edit`) | Chưa | **Cao** (checklist nộp) |
 | PIE-Bench 50–100 mẫu metrics Colab | Chỉ 20 mẫu Mac | Trung bình |
 | So sánh baseline (TurboEdit) | Chưa | Trung bình |
-| Slide trình bày | Chưa | **Cao** |
+| Slide trình bày | Draft Marp — [`report/SLIDE_SwiftEdit.md`](./report/SLIDE_SwiftEdit.md) | Trung bình (export PDF/PPTX) |
 | Lý thuyết (đọc paper PDF, Related Work bảng) | 3/6 | Trung bình |
 
 **Checklist nộp — đã đạt / chưa:**
@@ -247,14 +248,13 @@ Chi tiết: [Mục 4.2 đề tài](./SwiftEdit_DeTai_CS2309.md#42-google-colab--
 
 | Ưu tiên | Việc | Thời gian ước tính |
 |---|---|---|
-| **1** | Bắt đầu viết báo cáo GĐ5 (dùng số liệu SwiftEdit-RT + object removal) | 2–4 ngày |
+| **1** | Chỉnh báo cáo + làm slide trình bày | 1–2 ngày |
 | **2** | Ablation hyperparameter Mac (5–10 ảnh, grid `s_edit`/`s_non-edit`) | 0.5–1 ngày |
-| **3** | Slide: pipeline + before/after + bảng fp16 vs fp32 + demo Gradio | 0.5–1 ngày |
-| **4** | PIE-Bench 50 mẫu Colab (`run_piebench_eval.py` + fp16+cache) | 1 ngày |
-| **5** | Object removal Hướng A — test 2–3 ảnh phù hợp ([`KE_HOACH_KIEM_TRA.md`](./experimental_data/object_removal_2026-06-14/KE_HOACH_KIEM_TRA.md)) | 0.5 ngày |
-| **6** | TurboEdit baseline 20 mẫu **hoặc** `torch.compile` Colab | Tùy thời gian |
+| **3** | PIE-Bench 50 mẫu Colab (`run_piebench_eval.py` + fp16+cache) | 1 ngày |
+| **4** | Object removal Hướng A — test 2–3 ảnh phù hợp ([`KE_HOACH_KIEM_TRA.md`](./experimental_data/object_removal_2026-06-14/KE_HOACH_KIEM_TRA.md)) | 0.5 ngày |
+| **5** | TurboEdit baseline 20 mẫu **hoặc** `torch.compile` Colab | Tùy thời gian |
 
-> **Khuyến nghị:** Nếu deadline gần → ưu tiên **báo cáo + ablation + slide** (đã có xương sống thực nghiệm). Nếu còn 1–2 tuần → thêm PIE-Bench 50 mẫu Colab.
+> **Khuyến nghị:** Draft báo cáo đã có tại [`report/BAO_CAO_SwiftEdit.md`](./report/BAO_CAO_SwiftEdit.md). Ưu tiên tiếp theo: **slide + ablation**.
 
 ---
 
@@ -271,7 +271,7 @@ Chi tiết: [Mục 4.2 đề tài](./SwiftEdit_DeTai_CS2309.md#42-google-colab--
 - [x] Tìm hiểu PieBench benchmark
 - [x] Vẽ/tóm tắt pipeline inversion → mask → ARaM
 - [ ] So sánh SwiftEdit vs P2P, NT-Inv, TurboEdit, ICD (bảng related work)
-- [ ] Viết phần Overview + Related Work trong báo cáo
+- [x] Viết phần Overview + Related Work trong báo cáo
 
 ### Chi tiết từng task (làm tuần tự)
 
@@ -507,15 +507,15 @@ Sau mỗi task xong, báo agent *"xong task X.Y"* để đánh `[x]` README + gh
 
 ### Viết báo cáo
 
-- [ ] Lý do chọn đề tài
-- [ ] Overview + pipeline SwiftEdit
-- [ ] Input / Output bài toán
-- [ ] Vấn đề nghiên cứu + Research Questions
-- [ ] Kế hoạch thực nghiệm (đã thực hiện)
-- [ ] **Quá trình nghiên cứu / kết quả thực nghiệm** (điền số liệu thật)
-- [ ] So sánh dataset / model
-- [ ] **Kết luận** (viết sau khi có kết quả)
-- [ ] Tài liệu tham khảo
+- [x] Lý do chọn đề tài
+- [x] Overview + pipeline SwiftEdit
+- [x] Input / Output bài toán
+- [x] Vấn đề nghiên cứu + Research Questions
+- [x] Kế hoạch thực nghiệm (đã thực hiện)
+- [x] **Quá trình nghiên cứu / kết quả thực nghiệm** (điền số liệu thật)
+- [x] So sánh dataset / model
+- [x] **Kết luận** (viết sau khi có kết quả)
+- [x] Tài liệu tham khảo
 
 ### Checklist nộp
 
@@ -527,8 +527,8 @@ Sau mỗi task xong, báo agent *"xong task X.Y"* để đánh `[x]` README + gh
 - [x] Có phân tích object removal: removal success (vật nhỏ/vừa) + failure case (vật lớn) — `experimental_data/object_removal_2026-06-14/`
 - [ ] Có so sánh baseline (Colab) **hoặc** phân tích failure cases chi tiết
 - [x] Bảng runtime: Mac (`fp16_benchmark_2026-06-14`) + Colab T4 (`quality_speed_bench_2026-06-17`: fp32 2.91s, fp16+cache 1.71s, fp8 1.52s, fp4 1.74s/edit)
-- [ ] Slide trình bày (pipeline + kết quả + demo)
-- [ ] Kết luận phản ánh đúng kết quả thực tế
+- [x] Slide trình bày (pipeline + kết quả + demo) — draft Marp [`report/SLIDE_SwiftEdit.md`](./report/SLIDE_SwiftEdit.md)
+- [x] Kết luận phản ánh đúng kết quả thực tế
 
 ---
 

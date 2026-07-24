@@ -9,6 +9,7 @@
 
 | Ngày       | Giai đoạn           | Công việc                                                                                            | Kết quả / Ghi chú                                                                                                                                                                                                                                                                                                                                      | Môi trường                                |
 | ---------- | ------------------- | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------- |
+| 2026-07-24 | 5                   | Viết báo cáo chuyên đề SwiftEdit-RT (`report/BAO_CAO_SwiftEdit.md`)                                  | Draft đầy đủ §1–10 + 4 flowchart Mermaid; số liệu chính từ FULL_COMPARE_REPORT (fp16 cold 1.39×, PSNR 48.47 dB; EditCache hit −17.3%; FP4 PSNR 21.17 dB); disk FP16 −49.5%; Hybrid multi-turn SSIM 0.959                                                                                                                                                 | Mac (viết tài liệu)                       |
 | 2026-07-22 | 4f                  | Hybrid Multi-turn Editing: 3 candidate, Regen/Pick/Undo và local full-resolution composite          | Inference trả clean latent + mask; latent jitter 0.05 tạo khác biệt pairwise MAE ~0.012; benchmark 5 lượt: PSNR ngoài mask Naive 30.09 dB vs Hybrid vô hạn, SSIM 0.8353 vs 0.9592, LPIPS 0.0575 vs 0.0119; UI Gradio render OK                                                                 | Mac M4 (MPS); fp16; gradio 5.50           |
 | 2026-07-19 | 4e                  | Pause tinh chỉnh RT; note hướng app xóa vật thể                                                      | Dừng FP4/xFormers/ToMe/TensorRT cho đến khi đủ bundle + viết đánh giá precision; app object-removal = phase sau (chưa code); ghi `FP4_DECISION` §0 + PRECISION_CASES                                                                                                                                                                                    | Mac (tài liệu); Colab (user test)         |
 | 2026-07-19 | 4e                  | Thêm `fp16_weight_xformers` (xFormers MEA trên FP16 disk)                           | Config mới `fp16_disk_xformers`; giữ nguyên `fp16_weight`; MEA qua Diffusers (inverse) + `efficient_attention` (gen self-attn); notebook SELECT mặc định xformers; chờ bundle T4                                                                                                                                                                     | Mac (code); Colab T4 (chờ eval)           |
@@ -44,6 +45,29 @@
 ## Chi tiết theo phiên làm việc
 
 *(Các entry chi tiết xuất hiện bên dưới, mới nhất ở trên cùng.)*
+
+### 2026-07-24 — [5] Viết báo cáo chuyên đề SwiftEdit-RT
+
+**Môi trường:** Mac (viết tài liệu)
+
+**Công việc đã làm:**
+
+- Viết `report/BAO_CAO_SwiftEdit.md` theo kế hoạch: mở đầu, bài toán, pipeline ngắn + ý tưởng SwiftEdit, phương pháp nghiên cứu, thiết kế thực nghiệm, kết quả tối ưu inference, ứng dụng bổ sung, hạn chế và kết luận.
+- Thêm 4 flowchart Mermaid: multi-step vs SwiftEdit; quy trình nghiên cứu; đánh giá công bằng; masked ROI.
+- Dùng số liệu bundle cuối (`FULL_COMPARE_REPORT.md`), disk/memory Phase A, object removal và multi-turn Hybrid.
+
+**Kết quả:**
+
+- Báo cáo draft đầy đủ ~430 dòng, không dùng LaTeX.
+- Kết luận chính: trên T4, FP16 + EditCache là cấu hình cân bằng tốt nhất; FP4 không phù hợp.
+
+**Task README đã [x]:** Lý do chọn đề tài; Overview + pipeline; I/O; RQ; kế hoạch thực nghiệm; kết quả; so sánh dataset/model; kết luận; tài liệu tham khảo; Overview + Related Work trong báo cáo.
+
+**Bước tiếp theo:**
+
+- Ablation `s_edit`/`s_non-edit`; slide trình bày; baseline TurboEdit nếu còn thời gian.
+
+---
 
 ### 2026-07-22 — [4f] Hybrid Multi-turn Editing giữ chất lượng qua nhiều lượt
 

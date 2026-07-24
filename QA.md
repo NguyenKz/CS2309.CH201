@@ -38,8 +38,8 @@ Tài liệu liên quan: [Overview](./SwiftEdit_Overview.md) · [Đề tài](./Sw
 | 2 | [SwiftEdit & Pipeline](#2-swiftedit--pipeline) | 6 |
 | 3 | [Inversion & Noise](#3-inversion--noise) | 5 |
 | 4 | [Mask & ARaM](#4-mask--aram) | 3 |
-| 5 | [Đánh giá & PieBench](#5-đánh-giá--piebench) | 1 |
-| 6 | [Triển khai Mac / Colab](#6-triển-khai-mac--colab) | 10 |
+| 5 | [Đánh giá & PieBench](#5-đánh-giá--piebench) | 3 |
+| 6 | [Triển khai Mac / Colab](#6-triển-khai-mac--colab) | 13 |
 | 7 | [Chỉnh sửa & Style](#7-chỉnh-sửa--style) | 2 |
 | 8 | [Chưa phân loại](#8-chưa-phân-loại) | 1 |
 
@@ -379,6 +379,42 @@ Tài liệu liên quan: [Overview](./SwiftEdit_Overview.md) · [Đề tài](./Sw
 *PSNR, MSE, CLIP-Whole, CLIP-Edited, IoU/Dice, 10 loại editing, …*
 
 <!-- qa:insert -->
+### Q: Trong kết quả đề tài SwiftEdit, các độ đo Miss/Hit/Overall/PSNR/Disk/VRAM nghĩa là gì?
+
+**Ngày:** 2026-07-24  
+**Chủ đề:** #metrics #psnr #editcache #precision
+
+**Trả lời (tóm tắt):**
+- Miss/cold (s): thời gian 1 edit khi chưa có EditCache (thường prompt_idx=0).
+- Hit (s): thời gian 1 edit khi đã cache (cùng ảnh + source; prompt_idx=1–2).
+- Overall × vs FP32: trung bình 600 job; t_fp32 / t_config (1.69× = nhanh hơn FP32 ~1.69 lần).
+- PSNR vs FP32 (dB): so ảnh output config với ảnh cùng job của baseline_fp32; ~48 dB gần như không lệch, ~22 dB hỏng rõ.
+- Disk (GiB): dung lượng cây swiftedit_weights; FP32→FP16: 9.79→4.94 GiB.
+- VRAM/peak (MB): bộ nhớ GPU (CUDA) hoặc peak alloc (MPS) lúc load/edit.
+- Slide ưu tiên tốc độ + PSNR vs FP32 + disk/VRAM; CLIP/LPIPS không phải tiêu chí chính.
+
+**Ghi chú thêm / link:**
+- report/SLIDE_SwiftEdit.md §6a
+
+
+### Q: 200 ảnh × 3 prompt: 3 prompt là gì, lấy từ đâu?
+
+**Ngày:** 2026-07-24  
+**Chủ đề:** #piebench #prompt #benchmark #cache
+
+**Trả lời (tóm tắt):**
+- Mỗi ảnh có 1 source prompt (original_prompt PIE-Bench) và 3 edit prompt.
+- Template cố định trong jobs_june17.json / build_june17_jobs.py:
+- 0 = {edit} — editing_prompt gốc PIE-Bench (semantic edit).
+- 1 = {src} at night, dark lighting — global night.
+- 2 = {src} in winter, covered in snow — global winter.
+- Dataset: data/PIE-Bench-auto200 (200 ảnh); file jobs: data/jobs_june17.json; khớp quality_speed_bench_2026-06-17.
+- prompt_idx=0 dùng cold/fair; idx 1–2 tạo cache hit khi cùng ảnh+source.
+
+**Ghi chú thêm / link:**
+- scripts/build_june17_jobs.py; data/jobs_june17.json
+
+
 ### Q: Đánh giá SwiftEdit dùng độ đo nào, đo thế nào, công nhận ở đâu?
 
 **Ngày:** 2026-06-05  
@@ -404,6 +440,52 @@ Tài liệu liên quan: [Overview](./SwiftEdit_Overview.md) · [Đề tài](./Sw
 *MPS vs CUDA, cài env, weights, OOM, runtime, …*
 
 <!-- qa:insert -->
+### Q: Vì sao thử FP4 và vì sao vẫn chạy được trên T4 dù không có native FP4?
+
+**Ngày:** 2026-07-24  
+**Chủ đề:** #fp4 #bitsandbytes #t4 #quantization
+
+**Trả lời (tóm tắt):**
+- Thử vì muốn nén mạnh hơn FP16 để giảm VRAM trên T4 16GB (chuỗi FP32→FP16→FP4).
+- Đã làm: quantize_unet() trong models.py — sau load UNet, thay nn.Linear bằng bitsandbytes Linear4bit (quant_type=fp4), compute_dtype=fp16; chỉ Linear, Conv/VAE/CLIP không quant, VAE giữ FP32.
+- Vẫn chạy vì bitsandbytes dequant 4-bit→FP16 rồi MatMul FP16 trên Turing — không cần Tensor Core FP4.
+- Chạy được nhưng không tối ưu: tốc độ không thắng FP16 rõ; PSNR ~21dB vs ~48.5dB của FP16 → giữ làm ablation âm; dừng làm hướng tối ưu (FP4_DECISION_AND_NEXT_PLAN.md).
+
+**Ghi chú thêm / link:**
+- SwiftEdit/models.py quantize_unet; experimental_data/FP4_DECISION_AND_NEXT_PLAN.md
+
+
+### Q: Chỗ nào trong SwiftEdit ép tensor tính toán sang FP16?
+
+**Ngày:** 2026-07-24  
+**Chủ đề:** #fp16 #models #vae #precision
+
+**Trả lời (tóm tắt):**
+- Không ép cả pipeline. Khi dtype=fp16 trong models.py:
+- Ép FP16: Inverse UNet, Generation UNet (SBv2), IP-Adapter (proj + to_k_ip/to_v_ip), CLIP text encoder, CLIP image encoder.
+- Giữ FP32: VAE encode/decode (tránh NaN/ảnh đen); trước decode latent được .to(float32).
+- Timestep vẫn int64.
+- Disk vẫn có thể là FP32 nếu chỉ compute fp16 (improved_fp16_cache); muốn giảm disk phải convert cây weight FP16 (fp16_disk).
+
+**Ghi chú thêm / link:**
+- SwiftEdit/models.py; report/BAO_CAO_SwiftEdit.md §6.2.2
+
+
+### Q: 32 bit trong FP32 là 32 bit của cái gì?
+
+**Ngày:** 2026-07-24  
+**Chủ đề:** #fp32 #fp16 #precision #quantization
+
+**Trả lời (tóm tắt):**
+- Là 32 bit nhị phân dùng để lưu MỖI một số thực (một weight hoặc một activation), không phải 32 bit của cả mô hình.
+- FP32 ≈ 4 byte/số; FP16 ≈ 2 byte/số; FP4 ≈ 0.5 byte/số — tổng dung lượng checkpoint/VRAM giảm vì mô hình có hàng tỷ số như vậy.
+- Chuẩn IEEE 754 chia các bit thành dấu + mũ + định trị (FP32 thường 1+8+23); báo cáo chỉ cần nhớ: ít bit hơn → tiết kiệm bộ nhớ nhưng dễ sai số học hơn.
+- Trong đề tài: baseline = FP32; tối ưu chính = FP16; FP4 = quant một phần Linear.
+
+**Ghi chú thêm / link:**
+- report/BAO_CAO_SwiftEdit.md §6.2.1
+
+
 ### Q: fp16_weight_xformers khác fp16_weight thế nào?
 
 **Ngày:** 2026-07-19  

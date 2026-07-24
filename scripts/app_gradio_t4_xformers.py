@@ -86,6 +86,178 @@ REMOVAL_EXAMPLE_PROMPTS = [
 ]
 _VAGUE_EDIT_PROMPTS = {"empty background", "background", "empty", ""}
 
+# Giống app_gradio.py (Mac) — refresh brush Gradio 5 + live preview mask.
+BRUSH_REFRESH_JS = r"""
+() => {
+  const findButton = (root, name) => Array.from(root.querySelectorAll("button")).find(
+    (button) => (button.getAttribute("aria-label") || button.textContent || "")
+      .trim().toLowerCase() === name
+  );
+
+  const refreshBrush = () => {
+    const root = document.querySelector("#mask-editor");
+    const image = root?.querySelector("img");
+    if (!root || !image || !image.currentSrc) return;
+    const textureKey = [
+      image.currentSrc,
+      image.naturalWidth,
+      image.naturalHeight,
+      root.clientWidth,
+      root.clientHeight,
+    ].join(":");
+    if (image.dataset.brushTextureKey === textureKey) return;
+    const erase = findButton(root, "erase");
+    const brush = findButton(root, "brush");
+    if (!erase || !brush) return;
+    image.dataset.brushTextureKey = textureKey;
+    erase.click();
+    requestAnimationFrame(() => brush.click());
+  };
+
+  const scheduleRefresh = () => {
+    window.setTimeout(refreshBrush, 80);
+    window.setTimeout(refreshBrush, 250);
+  };
+
+  const syncBrushSize = () => {
+    const root = document.querySelector("#mask-editor");
+    if (!root) return;
+    const slider = Array.from(root.querySelectorAll('input[type="range"]')).find(
+      (input) => input.min === "1" && input.max === "100"
+    );
+    if (!slider) return;
+    root.dataset.brushSize = slider.value;
+    if (slider.dataset.liveMaskBound === "1") return;
+    slider.dataset.liveMaskBound = "1";
+    const update = () => {
+      root.dataset.brushSize = slider.value;
+    };
+    slider.addEventListener("input", update);
+    slider.addEventListener("change", update);
+  };
+
+  const setupLivePreview = () => {
+    const root = document.querySelector("#mask-editor");
+    if (!root || root.dataset.liveMaskBound === "1") return;
+    const baseCanvas = () => Array.from(root.querySelectorAll("canvas"))
+      .find((canvas) => !canvas.classList.contains("live-mask-preview"));
+    if (!baseCanvas()) return;
+    root.dataset.liveMaskBound = "1";
+    root.style.position = "relative";
+
+    const overlay = document.createElement("canvas");
+    overlay.className = "live-mask-preview";
+    overlay.style.position = "absolute";
+    overlay.style.pointerEvents = "none";
+    overlay.style.zIndex = "50";
+    root.appendChild(overlay);
+    let drawing = false;
+    let lastPoint = null;
+
+    const syncOverlay = () => {
+      const base = baseCanvas();
+      if (!base) return null;
+      const baseRect = base.getBoundingClientRect();
+      const rootRect = root.getBoundingClientRect();
+      const ratio = window.devicePixelRatio || 1;
+      overlay.style.left = `${baseRect.left - rootRect.left}px`;
+      overlay.style.top = `${baseRect.top - rootRect.top}px`;
+      overlay.style.width = `${baseRect.width}px`;
+      overlay.style.height = `${baseRect.height}px`;
+      const width = Math.max(1, Math.round(baseRect.width * ratio));
+      const height = Math.max(1, Math.round(baseRect.height * ratio));
+      if (overlay.width !== width || overlay.height !== height) {
+        overlay.width = width;
+        overlay.height = height;
+      }
+      const context = overlay.getContext("2d");
+      context.setTransform(ratio, 0, 0, ratio, 0, 0);
+      return { baseRect, context };
+    };
+
+    const brushIsActive = () => {
+      const brush = findButton(root, "brush");
+      return !!brush && brush.classList.contains("highlight");
+    };
+    const pointFor = (event, rect) => ({
+      x: event.clientX - rect.left,
+      y: event.clientY - rect.top,
+    });
+    const brushWidth = () => {
+      const zoomText = Array.from(root.querySelectorAll("span"))
+        .map((span) => span.textContent.trim())
+        .find((text) => /^\d+%$/.test(text));
+      const zoom = zoomText ? Number.parseFloat(zoomText) / 100 : 1;
+      const size = Number.parseFloat(root.dataset.brushSize || "28");
+      return Math.max(2, size * zoom);
+    };
+    const inside = (event, rect) => (
+      event.clientX >= rect.left && event.clientX <= rect.right
+      && event.clientY >= rect.top && event.clientY <= rect.bottom
+    );
+    const drawSegment = (from, to, context) => {
+      context.strokeStyle = "rgba(255, 0, 0, 0.5)";
+      context.fillStyle = "rgba(255, 0, 0, 0.5)";
+      context.lineWidth = brushWidth();
+      context.lineCap = "round";
+      context.lineJoin = "round";
+      context.beginPath();
+      context.moveTo(from.x, from.y);
+      context.lineTo(to.x, to.y);
+      context.stroke();
+    };
+
+    root.addEventListener("pointerdown", (event) => {
+      const synced = syncOverlay();
+      if (!synced || !brushIsActive() || !inside(event, synced.baseRect)) return;
+      drawing = true;
+      lastPoint = pointFor(event, synced.baseRect);
+      drawSegment(lastPoint, lastPoint, synced.context);
+    }, true);
+    root.addEventListener("pointermove", (event) => {
+      if (!drawing || !lastPoint) return;
+      const synced = syncOverlay();
+      if (!synced) return;
+      const nextPoint = pointFor(event, synced.baseRect);
+      drawSegment(lastPoint, nextPoint, synced.context);
+      lastPoint = nextPoint;
+    }, true);
+    const finish = () => {
+      if (!drawing) return;
+      drawing = false;
+      lastPoint = null;
+      window.setTimeout(() => {
+        const context = overlay.getContext("2d");
+        context.clearRect(0, 0, overlay.width, overlay.height);
+      }, 120);
+    };
+    root.addEventListener("pointerup", finish, true);
+    root.addEventListener("pointercancel", finish, true);
+    new ResizeObserver(syncOverlay).observe(root);
+    syncOverlay();
+  };
+
+  new MutationObserver(() => {
+    scheduleRefresh();
+    syncBrushSize();
+    setupLivePreview();
+  }).observe(document.body, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: ["src"],
+  });
+  window.addEventListener("resize", () => {
+    scheduleRefresh();
+    syncBrushSize();
+    setupLivePreview();
+  });
+  scheduleRefresh();
+  syncBrushSize();
+  setupLivePreview();
+}
+"""
+
 
 def _in_colab() -> bool:
     try:
@@ -177,6 +349,25 @@ def _prepare_model_image(image_path: str) -> tuple[str, dict]:
     return str(cache_path), meta
 
 
+def image_editor_value(image: Image.Image) -> dict:
+    image = image.convert("RGB")
+    return {"background": image, "layers": [], "composite": image}
+
+
+def _prepare_roi_image(session, roi) -> tuple[str, Image.Image]:
+    """Cắt ROI vuông → proxy 512×512 (giống Mac app_gradio)."""
+    from hybrid_editing import crop_square
+
+    crop = crop_square(session.master, roi)
+    model_image = crop.resize((EDIT_SIZE, EDIT_SIZE), Image.Resampling.LANCZOS)
+    arr = np.asarray(crop)
+    key = hashlib.sha256(arr.tobytes()).hexdigest()[:24]
+    cache_path = Path(tempfile.gettempdir()) / "swiftedit_t4_demo" / f"roi_{key}.png"
+    cache_path.parent.mkdir(parents=True, exist_ok=True)
+    model_image.save(cache_path)
+    return str(cache_path), crop
+
+
 def extract_editor_mask(editor_value):
     if not editor_value:
         return None, None
@@ -212,9 +403,21 @@ def _removal_prompt_hints(src_p: str, edit_p: str) -> str:
     src = (src_p or "").strip()
     edit = (edit_p or "").strip()
     if len(src.split()) < 4:
-        hints.append("source prompt quá ngắn — mô tả toàn bộ ảnh")
+        hints.append(
+            "source prompt quá ngắn — mô tả **toàn bộ ảnh** "
+            "(người/vật + nền), không chỉ vùng cần xóa"
+        )
     if edit.lower() in _VAGUE_EDIT_PROMPTS:
-        hints.append("edit prompt quá chung — mô tả nền thay thế cụ thể")
+        hints.append(
+            "edit prompt quá chung — mô tả **nền thay thế cụ thể** "
+            "(vd: `plain white banner`, `blue sky and green trees`)"
+        )
+    if any(k in edit.lower() for k in ("text", "letter", "word", "chữ", "banner")) or any(
+        k in src.lower() for k in ("text", "letter", "word", "chữ", "banner")
+    ):
+        hints.append(
+            "xóa **chữ/typography** thường không hiệu quả — SwiftEdit không phải inpainting chuyên dụng"
+        )
     if not hints:
         return ""
     return "  \n⚠️ **Gợi ý:** " + " · ".join(hints)
@@ -520,7 +723,21 @@ def build_app(weights_fp16: Path):
         f"peak ~{peak_mb:.0f} MB"
     )
 
+    # hybrid_editing nằm cạnh script — cùng UI multi-candidate như Mac.
+    sys.path.insert(0, str(SCRIPTS))
+    from hybrid_editing import (  # noqa: E402
+        Candidate,
+        commit_candidate,
+        crop_mask,
+        ensure_session,
+        hybrid_composite,
+        paste_square,
+        square_roi_from_mask,
+        undo_session,
+    )
+
     def run_edit(image_path, src_p, edit_p, scale_edit, scale_non_edit, mask_threshold, use_cache):
+        """Selftest / API đơn giản (không ROI) — giữ tương thích --selftest."""
         if not image_path:
             raise gr.Error("Vui lòng tải lên ảnh nguồn.")
         if not edit_p or not edit_p.strip():
@@ -564,16 +781,221 @@ def build_app(weights_fp16: Path):
         )
         return _unletterbox(tensor_to_pil(res), lb_meta), info
 
+    def reset_edit_session(image_path, src_p):
+        if not image_path:
+            return None, None, "Tải ảnh để bắt đầu phiên chỉnh sửa."
+        session = ensure_session(None, image_path, src_p or "")
+        w, h = session.master.size
+        return (
+            session,
+            image_editor_value(session.master),
+            f"{runtime_banner}  \n**Ảnh hiện tại:** {w}×{h} · lượt 0",
+        )
+
+    def generate_candidate_batch(
+        image_path,
+        src_p,
+        edit_p,
+        scale_edit,
+        scale_non_edit,
+        mask_threshold,
+        roi_padding_percent,
+        mask_blur,
+        latent_strategy,
+        editor_value,
+        session,
+    ):
+        if not image_path:
+            raise gr.Error("Vui lòng tải lên ảnh nguồn.")
+        if not edit_p or not edit_p.strip():
+            raise gr.Error("Vui lòng nhập Edit prompt.")
+        session = ensure_session(session, image_path, src_p or "")
+        session.source_prompt = (src_p or session.source_prompt).strip()
+        _, mask = extract_editor_mask(editor_value)
+        if mask is None or mask.sum() < 1:
+            raise gr.Error("Chưa tô mask. Hãy dùng cọ tô vùng cần sửa trên ảnh hiện tại.")
+        if mask.shape[::-1] != session.master.size:
+            mask = (
+                np.asarray(
+                    Image.fromarray((mask * 255).astype(np.uint8)).resize(
+                        session.master.size,
+                        Image.Resampling.NEAREST,
+                    ),
+                    dtype=np.float32,
+                )
+                / 255.0
+            )
+        try:
+            roi = square_roi_from_mask(
+                mask,
+                padding_ratio=float(roi_padding_percent) / 100.0,
+            )
+        except ValueError as exc:
+            raise gr.Error(str(exc)) from exc
+        model_path, source_crop = _prepare_roi_image(session, roi)
+        source_mask = crop_mask(mask, roi)
+        model_user_mask = (
+            np.asarray(
+                source_mask.resize((EDIT_SIZE, EDIT_SIZE), Image.Resampling.NEAREST),
+                dtype=np.float32,
+            )
+            / 255.0
+        )
+        batch_cache = EditCache()
+        candidates: list = []
+        candidate_images = [None, None, None]
+        batch_seed = 250101049 + session.turn * 10000 + session.batch_index * 3
+        session.batch_index += 1
+        session.candidates = []
+        use_latent_strategy = latent_strategy == "latent"
+        batch_source_latent = None
+
+        yield (
+            *candidate_images,
+            gr.skip(),
+            f"**Batch {session.batch_index}:** đang sinh candidate 1/3 theo thứ tự…",
+            session,
+        )
+        _sync(device)
+        t0 = time.perf_counter()
+        for index in range(3):
+            candidate_started = time.perf_counter()
+            seed = batch_seed + index
+            if batch_source_latent is None:
+                batch_cache.latents = None
+            details = edit_image(
+                model_path,
+                session.source_prompt,
+                edit_p.strip(),
+                inverse_model,
+                aux_model,
+                ip_sb_model,
+                scale_edit=scale_edit,
+                scale_non_edit=scale_non_edit,
+                mask_threshold=mask_threshold,
+                cache=batch_cache,
+                seed=seed,
+                user_mask=model_user_mask,
+                source_latent=batch_source_latent,
+                latent_jitter_strength=(0.05 if batch_source_latent is not None else 0.0),
+                return_details=True,
+            )
+            if use_latent_strategy and batch_source_latent is None:
+                batch_source_latent = details["source_latent"][-1:].float().cpu()
+            model_output = tensor_to_pil(details["image"])
+            edited_crop = model_output.resize(
+                (roi.size, roi.size),
+                Image.Resampling.LANCZOS,
+            )
+            composed_crop = hybrid_composite(
+                source_crop,
+                edited_crop,
+                source_mask,
+                mode="local",
+                dilation=0,
+                blur=float(mask_blur),
+            )
+            composed = paste_square(session.master, composed_crop, roi)
+            candidates.append(
+                Candidate(
+                    image=composed,
+                    model_image=model_output,
+                    mask=source_mask,
+                    clean_latent=details["clean_latent"][-1:].float().cpu(),
+                    seed=seed,
+                    mode="masked",
+                    source_prompt=session.source_prompt,
+                    edit_prompt=edit_p.strip(),
+                )
+            )
+            session.candidates = candidates
+            candidate_images[index] = candidates[index].image
+            _sync(device)
+            candidate_elapsed = time.perf_counter() - candidate_started
+            total_elapsed = time.perf_counter() - t0
+            strategy_note = (
+                "encode master 1 lần + latent jitter 0.05"
+                if use_latent_strategy
+                else "VAE seed độc lập"
+            )
+            if index < 2:
+                progress = (
+                    f"Đã có candidate {index + 1}/3 ({candidate_elapsed:.2f}s); "
+                    f"đang sinh candidate {index + 2}/3…"
+                )
+            else:
+                progress = (
+                    f"Đã đủ 3 candidate trong {total_elapsed:.2f}s. "
+                    "Bấm **Chọn** để commit hoặc **Regen** để tạo batch mới."
+                )
+            modes = ", ".join(candidate.mode for candidate in candidates)
+            mask_coverage = 100 * float(
+                np.asarray(source_mask, dtype=np.float32).mean() / 255.0
+            )
+            info = (
+                f"{runtime_banner}  \n"
+                f"**Lượt:** {session.turn} · **Batch:** {session.batch_index} · {progress}  \n"
+                f"**ROI:** x={roi.x}, y={roi.y}, {roi.size}×{roi.size} px · "
+                f"mask chiếm {mask_coverage:.1f}% ROI · pixel ngoài mask giữ nguyên  \n"
+                f"**Seeds đã xong:** {batch_seed}–{seed} · **Mode:** {modes} · "
+                f"**Chiến lược:** {strategy_note}"
+            )
+            yield (
+                *candidate_images,
+                gr.skip(),
+                info,
+                session,
+            )
+
+    def pick_candidate(index, session):
+        if session is None or not session.candidates:
+            raise gr.Error("Chưa có candidate để chọn.")
+        selected_seed = session.candidates[int(index)].seed
+        commit_candidate(session, int(index))
+        info = (
+            f"{runtime_banner}  \n"
+            f"**Đã chọn ảnh {int(index) + 1}.** Ảnh này trở thành master lượt "
+            f"{session.turn}; có thể chỉnh tiếp hoặc Undo. (seed {selected_seed})"
+        )
+        return (
+            image_editor_value(session.master),
+            None,
+            None,
+            None,
+            info,
+            session,
+            session.source_prompt,
+        )
+
+    def undo_edit(session):
+        if session is None:
+            raise gr.Error("Chưa có phiên chỉnh sửa.")
+        had_history = bool(session.history)
+        undo_session(session)
+        info = (
+            f"{runtime_banner}  \n**Đã quay lại lượt {session.turn}.**"
+            if had_history
+            else f"{runtime_banner}  \n**Không có lượt trước để Undo.**"
+        )
+        return (
+            image_editor_value(session.master),
+            None,
+            None,
+            None,
+            info,
+            session,
+            session.source_prompt,
+        )
+
     def run_removal(editor_value, src_p, edit_p, scale_edit, scale_non_edit, mask_threshold):
         bg_img, mask = extract_editor_mask(editor_value)
         if bg_img is None:
             raise gr.Error("Vui lòng tải ảnh và khoanh vùng cần xóa.")
         if mask is None or mask.sum() < 1:
             raise gr.Error("Chưa tô mask — dùng cọ khoanh vật thể cần xóa.")
-        if not edit_p or not edit_p.strip():
-            raise gr.Error("Vui lòng nhập mô tả nền sau khi xóa.")
+        edit_p = (edit_p or "").strip() or "empty background"
 
-        boxed, lb_meta = _letterbox_image(bg_img, EDIT_SIZE)
+        boxed, lb_meta = _letterbox_image(bg_img.convert("RGB"), EDIT_SIZE)
         mask512 = _letterbox_mask(mask, lb_meta, EDIT_SIZE)
         tmp = Path(tempfile.gettempdir()) / "swiftedit_t4_demo" / "removal_src.png"
         tmp.parent.mkdir(parents=True, exist_ok=True)
@@ -607,56 +1029,181 @@ def build_app(weights_fp16: Path):
             f"**Thời gian:** {dt:.2f}s  \n"
             f"**Kích thước gốc:** {orig_w}×{orig_h} · "
             f"vùng khoanh {100 * mask512.mean():.1f}%  \n"
-            f"{hints}"
+            f"{hints}\n"
+            f"_Lưu ý: SwiftEdit xóa tốt vật **rời nhỏ/vừa**; "
+            f"**chữ trên banner** thường không sạch._"
         )
         return _unletterbox(tensor_to_pil(res), lb_meta), mask_prev, info
 
-    with gr.Blocks(title="SwiftEdit T4 — fp16_disk_xformers", theme=gr.themes.Soft()) as demo:
+    with gr.Blocks(
+        title="SwiftEdit-RT Demo (T4)",
+        theme=gr.themes.Soft(),
+        js=BRUSH_REFRESH_JS,
+    ) as demo:
         gr.Markdown(
-            "# SwiftEdit — Colab T4 (`fp16_disk_xformers`)\n"
-            "FP16 **disk** + **xFormers MEA** + **EditCache**. "
-            "Weights ưu tiên Google Drive; thiếu thì tải về.\n\n"
+            "# SwiftEdit-RT — Chỉnh sửa & xóa vật thể bằng prompt (one-step)\n"
+            f"Colab T4: **fp16 disk + channels_last + xFormers + EditCache** "
+            f"(đang chạy trên `{device}`).\n\n"
             f"{runtime_banner}"
         )
         with gr.Tabs():
             with gr.Tab("Chỉnh sửa bằng prompt"):
+                edit_session = gr.State(value=None)
                 with gr.Row():
                     with gr.Column(scale=1):
                         inp_image = gr.Image(label="Ảnh nguồn", type="filepath", height=320)
+                        gr.Markdown(
+                            "**Chọn vùng sửa:** dùng cọ tô mask trên *Ảnh hiện tại*. "
+                            "Hệ thống tự tạo crop vuông có context bao quanh mask, "
+                            "sau đó chỉ ghép kết quả vào đúng vùng đã tô."
+                        )
+                        current_image = gr.ImageEditor(
+                            label="Ảnh hiện tại — tô mask vùng cần sửa",
+                            type="numpy",
+                            height=420,
+                            elem_id="mask-editor",
+                            brush=gr.Brush(
+                                colors=["rgba(255, 0, 0, 0.5)"],
+                                default_size=28,
+                            ),
+                            layers=False,
+                            transforms=[],
+                        )
                         inp_src = gr.Textbox(
-                            label="Source prompt",
+                            label="Source prompt (mô tả nội dung trong ROI)",
                             placeholder="vd: a mountain bicycle on the road",
                         )
                         inp_edit = gr.Textbox(
-                            label="Edit prompt",
+                            label="Edit prompt (nội dung ROI sau khi sửa)",
                             placeholder="vd: a rusty motorcycle on the road",
                         )
-                        with gr.Accordion("Tùy chọn", open=False):
-                            sl_edit = gr.Slider(0.0, 1.0, value=0.2, step=0.05, label="scale_edit")
-                            sl_non = gr.Slider(0.0, 2.0, value=1.0, step=0.05, label="scale_non_edit")
-                            sl_mask = gr.Slider(0.0, 1.0, value=0.5, step=0.05, label="mask_threshold")
-                            use_cache = gr.Checkbox(value=True, label="Dùng EditCache")
-                        btn = gr.Button("Chỉnh sửa", variant="primary")
+                        with gr.Accordion("Tùy chọn nâng cao", open=False):
+                            sl_edit = gr.Slider(
+                                0.0, 1.0, value=0.2, step=0.05,
+                                label="scale_edit (vùng chỉnh sửa)",
+                            )
+                            sl_non = gr.Slider(
+                                0.0, 2.0, value=1.0, step=0.05,
+                                label="scale_non_edit (giữ nền)",
+                            )
+                            sl_mask = gr.Slider(
+                                0.0, 1.0, value=0.5, step=0.05,
+                                label="mask_threshold",
+                            )
+                            roi_padding = gr.Slider(
+                                0, 100, value=25, step=5,
+                                label="Context padding quanh mask (%)",
+                            )
+                            mask_blur = gr.Slider(
+                                0, 20, value=4, step=1,
+                                label="Mask blur khi ghép (px)",
+                            )
+                            latent_strategy = gr.Radio(
+                                choices=[
+                                    ("Encode 1 lần + latent jitter (khuyến nghị)", "latent"),
+                                    ("VAE seed độc lập (đối chứng)", "baseline"),
+                                ],
+                                value="latent",
+                                label="Chiến lược tạo candidate",
+                            )
+                        with gr.Row():
+                            btn = gr.Button("Tạo 3 kết quả", variant="primary")
+                            regen_btn = gr.Button("Regen 3 kết quả")
+                            undo_btn = gr.Button("Undo")
                     with gr.Column(scale=1):
-                        out_img = gr.Image(label="Kết quả", height=320)
                         out_info = gr.Markdown()
+                        with gr.Row():
+                            with gr.Column():
+                                candidate_1 = gr.Image(label="Candidate 1", height=230)
+                                pick_1 = gr.Button("Chọn ảnh 1")
+                            with gr.Column():
+                                candidate_2 = gr.Image(label="Candidate 2", height=230)
+                                pick_2 = gr.Button("Chọn ảnh 2")
+                            with gr.Column():
+                                candidate_3 = gr.Image(label="Candidate 3", height=230)
+                                pick_3 = gr.Button("Chọn ảnh 3")
                 gr.Examples(
                     examples=[[p[0], p[1]] for p in EXAMPLE_PROMPTS],
                     inputs=[inp_src, inp_edit],
                     label="Ví dụ prompt",
                 )
+                inp_image.change(
+                    reset_edit_session,
+                    inputs=[inp_image, inp_src],
+                    outputs=[edit_session, current_image, out_info],
+                )
+                candidate_inputs = [
+                    inp_image,
+                    inp_src,
+                    inp_edit,
+                    sl_edit,
+                    sl_non,
+                    sl_mask,
+                    roi_padding,
+                    mask_blur,
+                    latent_strategy,
+                    current_image,
+                    edit_session,
+                ]
+                candidate_outputs = [
+                    candidate_1,
+                    candidate_2,
+                    candidate_3,
+                    current_image,
+                    out_info,
+                    edit_session,
+                ]
                 btn.click(
-                    run_edit,
-                    inputs=[inp_image, inp_src, inp_edit, sl_edit, sl_non, sl_mask, use_cache],
-                    outputs=[out_img, out_info],
+                    generate_candidate_batch,
+                    inputs=candidate_inputs,
+                    outputs=candidate_outputs,
+                )
+                regen_btn.click(
+                    generate_candidate_batch,
+                    inputs=candidate_inputs,
+                    outputs=candidate_outputs,
+                )
+                pick_outputs = [
+                    current_image,
+                    candidate_1,
+                    candidate_2,
+                    candidate_3,
+                    out_info,
+                    edit_session,
+                    inp_src,
+                ]
+                pick_1.click(
+                    lambda state: pick_candidate(0, state),
+                    inputs=[edit_session],
+                    outputs=pick_outputs,
+                )
+                pick_2.click(
+                    lambda state: pick_candidate(1, state),
+                    inputs=[edit_session],
+                    outputs=pick_outputs,
+                )
+                pick_3.click(
+                    lambda state: pick_candidate(2, state),
+                    inputs=[edit_session],
+                    outputs=pick_outputs,
+                )
+                undo_btn.click(
+                    undo_edit,
+                    inputs=[edit_session],
+                    outputs=pick_outputs,
                 )
 
             with gr.Tab("Xóa vật thể (khoanh vùng)"):
-                gr.Markdown("Tải ảnh → **cọ tô** vật cần xóa → mô tả nền thay thế.")
+                gr.Markdown(
+                    "Tải ảnh, **dùng cọ tô lên vật thể cần xóa**, rồi mô tả ảnh gốc + nền "
+                    "sau khi xóa.\n\n"
+                    "**Phù hợp:** vật rời nhỏ/vừa (tai nghe, lon, biển báo).  \n"
+                    "**Không phù hợp:** chữ/typography trên banner, vật chiếm gần hết khung."
+                )
                 with gr.Row():
                     with gr.Column(scale=1):
                         rm_editor = gr.ImageEditor(
-                            label="Khoanh vùng cần xóa",
+                            label="Khoanh vùng vật thể cần xóa (dùng cọ)",
                             type="numpy",
                             height=360,
                             brush=gr.Brush(
@@ -666,17 +1213,26 @@ def build_app(weights_fp16: Path):
                             layers=False,
                             transforms=[],
                         )
-                        rm_src = gr.Textbox(label="Source prompt (ảnh gốc)")
-                        rm_edit = gr.Textbox(label="Edit prompt (nền sau khi xóa)")
-                        with gr.Accordion("Tùy chọn", open=False):
+                        rm_src = gr.Textbox(
+                            label="Mô tả ảnh gốc (source prompt)",
+                            placeholder="vd: a woman in a blue dress in front of a white banner",
+                        )
+                        rm_edit = gr.Textbox(
+                            label="Mô tả vùng sau khi xóa (nền thay thế)",
+                            placeholder="vd: plain white banner without text",
+                        )
+                        with gr.Accordion("Tùy chọn nâng cao", open=False):
                             rm_sl_edit = gr.Slider(
-                                0.0, 1.0, value=0.15, step=0.05, label="scale_edit"
+                                0.0, 1.0, value=0.15, step=0.05,
+                                label="scale_edit (vùng xóa; thấp = ít giữ vật gốc)",
                             )
                             rm_sl_non = gr.Slider(
-                                0.0, 2.0, value=1.2, step=0.05, label="scale_non_edit"
+                                0.0, 2.0, value=1.2, step=0.05,
+                                label="scale_non_edit (giữ nền)",
                             )
                             rm_sl_mask = gr.Slider(
-                                0.0, 1.0, value=0.5, step=0.05, label="mask_threshold"
+                                0.0, 1.0, value=0.5, step=0.05,
+                                label="mask_threshold",
                             )
                         rm_btn = gr.Button("Xóa vật thể", variant="primary")
                     with gr.Column(scale=1):
@@ -686,7 +1242,7 @@ def build_app(weights_fp16: Path):
                 gr.Examples(
                     examples=[[p[0], p[1]] for p in REMOVAL_EXAMPLE_PROMPTS],
                     inputs=[rm_src, rm_edit],
-                    label="Ví dụ prompt xóa",
+                    label="Ví dụ prompt xóa vật thể",
                 )
                 rm_btn.click(
                     run_removal,

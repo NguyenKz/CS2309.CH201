@@ -38,7 +38,7 @@ Tài liệu liên quan: [Overview](./SwiftEdit_Overview.md) · [Đề tài](./Sw
 | 2 | [SwiftEdit & Pipeline](#2-swiftedit--pipeline) | 6 |
 | 3 | [Inversion & Noise](#3-inversion--noise) | 7 |
 | 4 | [Mask & ARaM](#4-mask--aram) | 3 |
-| 5 | [Đánh giá & PieBench](#5-đánh-giá--piebench) | 4 |
+| 5 | [Đánh giá & PieBench](#5-đánh-giá--piebench) | 5 |
 | 6 | [Triển khai Mac / Colab](#6-triển-khai-mac--colab) | 13 |
 | 7 | [Chỉnh sửa & Style](#7-chỉnh-sửa--style) | 2 |
 | 8 | [Chưa phân loại](#8-chưa-phân-loại) | 1 |
@@ -406,6 +406,19 @@ Tài liệu liên quan: [Overview](./SwiftEdit_Overview.md) · [Đề tài](./Sw
 *PSNR, MSE, CLIP-Whole, CLIP-Edited, IoU/Dice, 10 loại editing, …*
 
 <!-- qa:insert -->
+### Q: Dùng 3 prompt_idx thì EditCache sao trùng prompt được?
+
+**Ngày:** 2026-07-24  
+**Chủ đề:** #editcache #prompt #piebench #benchmark #cache
+
+**Trả lời (tóm tắt):**
+- Không cần trùng edit prompt. Cache khóa theo ảnh + source prompt; 3 prompt_idx chỉ đổi edit prompt.
+- Mỗi ảnh PIE-Bench: 1 src_prompt cố định + 3 edit_prompt khác nhau (idx 0/1/2).
+- Thứ tự chạy cùng ảnh: idx0 = miss (tính VAE latent, CLIP image embed, source text embed); idx1 và idx2 = hit (tái dùng 3 thành phần trên).
+- Phần vẫn tính lại mỗi lần: embed/inversion/generation phụ thuộc edit_prompt — vì 3 edit khác nhau nên output khác nhau.
+- Đổi ảnh hoặc đổi source prompt → invalidate cache. Lần edit đầu trên ảnh mới luôn miss.
+
+
 ### Q: PSNR, MSE×10⁴↓, CLIP-Whole↑, CLIP-Edited↑ là độ đo gì, so sánh với cái gì?
 
 **Ngày:** 2026-07-24  

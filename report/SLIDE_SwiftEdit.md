@@ -268,17 +268,18 @@ flowchart TB
 
 # §6b. Kết quả đề tài — 5 bundle trên T4 (so FP32)
 
-### Tốc độ & PSNR vs FP32
+### Tốc độ · PSNR · VRAM vs FP32
 
-| Config                           | Miss/cold s | Hit s    | Overall 600 vs FP32 | PSNR vs FP32   |
-| -------------------------------- | ----------- | -------- | ------------------- | -------------- |
-| `baseline_fp32`                  | 2.45        | —        | 1.00×               | —              |
-| `fp16 + cache`                   | 1.76        | 1.46     | 1.57×               | 48.5 dB        |
-| `fp16 + cache + disk`            | 1.76        | 1.45     | 1.57×               | 48.5 dB        |
-| `fp16 + cache + disk + xformers` | **1.64**    | **1.35** | **1.69×**           | **48.5 dB**    |
-| `fp4 + cache`                    | 1.82        | 1.51     | 1.51×               | **21–22 dB** ❌ |
+| Config                           | Miss/cold s | Hit s    | Overall 600 vs FP32 | PSNR vs FP32   | VRAM peak |
+| -------------------------------- | ----------- | -------- | ------------------- | -------------- | --------- |
+| `baseline_fp32`                  | 2.45        | —        | 1.00×               | —              | 14.0 GB   |
+| `fp16 + cache`                   | 1.76        | 1.46     | 1.57×               | 48.5 dB        | 8.1 GB    |
+| `fp16 + cache + disk`            | 1.76        | 1.45     | 1.57×               | 48.5 dB        | 8.1 GB    |
+| `fp16 + cache + disk + xformers` | **1.64**    | **1.35** | **1.69×**           | **48.5 dB**    | **8.1 GB** |
+| `fp4 + cache`                    | 1.82        | 1.51     | 1.51×               | **21–22 dB** ❌ | **7.3 GB** |
 
 Hit tiết kiệm 17% so miss (các config có cache).\
+**VRAM peak** = `peak_alloc` sau warmup (`memory.csv` từng bundle T4); FP16 −42% vs FP32 (14.0 → 8.1 GB). Disk FP16 / xFormers **không** giảm thêm VRAM so `fp16+cache` — chủ yếu tăng tốc / giảm dung lượng file.\
 **Disk** `swiftedit_weights` FP32→FP16: 9.79 → **4.94 GiB (−49.5%)** — chỉ khác ở `fp16+cache+disk` / `fp16+cache+disk+xformers` (hai config kia vẫn disk FP32).
 
 **Khuyến nghị T4:** `fp16_disk_xformers` (FP16 disk + xFormers + EditCache).\
@@ -409,7 +410,7 @@ flowchart LR
 
 - **Tốc độ** trên T4: \~**2.45 s → 1.45 s**/edit (overall, `fp16_cache_disk_xformers`, **1.69×** vs FP32)
 - **Tốc độ** trên Mac M4 (MPS): \~**52.1 s → 7.2 s**/edit (`improved_fp16_cache`, **\~7.25×**, n=150, PSNR \~49.8 dB)
-- **VRAM** peak: \~**14.6 GB → 8.5 GB** (−42%)
+- **VRAM** peak (T4, `peak_alloc` warmup): \~**14.0 GB → 8.1 GB** (−42%; FP4 ~7.3 GB nhưng PSNR kém)
 - **Weight trên disk:** **9.79 → 4.94 GiB** (−49.5%)
 - **Chất lượng** gần như không đổi so FP32 (PSNR \~**48.5–49.8 dB**)
 - Tạo được **ứng dụng** minh họa: sửa ảnh cục bộ (FE web + BE SwiftEdit / Hybrid mask · multi-turn)

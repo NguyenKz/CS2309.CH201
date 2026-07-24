@@ -952,7 +952,46 @@ def main() -> int:
         print(f"[selftest-removal] OK -> {out}\n{info}")
         return 0
 
-    demo.launch(share=args.share, server_port=args.port)
+    print(
+        f"[demo] Launch Gradio port={args.port} share={args.share} ...",
+        flush=True,
+    )
+    if args.share:
+        print(
+            "[demo] Đang tạo public URL (*.gradio.live) — chờ sau khi server sẵn sàng...",
+            flush=True,
+        )
+    # server_name=0.0.0.0: Colab/tunnel ổn định hơn; flush log trước khi block.
+    launch_kwargs = dict(
+        share=args.share,
+        server_port=args.port,
+        server_name="0.0.0.0",
+        show_error=True,
+    )
+    try:
+        out = demo.launch(**launch_kwargs)
+    except TypeError:
+        # Gradio cũ hơn có thể không nhận show_error
+        out = demo.launch(share=args.share, server_port=args.port, server_name="0.0.0.0")
+
+    # Gradio 4/5 đôi khi trả (app, local_url, share_url) — in rõ để Colab không “nuốt” log.
+    share_url = None
+    local_url = None
+    if isinstance(out, (tuple, list)):
+        if len(out) >= 2:
+            local_url = out[1]
+        if len(out) >= 3:
+            share_url = out[2]
+    if local_url:
+        print(f"[demo] Local URL: {local_url}", flush=True)
+    if share_url:
+        print(f"[demo] Public URL: {share_url}", flush=True)
+    elif args.share:
+        print(
+            "[demo] Chưa lấy được share_url từ return value — "
+            "xem dòng 'Running on public URL' phía trên.",
+            flush=True,
+        )
     return 0
 
 

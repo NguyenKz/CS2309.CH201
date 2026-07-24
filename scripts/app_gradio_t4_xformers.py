@@ -612,30 +612,21 @@ def main() -> int:
     parser.add_argument("--local-fp32", type=Path, default=LOCAL_FP32)
     parser.add_argument(
         "--allow-download",
-        action="store_true",
+        action=argparse.BooleanOptionalAction,
         default=True,
-        help="Nếu Drive/local thiếu → tải Qualcomm (mặc định BẬT)",
+        help="Nếu Drive/local thiếu → tải Qualcomm (mặc định: có)",
     )
     parser.add_argument(
-        "--no-download",
-        action="store_true",
-        help="Cấm tải Qualcomm — chỉ dùng Drive/local",
-    )
-    parser.add_argument(
-        "--no-convert",
-        action="store_true",
-        help="Không convert fp32→fp16 trên Colab",
+        "--convert",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Cho phép convert fp32→fp16 trên Colab (mặc định: có)",
     )
     parser.add_argument(
         "--save-to-drive",
-        action="store_true",
+        action=argparse.BooleanOptionalAction,
         default=True,
-        help="Sau khi tải/convert → copy weights lên Drive (mặc định BẬT)",
-    )
-    parser.add_argument(
-        "--no-save-to-drive",
-        action="store_true",
-        help="Không copy weights lên Drive",
+        help="Sau tải/convert → copy weights lên Drive (mặc định: có)",
     )
     parser.add_argument("--share", action="store_true", help="Link public Gradio")
     parser.add_argument("--port", type=int, default=7860)
@@ -647,8 +638,9 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    allow_download = bool(args.allow_download) and not args.no_download
-    save_to_drive = bool(args.save_to_drive) and not args.no_save_to_drive
+    allow_download = bool(args.allow_download)
+    save_to_drive = bool(args.save_to_drive)
+    allow_convert = bool(args.convert)
     # Colab share mặc định nếu không truyền --share từ notebook có thể set env
     if _in_colab() and not args.share and os.environ.get("SWIFTEDIT_GRADIO_SHARE", "1") != "0":
         args.share = True
@@ -661,7 +653,7 @@ def main() -> int:
         local_fp16=args.local_fp16,
         local_fp32=args.local_fp32,
         allow_download=allow_download,
-        allow_convert=not args.no_convert,
+        allow_convert=allow_convert,
         save_to_drive=save_to_drive,
     )
 

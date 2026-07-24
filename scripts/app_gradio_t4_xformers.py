@@ -31,10 +31,18 @@ import tempfile
 import time
 from pathlib import Path
 
+print("[t4] Khởi động script…", flush=True)
+print("[t4] Đang import torch/gradio/xformers (có thể 30–90s, VRAM chưa tăng)…", flush=True)
+
 import gradio as gr
 import numpy as np
 import torch
 from PIL import Image
+
+print(
+    f"[t4] Import xong | torch={torch.__version__} cuda={torch.cuda.is_available()}",
+    flush=True,
+)
 
 ROOT = Path(__file__).resolve().parent.parent
 SCRIPTS = ROOT / "scripts"
@@ -44,6 +52,18 @@ LOCAL_FP16 = ROOT / "SwiftEdit" / "swiftedit_weights_fp16"
 LOCAL_FP32 = ROOT / "SwiftEdit" / "swiftedit_weights"
 EDIT_SIZE = 512
 CONFIG_NAME = "fp16_disk_xformers"
+
+
+def _step(n: int, total: int, msg: str) -> None:
+    print(f"\n{'=' * 60}\n[t4] BƯỚC {n}/{total}: {msg}\n{'=' * 60}", flush=True)
+
+
+def _log_vram(prefix: str = "[t4]") -> None:
+    if not torch.cuda.is_available():
+        return
+    used = torch.cuda.memory_allocated() / (1024**2)
+    reserved = torch.cuda.memory_reserved() / (1024**2)
+    print(f"{prefix} VRAM alloc={used:.0f} MB | reserved={reserved:.0f} MB", flush=True)
 
 EXAMPLE_PROMPTS = [
     [
@@ -291,6 +311,31 @@ def save_weights_to_drive(local: Path, drive: Path, *, label: str) -> None:
     print(f"[t4] {label}: đã lưu Drive → {drive}", flush=True)
 
 
+def inspect_weights(*, drive_fp16: Path, drive_fp32: Path, local_fp16: Path, local_fp32: Path) -> None:
+    """Log rõ đã có weights ở đâu — chưa tải/load gì."""
+    rows = [
+        ("Drive fp16", drive_fp16, _tree_ok(drive_fp16)),
+        ("Drive fp32", drive_fp32, _tree_ok(drive_fp32)),
+        ("Local fp16", local_fp16, _tree_ok(local_fp16)),
+        ("Local fp32", local_fp32, _tree_ok(local_fp32)),
+    ]
+    print("[t4] Kiểm tra weights:", flush=True)
+    for label, path, ok in rows:
+        mark = "CÓ" if ok else "THIẾU"
+        exists = "dir" if path.is_dir() else ("file" if path.exists() else "không tồn tại")
+        print(f"  [{mark:5}] {label}: {path} ({exists})", flush=True)
+    if _tree_ok(drive_fp16) or _tree_ok(local_fp16):
+        print("[t4] → fp16 sẵn sàng — sẽ symlink/dùng, không cần tải Qualcomm.", flush=True)
+    elif _tree_ok(drive_fp32) or _tree_ok(local_fp32):
+        print("[t4] → chỉ có fp32 — sẽ convert → fp16 (lâu, tốn RAM).", flush=True)
+    else:
+        print(
+            "[t4] → chưa có weights — sẽ TẢI Qualcomm (~10GB, vài–15 phút). "
+            "VRAM vẫn ~0 trong lúc tải.",
+            flush=True,
+        )
+
+
 def prepare_fp16_disk_weights(
     *,
     drive_fp16: Path,
@@ -302,6 +347,17 @@ def prepare_fp16_disk_weights(
     save_to_drive: bool,
 ) -> Path:
     """Drive fp16 → local; thiếu thì tải Qualcomm + convert; tùy chọn lưu lại Drive."""
+    inspect_weights(
+        drive_fp16=drive_fp16,
+        drive_fp32=drive_fp32,
+        local_fp16=local_fp16,
+        local_fp32=local_fp32,
+    )
+
+    if _tree_ok(local_fp16):
+        print(f"[t4] fp16 local đã OK — bỏ qua prepare: {local_fp16}", flush=True)
+        return local_fp16
+
     cmd = [
         sys.executable,
         "-u",
@@ -324,7 +380,8 @@ def prepare_fp16_disk_weights(
     if not allow_convert:
         cmd.append("--no-convert")
 
-    print("[t4] Chuẩn bị weights (Drive trước)...", flush=True)
+    print("[t4] Chuẩn bị weights (Drive trước → thiếu thì tải/convert)…", flush=True)
+    print(f"[t4] Lệnh: {' '.join(cmd)}", flush=True)
     r = subprocess.run(cmd, cwd=ROOT)
     if r.returncode == 0 and _tree_ok(local_fp16):
         print(f"[t4] fp16 disk OK: {local_fp16}", flush=True)
@@ -336,7 +393,7 @@ def prepare_fp16_disk_weights(
 
     # Fallback: tải Qualcomm nếu prepare chưa được phép / thất bại
     if allow_download and not _tree_ok(local_fp32):
-        print("[t4] Fallback tải Qualcomm fp32...", flush=True)
+        print("[t4] Fallback tải Qualcomm fp32…", flush=True)
         r2 = subprocess.run(
             [
                 sys.executable,
@@ -364,10 +421,11 @@ def prepare_fp16_disk_weights(
                 "Có fp32 nhưng chưa có fp16 disk. "
                 "Bỏ --no-convert hoặc upload Drive fp16."
             )
-        print("[t4] Convert fp32 → fp16 (chậm, tốn RAM)...", flush=True)
+        print("[t4] Convert fp32 → fp16 (chậm, tốn RAM)…", flush=True)
         r3 = subprocess.run(
             [
                 sys.executable,
+                "-u",
                 str(SCRIPTS / "convert_weights_fp16.py"),
                 "--src",
                 str(local_fp32),
@@ -411,7 +469,10 @@ def build_app(weights_fp16: Path):
         f"weights={weights_fp16}",
         flush=True,
     )
+    print("[t4] (VRAM sẽ tăng ở bước này — đợi InverseModel + IPSBV2…)", flush=True)
+    _log_vram()
     t0 = time.perf_counter()
+    print("[t4]   → InverseModel…", flush=True)
     inverse_model = InverseModel(
         str(weights_fp16 / "inverse_ckpt-120k"),
         device=device,
@@ -419,7 +480,11 @@ def build_app(weights_fp16: Path):
         channels_last=channels_last,
         use_xformers=use_xformers,
     )
+    _log_vram()
+    print("[t4]   → AuxiliaryModel…", flush=True)
     aux_model = AuxiliaryModel(device=device, dtype=dtype)
+    _log_vram()
+    print("[t4]   → IPSBV2Model…", flush=True)
     ip_sb_model = IPSBV2Model(
         str(weights_fp16 / "sbv2_0.5"),
         str(weights_fp16 / "ip_adapter_ckpt-90k" / "ip_adapter.bin"),
@@ -433,6 +498,12 @@ def build_app(weights_fp16: Path):
     load_s = time.perf_counter() - t0
     peak_mb = torch.cuda.max_memory_allocated() / (1024**2)
     print(f"[t4] Nạp xong {load_s:.1f}s | peak alloc ~{peak_mb:.0f} MB", flush=True)
+    _log_vram()
+    if peak_mb < 500:
+        raise RuntimeError(
+            f"Load model bất thường: peak VRAM chỉ ~{peak_mb:.0f} MB "
+            "(kỳ vọng vài GB). Kiểm tra đường dẫn weights / CUDA."
+        )
 
     cache = EditCache()
     runtime_banner = (
@@ -620,6 +691,93 @@ def build_app(weights_fp16: Path):
     return demo, run_edit, run_removal
 
 
+def _start_ngrok(port: int) -> str | None:
+    """Tạo tunnel ngrok nếu có token (env NGROK_AUTHTOKEN hoặc Colab secret)."""
+    token = os.environ.get("NGROK_AUTHTOKEN") or os.environ.get("NGROK_TOKEN")
+    if not token and _in_colab():
+        try:
+            from google.colab import userdata
+
+            token = userdata.get("NGROK_AUTHTOKEN")
+        except Exception:
+            token = None
+    if not token:
+        print(
+            "[t4] ngrok: không có NGROK_AUTHTOKEN — bỏ qua "
+            "(Colab Secrets hoặc env).",
+            flush=True,
+        )
+        return None
+    try:
+        from pyngrok import ngrok
+    except ImportError:
+        print("[t4] ngrok: pip install pyngrok…", flush=True)
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "-q", "pyngrok"])
+        from pyngrok import ngrok
+
+    ngrok.set_auth_token(token)
+    tunnel = ngrok.connect(port, "http")
+    url = tunnel.public_url if hasattr(tunnel, "public_url") else str(tunnel)
+    print(f"[t4] ngrok Public URL: {url}", flush=True)
+    return url
+
+
+def _launch_gradio(demo, *, port: int, share_mode: str) -> int:
+    """share_mode: gradio | ngrok | both | none"""
+    use_gradio_share = share_mode in ("gradio", "both")
+    use_ngrok = share_mode in ("ngrok", "both")
+
+    print(
+        f"[t4] Launch Gradio port={port} share_mode={share_mode}",
+        flush=True,
+    )
+    if use_gradio_share:
+        print(
+            "[t4] Đang tạo Gradio share (*.gradio.live) — chờ vài chục giây…",
+            flush=True,
+        )
+
+    launch_kwargs = dict(
+        share=use_gradio_share,
+        server_port=port,
+        server_name="0.0.0.0",
+        show_error=True,
+    )
+    try:
+        out = demo.launch(**launch_kwargs)
+    except TypeError:
+        out = demo.launch(
+            share=use_gradio_share,
+            server_port=port,
+            server_name="0.0.0.0",
+        )
+
+    local_url = share_url = None
+    if isinstance(out, (tuple, list)):
+        if len(out) >= 2:
+            local_url = out[1]
+        if len(out) >= 3:
+            share_url = out[2]
+    if local_url:
+        print(f"[t4] Local URL: {local_url}", flush=True)
+    if share_url:
+        print(f"[t4] Gradio Public URL: {share_url}", flush=True)
+    elif use_gradio_share:
+        print(
+            "[t4] Chưa lấy share_url từ return — xem dòng 'Running on public URL' phía trên.",
+            flush=True,
+        )
+
+    if use_ngrok:
+        _start_ngrok(port)
+
+    print(
+        "[t4] App đang chạy. Dừng: Ctrl+C / Interrupt kernel (■).",
+        flush=True,
+    )
+    return 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="Gradio Colab T4 — fp16_disk_xformers + EditCache (Drive-first)"
@@ -646,7 +804,18 @@ def main() -> int:
         default=True,
         help="Sau tải/convert → copy weights lên Drive (mặc định: có)",
     )
-    parser.add_argument("--share", action="store_true", help="Link public Gradio")
+    parser.add_argument(
+        "--share",
+        action=argparse.BooleanOptionalAction,
+        default=None,
+        help="Bật Gradio share (mặc định Colab: bật). Ghi đè --share-mode nếu False.",
+    )
+    parser.add_argument(
+        "--share-mode",
+        choices=("gradio", "ngrok", "both", "none"),
+        default=None,
+        help="Cách public URL: gradio | ngrok | both | none (mặc định: gradio trên Colab)",
+    )
     parser.add_argument("--port", type=int, default=7860)
     parser.add_argument(
         "--selftest",
@@ -659,11 +828,27 @@ def main() -> int:
     allow_download = bool(args.allow_download)
     save_to_drive = bool(args.save_to_drive)
     allow_convert = bool(args.convert)
-    # Colab share mặc định nếu không truyền --share từ notebook có thể set env
-    if _in_colab() and not args.share and os.environ.get("SWIFTEDIT_GRADIO_SHARE", "1") != "0":
-        args.share = True
 
+    # Resolve share_mode
+    share_mode = args.share_mode
+    if share_mode is None:
+        env_mode = os.environ.get("SWIFTEDIT_SHARE_MODE", "").strip().lower()
+        if env_mode in ("gradio", "ngrok", "both", "none"):
+            share_mode = env_mode
+        elif _in_colab():
+            share_mode = "gradio"
+        else:
+            share_mode = "none"
+    if args.share is False:
+        share_mode = "none"
+    elif args.share is True and share_mode == "none":
+        share_mode = "gradio"
+
+    _step(1, 4, "Kiểm tra CUDA")
     ensure_cuda()
+    _log_vram()
+
+    _step(2, 4, "Mount Drive (nếu cần) + kiểm tra / chuẩn bị weights")
     mount_drive_if_needed(args.drive_fp16, args.drive_fp32)
     weights = prepare_fp16_disk_weights(
         drive_fp16=args.drive_fp16,
@@ -674,8 +859,11 @@ def main() -> int:
         allow_convert=allow_convert,
         save_to_drive=save_to_drive,
     )
+    print(f"[t4] Weights sẵn sàng → {weights}", flush=True)
 
+    _step(3, 4, "Load model lên GPU (VRAM phải tăng)")
     demo, run_edit, _run_removal = build_app(weights)
+    print("[t4] Load model OK — mới được phép launch app.", flush=True)
 
     if args.selftest is not None:
         img, info = run_edit(
@@ -693,12 +881,8 @@ def main() -> int:
         print(f"[selftest] OK → {out}\n{info}", flush=True)
         return 0
 
-    print(
-        f"[t4] Launch Gradio port={args.port} share={args.share}",
-        flush=True,
-    )
-    demo.launch(share=args.share, server_port=args.port)
-    return 0
+    _step(4, 4, f"Launch Gradio + share ({share_mode})")
+    return _launch_gradio(demo, port=args.port, share_mode=share_mode)
 
 
 if __name__ == "__main__":

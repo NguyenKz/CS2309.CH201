@@ -8,16 +8,10 @@ Khác `app_gradio.py` (Mac MPS / fp16 compute trên weights FP32):
   - Ưu tiên **Google Drive**; thiếu thì tải Qualcomm (+ convert fp16 nếu cần)
   - Mặc định **lưu lại Drive** sau tải/convert (`--save-to-drive`)
 
-Chạy trên Colab (sau khi clone repo + GPU T4):
-  from google.colab import drive
-  drive.mount('/content/drive')
-  !pip install -q 'gradio>=5,<6' 'huggingface-hub<1.0' xformers
-  !python scripts/app_gradio_t4_xformers.py --share
+Pipeline: kiểm tra weights → thiếu thì tải (log) → load GPU → mới launch + share.
 
-Tùy chọn:
-  python scripts/app_gradio_t4_xformers.py \\
-      --drive-fp16 /content/drive/MyDrive/CS2309/swiftedit_weights_fp16 \\
-      --share --port 7860
+  python scripts/app_gradio_t4_xformers.py --share-mode gradio --port 7860
+  # share-mode: gradio | ngrok | both | none  (ngrok cần NGROK_AUTHTOKEN)
 """
 
 from __future__ import annotations
@@ -32,17 +26,30 @@ import time
 from pathlib import Path
 
 print("[t4] Khởi động script…", flush=True)
-print("[t4] Đang import torch/gradio/xformers (có thể 30–90s, VRAM chưa tăng)…", flush=True)
 
-import gradio as gr
-import numpy as np
-import torch
-from PIL import Image
+# Import nặng được gọi trong main() — để --help không cần gradio/torch.
+gr = np = torch = Image = None  # type: ignore
 
-print(
-    f"[t4] Import xong | torch={torch.__version__} cuda={torch.cuda.is_available()}",
-    flush=True,
-)
+
+def _import_runtime() -> None:
+    global gr, np, torch, Image
+    if torch is not None:
+        return
+    print(
+        "[t4] Đang import torch/gradio/xformers (có thể 30–90s, VRAM chưa tăng)…",
+        flush=True,
+    )
+    import gradio as _gr
+    import numpy as _np
+    import torch as _torch
+    from PIL import Image as _Image
+
+    gr, np, torch, Image = _gr, _np, _torch, _Image
+    print(
+        f"[t4] Import xong | torch={torch.__version__} cuda={torch.cuda.is_available()}",
+        flush=True,
+    )
+
 
 ROOT = Path(__file__).resolve().parent.parent
 SCRIPTS = ROOT / "scripts"
@@ -59,7 +66,7 @@ def _step(n: int, total: int, msg: str) -> None:
 
 
 def _log_vram(prefix: str = "[t4]") -> None:
-    if not torch.cuda.is_available():
+    if torch is None or not torch.cuda.is_available():
         return
     used = torch.cuda.memory_allocated() / (1024**2)
     reserved = torch.cuda.memory_reserved() / (1024**2)
@@ -824,6 +831,7 @@ def main() -> int:
         help="Chạy 1 edit rồi thoát (không mở server)",
     )
     args = parser.parse_args()
+    _import_runtime()
 
     allow_download = bool(args.allow_download)
     save_to_drive = bool(args.save_to_drive)

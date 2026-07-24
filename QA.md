@@ -38,7 +38,7 @@ Tài liệu liên quan: [Overview](./SwiftEdit_Overview.md) · [Đề tài](./Sw
 | 2 | [SwiftEdit & Pipeline](#2-swiftedit--pipeline) | 6 |
 | 3 | [Inversion & Noise](#3-inversion--noise) | 7 |
 | 4 | [Mask & ARaM](#4-mask--aram) | 3 |
-| 5 | [Đánh giá & PieBench](#5-đánh-giá--piebench) | 3 |
+| 5 | [Đánh giá & PieBench](#5-đánh-giá--piebench) | 4 |
 | 6 | [Triển khai Mac / Colab](#6-triển-khai-mac--colab) | 13 |
 | 7 | [Chỉnh sửa & Style](#7-chỉnh-sửa--style) | 2 |
 | 8 | [Chưa phân loại](#8-chưa-phân-loại) | 1 |
@@ -406,6 +406,20 @@ Tài liệu liên quan: [Overview](./SwiftEdit_Overview.md) · [Đề tài](./Sw
 *PSNR, MSE, CLIP-Whole, CLIP-Edited, IoU/Dice, 10 loại editing, …*
 
 <!-- qa:insert -->
+### Q: PSNR, MSE×10⁴↓, CLIP-Whole↑, CLIP-Edited↑ là độ đo gì, so sánh với cái gì?
+
+**Ngày:** 2026-07-24  
+**Chủ đề:** #metrics #psnr #mse #clip #piebench #swiftedit
+
+**Trả lời (tóm tắt):**
+- Bốn độ đo chuẩn paper SwiftEdit (Table 1) / PIE-Bench — so các method editing với nhau trên cùng dataset (ảnh nguồn, edit prompt, GT mask).
+- PSNR↑ + MSE×10⁴↓: đo bảo toàn background. So ảnh edited với ảnh nguồn trên vùng KHÔNG sửa (1 − mask). PSNR cao = nền giữ tốt; MSE thấp = sai số pixel nhỏ. ×10⁴ = nhân 10000 cho dễ đọc bảng.
+- CLIP-Whole↑: CLIPScore giữa TOÀN ảnh edited và edit_prompt — edit có khớp nghĩa prompt không (toàn cục).
+- CLIP-Edited↑: CLIPScore giữa vùng TRONG mask của ảnh edited và edit_prompt — vùng được sửa có đúng nội dung prompt không.
+- Mũi tên: ↑ càng cao càng tốt; ↓ càng thấp càng tốt.
+- Không nhầm với PSNR vs FP32 trên slide tối ưu: cái đó so output config với output baseline_fp32 cùng job (sai số precision), còn PSNR paper là so edited vs source trên background.
+
+
 ### Q: Trong kết quả đề tài SwiftEdit, các độ đo Miss/Hit/Overall/PSNR/Disk/VRAM nghĩa là gì?
 
 **Ngày:** 2026-07-24  

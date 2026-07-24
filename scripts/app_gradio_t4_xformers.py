@@ -216,10 +216,28 @@ def mount_drive_if_needed(drive_fp16: Path, drive_fp32: Path) -> None:
     if Path("/content/drive/MyDrive").is_dir():
         print("[t4] Drive đã mount.", flush=True)
         return
-    print("[t4] Mount Google Drive...", flush=True)
-    from google.colab import drive
+    # drive.mount() trong subprocess thường KHÔNG hiện UI auth Colab.
+    # Notebook phải mount trước (cell ③). Vẫn thử; fail → hướng dẫn rõ.
+    print(
+        "[t4] Drive chưa mount trong kernel — thử mount (nên mount sẵn trong notebook)...",
+        flush=True,
+    )
+    try:
+        from google.colab import drive
 
-    drive.mount("/content/drive")
+        drive.mount("/content/drive")
+    except Exception as e:
+        raise RuntimeError(
+            "Google Drive chưa mount.\n"
+            "Trong notebook CS2309_SwiftEdit_webui_t4_xformers: chạy cell ③ "
+            "(có `_mount_drive()`) trước — mount phải ở kernel, không phải subprocess.\n"
+            f"Chi tiết: {e}"
+        ) from e
+    if not Path("/content/drive/MyDrive").is_dir():
+        raise RuntimeError(
+            "Mount Drive thất bại (không thấy /content/drive/MyDrive). "
+            "Chạy lại cell mount trong notebook và Connect khi Colab hỏi."
+        )
 
 
 def ensure_xformers() -> str:

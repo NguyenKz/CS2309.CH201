@@ -1,13 +1,11 @@
 ---
-FP16+disk
-## marp: true
+marp: true
 paginate: true
 size: 16:9
 html: true
 title: SwiftEdit — Báo cáo chuyên đề CS2309
 description: Bố cục theo report/BAO_CAO_SwiftEdit.md (§1→§10); có flowchart Mermaid
-
-
+---
 
 # SwiftEdit
 
@@ -28,6 +26,8 @@ Nghiên cứu paper SwiftEdit (CVPR 2025)
 | 1    | Mở đầu · lý do chọn                                  |
 | 2    | Bài báo · bài toán I/O                               |
 | 3a   | Pipeline cũ · ý tưởng (+ flowchart)                  |
+| 3a+  | **Training trên SBv2** (vì sao + Stage 1→2)          |
+| 3a++ | **Flowchart dễ hiểu** train SBv2 → infer edit        |
 | 3b   | Kết quả paper (PIE-Bench)                            |
 | 4–5  | Phương pháp · thực nghiệm (+ flowchart)              |
 | 6–7  | Kết quả đề tài (T4 + Mac MPS) · FP32/16/4 · ứng dụng |
@@ -92,6 +92,80 @@ flowchart LR
 | **Self-guided mask + ARaM** | Ước vùng sửa + rescale attention (`s_y`, `s_edit`, `s_non-edit`)                                                  |
 
 → Cũ: **20–50 + 20–50** bước. SwiftEdit: **1 + 1** bước.
+
+---
+
+# §3a+. Nguyên lý training SwiftEdit trên SBv2
+
+**Vì sao gắn SBv2?** SwiftBrushv2 = **T2I one-step** (distill từ SD-Turbo). Biết **noise → ảnh** trong 1 bước → tạo được cặp `(noise, ảnh)` synthetic để dạy `F_theta` đảo ngược; lúc edit thì **cùng SBv2** (+ IP-Adapter) sinh lại ảnh trong 1 bước.
+
+**Ai được train?** `F_theta` (inversion) + nhánh **IP-Adapter**. **SBv2 backbone đóng băng** — không train lại generator gốc.
+
+```mermaid
+flowchart TB
+    subgraph why [Vai trò SBv2]
+        SBv2["SBv2 frozen: noise + prompt → ảnh (1 bước)"]
+    end
+    subgraph s1 [Stage 1 — synthetic · ~100k iter]
+        N1["noise_svb ngẫu nhiên + src_prompt"] --> Gen1["SBv2 → Img_svb"]
+        Gen1 --> Enc1["VAE encode → z"]
+        Enc1 --> F1["F_theta(z, src_prompt) → noise_f"]
+        F1 --> L1["Loss: |noise_svb − noise_f| + recon ≈ Img_svb"]
+    end
+    subgraph s2 [Stage 2 — ảnh thật · ~180k iter]
+        Real["Img_real + caption"] --> Enc2["VAE → z"]
+        Enc2 --> F2["F_theta → noise_f"]
+        F2 --> Rec2["SBv2 + IP-Adapter → Img_recon"]
+        Rec2 --> L2["Loss: DISTS(Img_real, Img_recon) + L_reg"]
+    end
+    subgraph infer [Inference edit — không train]
+        Src["Ảnh nguồn"] --> Inv["F_theta: eps_hat_src / eps_hat_edit"]
+        Inv --> Mask["Mask = |eps_src − eps_edit|"]
+        Mask --> Edit["SBv2 + IP + ARaM + edit_prompt → ảnh sửa"]
+    end
+    SBv2 --> s1
+    s1 --> s2
+    s2 --> infer
+```
+
+| Stage | Dữ liệu | Mục tiêu train | Không làm gì |
+| ----- | ------- | -------------- | ------------ |
+| **1** | ~40k caption JourneyDB → ảnh **synthetic từ SBv2** | `F_theta` học đảo: ảnh → đúng `noise_svb` đã dùng để sinh | **Không** dùng edit prompt |
+| **2** | ~5k ảnh thật CommonCanvas | Tái tạo ảnh thật (DISTS); chỉnh IP-Adapter / phân phối noise | **Vẫn không** train hành vi “edit” |
+| **Infer** | Checkpoint pretrained | — | Đổi `edit_prompt` + ARaM → edit lúc chạy |
+
+→ Train = học **invert + tái tạo**; **edit** chỉ xuất hiện ở inference (đổi prompt + mask/ARaM). Đề tài **không** train lại — dùng checkpoint.
+
+---
+
+# §3a++. Flowchart dễ hiểu — train SwiftEdit nhờ SBv2
+
+**Giải thích ngắn**
+
+1. **SBv2 đóng băng** — đã biết sinh ảnh 1 bước từ noise + prompt.
+2. **Stage 1** — dùng SBv2 tạo ảnh giả → dạy `F_theta` **đảo ngược** (ảnh → đúng noise đã dùng).
+3. **Stage 2** — ảnh thật → dạy `F_theta` + **IP-Adapter** **tái tạo** ảnh (chưa dạy edit).
+4. **Lúc chạy** — đổi edit prompt + mask/ARaM → mới thành **edit**.
+
+→ Train = invert + tái tạo. Edit = chỉ lúc inference. Đề tài dùng checkpoint sẵn.
+
+```mermaid
+flowchart TB
+    SBv2["1. SBv2 frozen: noise + prompt → ảnh"]
+    SBv2 --> S1["2. Stage 1: F_theta học đảo noise"]
+    S1 --> S2["3. Stage 2: F_theta + IP học tái tạo"]
+    S2 --> Ckpt["Checkpoint pretrained"]
+    Ckpt --> Img[Ảnh nguồn]
+    Img --> Inv["4. F_theta x2: src và edit prompt"]
+    Inv --> Mask[Self-guided mask]
+    Mask --> Out["SBv2 + IP + ARaM → ảnh đã sửa"]
+```
+
+| Train | Đóng băng | Lúc train có edit? |
+| ----- | --------- | ------------------ |
+| `F_theta` + IP-Adapter | SBv2 | Không — edit chỉ lúc infer |
+
+Checkpoint: `inverse_ckpt-120k` · `sbv2_0.5` · `ip_adapter_ckpt-90k`
 
 ---
 
@@ -372,6 +446,7 @@ flowchart LR
 # Cảm ơn / QA
 
 - Paper vs đề tài? → paper = thuật toán; đề tài = nghiên cứu paper + tối ưu cách chạy
+- Train SwiftEdit trên SBv2 thế nào? → Stage 1 synthetic (regression noise) → Stage 2 ảnh thật (DISTS); SBv2 freeze; edit chỉ lúc infer — xem slide **§3a+ / §3a++**
 - Vì sao không LoRA làm chính? → không giải trực tiếp tốc độ inference
 - VAE vẫn FP32? → FP16 dễ NaN/đen
 - PSNR 48.5 dB? → so với output FP32 cùng job

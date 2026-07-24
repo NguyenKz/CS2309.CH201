@@ -21,6 +21,7 @@ Tài liệu: [`SwiftEdit_Overview.md`](./SwiftEdit_Overview.md) · [`SwiftEdit_D
 | Thực nghiệm giai đoạn 3 (ablation + PIE-Bench) | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/NguyenKz/CS2309.CH201/blob/main/notebooks/CS2309_SwiftEdit_phase3.ipynb) |
 | Test nhanh pipeline | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/NguyenKz/CS2309.CH201/blob/main/notebooks/CS2309_SwiftEdit_test.ipynb) |
 | **WebUI Gradio** (edit + xóa vật thể) | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/NguyenKz/CS2309.CH201/blob/main/notebooks/CS2309_SwiftEdit_webui.ipynb) |
+| **WebUI T4** (`fp16_disk_xformers` + Drive) | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/NguyenKz/CS2309.CH201/blob/main/notebooks/CS2309_SwiftEdit_webui_t4_xformers.ipynb) |
 
 > Mở badge → Colab → Runtime **T4 GPU** → chạy tuần tự. Repo private cần thêm `GITHUB_TOKEN` trong Colab Secrets (xem cell setup).
 
@@ -73,6 +74,7 @@ CS2309.CH201/
 ├── notebooks/
 │   ├── CS2309_SwiftEdit_test.ipynb
 │   ├── CS2309_SwiftEdit_webui.ipynb
+│   ├── CS2309_SwiftEdit_webui_t4_xformers.ipynb
 │   ├── CS2309_SwiftEdit_phase3.ipynb
 │   └── CS2309_SwiftEdit_quality_speed_bench.ipynb
 ├── experimental_data/         ← Bằng chứng thực nghiệm (metrics, ảnh mẫu)
@@ -225,6 +227,7 @@ Chi tiết: [Mục 4.2 đề tài](./SwiftEdit_DeTai_CS2309.md#42-google-colab--
 | Precision picker Colab (T4) | Workflow 3 lần: `fp32` → `fp16_weight` → `fp4_weight`; catalog/eval sẵn; [`PRECISION_CASES.md`](./experimental_data/PRECISION_CASES.md) — chờ bundle full 600 |
 | PIE-Bench Mac | 20 mẫu (2/loại × 10 loại); CLIP-Whole 23.02 — [`piebench_subset20_2026-06-14/`](./experimental_data/piebench_subset20_2026-06-14/) |
 | Demo | Gradio fp16+cache + tab xóa vật thể — [`app_gradio.py`](./scripts/app_gradio.py) · notebook [`CS2309_SwiftEdit_webui.ipynb`](./notebooks/CS2309_SwiftEdit_webui.ipynb) |
+| Demo T4 | `fp16_disk_xformers` + Drive-first — [`app_gradio_t4_xformers.py`](./scripts/app_gradio_t4_xformers.py) · [`CS2309_SwiftEdit_webui_t4_xformers.ipynb`](./notebooks/CS2309_SwiftEdit_webui_t4_xformers.ipynb) |
 | Runtime 3 cột | Mac MPS ~30s / Colab T4 ~1.3–2.9s / Paper A100 ~0.23s |
 | **Học diffusion + QA** | [`learn/diffusion-from-scratch/`](./learn/diffusion-from-scratch/) notebook 01→04; [`QA.md`](./QA.md) §1–3 (F_theta, SBv2, pipeline notation) — xem [`NHAT_KY.md`](./NHAT_KY.md) 2026-07-03 |
 

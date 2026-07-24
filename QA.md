@@ -36,7 +36,7 @@ Tài liệu liên quan: [Overview](./SwiftEdit_Overview.md) · [Đề tài](./Sw
 |---|---|---|
 | 1 | [Diffusion & Text-to-Image](#1-diffusion--text-to-image) | 4 |
 | 2 | [SwiftEdit & Pipeline](#2-swiftedit--pipeline) | 6 |
-| 3 | [Inversion & Noise](#3-inversion--noise) | 5 |
+| 3 | [Inversion & Noise](#3-inversion--noise) | 7 |
 | 4 | [Mask & ARaM](#4-mask--aram) | 3 |
 | 5 | [Đánh giá & PieBench](#5-đánh-giá--piebench) | 3 |
 | 6 | [Triển khai Mac / Colab](#6-triển-khai-mac--colab) | 13 |
@@ -222,6 +222,33 @@ Tài liệu liên quan: [Overview](./SwiftEdit_Overview.md) · [Đề tài](./Sw
 *DDIM inversion, Null-text, one-step inversion `F_theta`, inverted noise `eps_hat`, stage 1/2 training, …*
 
 <!-- qa:insert -->
+### Q: Nguyên lý train SwiftEdit trên SBv2 là gì?
+
+**Ngày:** 2026-07-24  
+**Chủ đề:** #training #sbv2 #f-theta #swiftedit
+
+**Trả lời (tóm tắt):**
+- SBv2 (SwiftBrushv2) là T2I one-step: noise + prompt → ảnh trong 1 bước; backbone này đóng băng khi train SwiftEdit.
+- Stage 1 (~40k caption JourneyDB, ~100k iter): SBv2 sinh ảnh synthetic → F_theta học đảo noise (regression |noise_svb − noise_f|).
+- Stage 2 (~5k ảnh CommonCanvas, ~180k iter): F_theta + IP-Adapter học tái tạo ảnh thật (DISTS); vẫn không dạy hành vi edit.
+- Edit chỉ lúc inference: đổi edit_prompt + self-guided mask + ARaM trên checkpoint pretrained.
+- Đề tài không train lại — dùng inverse_ckpt-120k + sbv2_0.5 + ip_adapter_ckpt-90k.
+
+
+### Q: Nguyên lý training SwiftEdit trên SBv2 là gì?
+
+**Ngày:** 2026-07-24  
+**Chủ đề:** #training #sbv2 #f_theta #swiftedit #stage1 #stage2
+
+**Trả lời (tóm tắt):**
+- SBv2 (one-step T2I) đóng băng: dùng để sinh cặp (noise, ảnh) synthetic và làm generator lúc infer.
+- Train F_theta + IP-Adapter; không train lại SBv2 backbone.
+- Stage 1 (~100k): noise_svb + prompt → SBv2 → ảnh → F_theta học hồi quy noise + recon.
+- Stage 2 (~180k): ảnh thật → invert → recon; loss DISTS + L_reg — vẫn tái tạo, không train edit.
+- Edit chỉ lúc inference: đổi edit_prompt + mask/ARaM trên checkpoint pretrained.
+- Slide: report/SLIDE_SwiftEdit.md §3a+.
+
+
 ### Q: Loss perceptual Stage 2 (DISTS) chấm điểm thế nào?
 
 **Ngày:** 2026-06-19  

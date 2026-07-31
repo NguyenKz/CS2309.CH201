@@ -455,6 +455,56 @@ def build_app(dtype: str):
         )
         return _unletterbox(tensor_to_pil(res), lb_meta), info
 
+    def generate_paper_candidate_batch(
+        image_path,
+        src_p,
+        edit_p,
+        scale_edit,
+        scale_non_edit,
+        mask_threshold,
+        batch_counter,
+    ):
+        """Paper-style: chỉ ảnh + prompt → 1 kết quả full-frame (self-guided mask)."""
+        if not image_path:
+            raise gr.Error("Vui lòng tải lên ảnh nguồn.")
+        if not edit_p or not edit_p.strip():
+            raise gr.Error("Vui lòng nhập Edit prompt.")
+        model_path, lb_meta = _prepare_model_image(image_path)
+        n = int(batch_counter or 0) + 1
+        seed = 250101049 + n
+        yield (
+            None,
+            f"**Paper demo · lần {n}:** đang sinh (self-guided mask, không tô tay)…",
+            n,
+        )
+        _sync(device)
+        t0 = time.perf_counter()
+        res = edit_image(
+            model_path,
+            src_p or "",
+            edit_p.strip(),
+            inverse_model,
+            aux_model,
+            ip_sb_model,
+            scale_edit=scale_edit,
+            scale_non_edit=scale_non_edit,
+            mask_threshold=mask_threshold,
+            cache=EditCache(),
+            seed=seed,
+            user_mask=None,
+        )
+        out = _unletterbox(tensor_to_pil(res), lb_meta)
+        _sync(device)
+        elapsed = time.perf_counter() - t0
+        info = (
+            f"**Paper demo** (khớp paper: chỉ prompt, self-guided mask) · "
+            f"**Lần {n}** · xong trong {elapsed:.2f}s  \n"
+            f"**Thiết bị:** `{device}` · **dtype:** `{dtype}` · "
+            f"**Seed:** `{seed}`  \n"
+            f"Source prompt có thể để trống (paper Fig. 8)."
+        )
+        yield out, info, n
+
     def reset_edit_session(image_path, src_p):
         if not image_path:
             return None, None, "Tải ảnh để bắt đầu phiên chỉnh sửa."
@@ -704,20 +754,84 @@ def build_app(dtype: str):
         js=BRUSH_REFRESH_JS,
     ) as demo:
         gr.Markdown(
-            "# SwiftEdit-RT — Chỉnh sửa & xóa vật thể bằng prompt (one-step)\n"
-            f"Inference tăng tốc bằng **fp16 + channels_last + cache** "
-            f"(đang chạy `{dtype}` trên `{device}`)."
+            "# SwiftEdit-RT — Demo one-step editing\n"
+            f"**Paper demo** = chỉ upload + prompt (self-guided). "
+            "**ROI / tô mask** = mở rộng đề tài. "
+            f"Đang chạy `{dtype}` trên `{device}`."
         )
         with gr.Tabs():
-            with gr.Tab("Chỉnh sửa bằng prompt"):
+            with gr.Tab("Paper demo (chỉ prompt)"):
+                paper_batch = gr.State(value=0)
+                gr.Markdown(
+                    "Khớp paper SwiftEdit: **upload ảnh → source/edit prompt → 1 kết quả**. "
+                    "Không cần tô mask (self-guided). Source prompt có thể để trống.\n\n"
+                    "**Gợi ý demo:** `woman` → `Taylor Swift` (case README, đổi rõ). "
+                    "Đổi giới tính toàn cục (`a man`) thường **under-edit** vì IP-Adapter giữ identity. "
+                    "Nếu yếu: mở ARaM, hạ `scale_edit` (0–0.1) hoặc dùng tab ROI + tô mặt."
+                )
+                with gr.Row():
+                    with gr.Column(scale=1):
+                        paper_image = gr.Image(
+                            label="Ảnh nguồn", type="filepath", height=320,
+                        )
+                        paper_src = gr.Textbox(
+                            label="Source prompt (tuỳ chọn)",
+                            placeholder="vd: a mountain bicycle on the road — có thể để trống",
+                        )
+                        paper_edit = gr.Textbox(
+                            label="Edit prompt (bắt buộc)",
+                            placeholder="vd: a rusty motorcycle on the road",
+                        )
+                        with gr.Accordion("Tùy chọn ARaM", open=False):
+                            paper_sl_edit = gr.Slider(
+                                0.0, 1.0, value=0.2, step=0.05, label="scale_edit",
+                            )
+                            paper_sl_non = gr.Slider(
+                                0.0, 2.0, value=1.0, step=0.05, label="scale_non_edit",
+                            )
+                            paper_sl_mask = gr.Slider(
+                                0.0, 1.0, value=0.5, step=0.05, label="mask_threshold",
+                            )
+                        paper_btn = gr.Button("Tạo kết quả", variant="primary")
+                        paper_regen = gr.Button("Regen")
+                    with gr.Column(scale=1):
+                        paper_info = gr.Markdown()
+                        paper_out = gr.Image(label="Kết quả", height=420)
+                gr.Examples(
+                    examples=[[p[0], p[1]] for p in EXAMPLE_PROMPTS],
+                    inputs=[paper_src, paper_edit],
+                    label="Ví dụ prompt",
+                )
+                paper_inputs = [
+                    paper_image,
+                    paper_src,
+                    paper_edit,
+                    paper_sl_edit,
+                    paper_sl_non,
+                    paper_sl_mask,
+                    paper_batch,
+                ]
+                paper_outputs = [paper_out, paper_info, paper_batch]
+                paper_btn.click(
+                    generate_paper_candidate_batch,
+                    inputs=paper_inputs,
+                    outputs=paper_outputs,
+                )
+                paper_regen.click(
+                    generate_paper_candidate_batch,
+                    inputs=paper_inputs,
+                    outputs=paper_outputs,
+                )
+
+            with gr.Tab("ROI / tô mask (mở rộng)"):
                 edit_session = gr.State(value=None)
                 with gr.Row():
                     with gr.Column(scale=1):
                         inp_image = gr.Image(label="Ảnh nguồn", type="filepath", height=320)
                         gr.Markdown(
-                            "**Chọn vùng sửa:** dùng cọ tô mask trên *Ảnh hiện tại*. "
-                            "Hệ thống tự tạo crop vuông có context bao quanh mask, "
-                            "sau đó chỉ ghép kết quả vào đúng vùng đã tô."
+                            "**Mở rộng đề tài (không bắt buộc theo paper):** tô mask trên "
+                            "*Ảnh hiện tại* → crop ROI → Hybrid blend. "
+                            "Dùng khi cần kiểm soát vùng sửa / multi-turn."
                         )
                         current_image = gr.ImageEditor(
                             label="Ảnh hiện tại — tô mask vùng cần sửa",

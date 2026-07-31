@@ -143,13 +143,19 @@ SwiftEdit dựa trên SwiftBrushv2 (SBv2) — mô hình text-to-image one-step �
 2. **One-step generation/editing** — đưa inverted noise vào generator có IP-Adapter để sinh ảnh đã sửa trong một bước.
 3. **Self-guided mask + ARaM** — so sánh inverted noise khi điều kiện bằng source prompt và edit prompt để ước lượng vùng cần sửa; attention rescaling giữ nền và điều khiển cường độ chỉnh sửa.
 
-**Hộp thông tin training (paper):**
+**Hộp thông tin training (paper, Fig. 2 + Sec. 4.1):**
 
-| Stage | Dữ liệu | Quy mô | Iteration |
-|---|---|---|---|
-| Stage 1 | Synthetic từ SBv2 + caption JourneyDB | khoảng 40.000 caption | 100.000 |
-| Stage 2 | Ảnh thật CommonCanvas | khoảng 5.000 ảnh | 180.000 |
-| Phần cứng | NVIDIA A100 40GB | — | — |
+| Stage | Dữ liệu | Quy mô | Iteration | Ai được train |
+|---|---|---|---|---|
+| Stage 1 | Synthetic từ SBv2 + caption JourneyDB | ~40.000 caption | 100.000 | `F_theta` + IP-Adapter (`W^K_x`, `W^V_x`); SBv2/VAE/CLIP **freeze** |
+| Stage 2 | Ảnh thật CommonCanvas | ~5.000 ảnh | 180.000 | **Chỉ `F_theta`** (tiếp tục từ Stage 1); **IP-Adapter freeze** |
+| Phần cứng | NVIDIA A100 40GB | — | — | — |
+
+**Thứ tự:** Stage 1 rồi Stage 2 (**tuần tự**, không song song). Caption Fig. 2: *warm up* → *shift / continue*.
+
+**Legend Fig. 2 (quy ước CV/ML):** ngọn lửa = trainable; bông tuyết = frozen. Edit / ARaM / self-guided mask **không** nằm trong training — chỉ lúc inference.
+
+Chi tiết trả lời thầy: slide [`SLIDE_SwiftEdit.md`](SLIDE_SwiftEdit.md) §3a-fig; QA mục training (Fig. 2).
 
 Đề tài **chỉ dùng pretrained checkpoint**; không tái hiện training.
 
@@ -239,7 +245,8 @@ SwiftEdit không đứng đầu mọi metric chất lượng, nhưng tạo trade
 | Kiểm soát công bằng | cùng `jobs_hash`, seed `250101049`, cùng ảnh và prompt |
 | Kịch bản cold | chỉ `prompt_idx=0` (khoảng 200 jobs/config) |
 | Kịch bản cache | 200 miss + 400 hit |
-| Chất lượng precision | PSNR output từng config so với output FP32 cùng job |
+| Chất lượng precision (**lớp A**) | PSNR/SSIM/LPIPS/MSE: output config ↔ output FP32 cùng job |
+| Edit quality (**lớp B**, subset) | CLIP + PSNR nền vs source: `piebench_subset20` — xem `EDIT_QUALITY_SUMMARY.md` |
 | Tài nguyên | disk checkpoint, peak/driver memory, runtime sau load |
 
 **Ba edit prompt trên mỗi ảnh** (cùng source prompt lấy từ PIE-Bench-auto200; sinh bởi `scripts/build_june17_jobs.py`, khớp benchmark 2026-06-17):
@@ -391,19 +398,36 @@ Checkpoint công khai gốc lưu trọng số chủ yếu dạng FP32. Chỉ b�
 
 **Ý nghĩa:** giảm disk giúp lưu Drive/Colab nhẹ hơn; giảm peak lúc load giúp máy 16GB VRAM nạp model ổn định hơn. Đây là đóng góp tài nguyên riêng, bổ sung cho tăng tốc runtime.
 
-### 6.3. Kết quả FP16 so với FP32 (tốc độ và chất lượng)
+### 6.3. Kết quả FP16 so với FP32 (tốc độ và fidelity precision)
 
-Baseline: `baseline_fp32`. Mọi PSNR dưới đây là **PSNR(output_config, output_fp32)** cùng job — càng cao càng gần FP32.
+Baseline: `baseline_fp32`. **Fidelity precision** đo bằng **PSNR / SSIM / LPIPS / MSE** giữa **output config** và **output FP32** cùng job (seed cố định) — **không** so với ảnh nguồn, **không** đo “edit có đúng ý người dùng”. Chi tiết audit: [`AUDIT_PSNR_FIDELITY.md`](AUDIT_PSNR_FIDELITY.md).
 
-**Cold/fair trên T4 (chỉ `prompt_idx=0`, n=200, không hưởng EditCache hit):**
+**Hai lớp độ đo (chỏi nhau có chủ đích):**
 
-| Config | mean s/edit | Speedup vs FP32 | PSNR vs FP32 (mean) |
-|---|---:|---:|---:|
-| `baseline_fp32` | 2.4456 | 1.000× | — (baseline) |
-| `fp16_disk` | 1.7592 | **1.390×** | **48.47 dB** |
-| `improved_fp16_cache` | 1.7625 | 1.388× | 48.47 dB |
+| Lớp | Câu hỏi | Độ đo | So sánh |
+|---|---|---|---|
+| A. Fidelity tối ưu | Config có lệch FP32 không? | PSNR/SSIM/LPIPS/MSE | edit_config ↔ edit_FP32 |
+| B. Edit quality | Edit đúng prompt / giữ nền? | CLIP-Whole/Edited; PSNR/MSE nền | edited ↔ prompt; edited ↔ **source** `(1−mask)` |
 
-Trên full 600 jobs, PSNR mean FP16 vs FP32 vẫn khoảng **48.52 dB** (gần như không đổi về mặt cảm nhận khi so pixel với seed cố định).
+**Cold/fair trên T4 (chỉ `prompt_idx=0`, n=200) — tốc độ:**
+
+| Config | mean s/edit | Speedup vs FP32 |
+|---|---:|---:|
+| `baseline_fp32` | 2.4456 | 1.000× |
+| `fp16_disk` | 1.7592 | **1.390×** |
+| `improved_fp16_cache` | 1.7625 | 1.388× |
+
+**Chất lượng vs FP32** (`quality_speed_bench_2026-06-17`, n=600; các alias FP16 dùng chung số `improved_fp16_cache`):
+
+| Config | PSNR mean (min–max) | SSIM mean (min–max) | LPIPS mean (min–max) | MSE mean (min–max) |
+|---|---|---|---|---|
+| `baseline_fp32` | — (reference) | — | — | — |
+| `improved_fp16_cache` / `fp16_disk` / xFormers | **48.56 (34.97–56.73)** | **0.9976 (0.9889–0.9994)** | **0.0008 (0.0001–0.0063)** | **0.000020 (0.000002–0.00032)** |
+| `improved_fp4_cache` | 21.67 (16.59–29.41) | 0.7757 (0.4763–0.9630) | 0.1504 (0.0215–0.3057) | 0.0076 (0.0011–0.022) |
+
+**Đọc nhanh (lớp A):** mean PSNR cao nhưng **min vẫn ~35 dB**; SSIM min ~0.989; LPIPS max ~0.006. Spot-check 12 mẫu: FP16↔FP32 ~47 dB; **edit↔ảnh nguồn ~19 dB** — không phải “copy gốc”. FP4 cùng protocol kém rõ trên cả 4 độ đo.
+
+**Đối chứng lớp B (edit quality, PieBench subset 20, Mac MPS):** CLIP-Whole mean **23.02**, CLIP-Edited **21.46**, PSNR nền `(1−mask)` mean **14.01** (n=9 có mask). Nguồn: `experimental_data/piebench_subset20_2026-06-14/EDIT_QUALITY_SUMMARY.md`. Hai lớp số **không thay thế nhau**.
 
 Kết hợp §6.2.4: FP16 vừa **nhanh hơn FP32**, vừa **nhẹ hơn trên disk/RAM**, nên là cấu hình thực dụng nhất.
 
@@ -417,6 +441,7 @@ Kết hợp §6.2.4: FP16 vừa **nhanh hơn FP32**, vừa **nhẹ hơn trên di
 | Config | `baseline_fp32`, `improved_fp16_cache` (disk vẫn FP32; compute FP16 + channels_last + EditCache) |
 | Jobs | **150** · seed `250101049` · `jobs_hash=622489df40d10991` |
 | PSNR | so output từng config với `baseline_fp32` cùng job |
+| SSIM / LPIPS | **chưa** tính trên bundle Mac (đa độ đo đầy đủ xem bench T4 §6.3) |
 | Bundle | `test_data/swiftedit_bundle_macos_mps_baseline_fp32+improved_fp16_cache_20260724-040029.zip` |
 | Run folder | `experimental_data/precision_run_20260724-040029_baseline_fp32+improved_fp16_cache/` |
 
@@ -429,7 +454,7 @@ Kết hợp §6.2.4: FP16 vừa **nhanh hơn FP32**, vừa **nhẹ hơn trên di
 
 - Overall **~7.25×** nhanh hơn FP32 trên cùng máy Mac (52.1 s → 7.2 s/edit).
 - Peak memory lúc load giảm khoảng **47%** (12.4 GB → 6.5 GB alloc).
-- PSNR vs FP32 ~**49.8 dB** — gần như không đổi về mặt cảm nhận khi so pixel với seed cố định.
+- PSNR vs FP32 mean ~**49.8 dB** (chỉ có mean trên Mac; củng cố bằng SSIM/LPIPS trên T4 ở §6.3).
 - Speedup tuyệt đối lớn hơn trên T4 vì baseline FP32 trên **MPS rất chậm**; đây là bằng chứng quan trọng rằng tối ưu FP16+EditCache có ích trên máy cá nhân Apple Silicon, không chỉ Colab CUDA.
 
 ### 6.4. Kết quả EditCache (so miss và so FP32)
@@ -466,46 +491,53 @@ Kịch bản: cùng ảnh + cùng source prompt, đổi nhiều edit prompt (200
 T4 **không** cần hỗ trợ tính toán native FP4. bitsandbytes cung cấp **đường thực thi phần mềm**: trọng số lưu dạng 4-bit trên GPU → lúc MatMul tự dequant sang FP16 → nhân bằng kernel FP16 vốn có trên Turing. Do đó pipeline SwiftEdit **vẫn chạy end-to-end** và xuất ra ảnh (không crash), nhưng:
 
 - Chi phí dequant triệt tiêu phần lớn lợi ích băng thông → tốc độ **không thắng** FP16 rõ ràng.
-- Sai số tích lũy trên pipeline one-step → PSNR so FP32 chỉ khoảng **21–22 dB** (so với ~48.5 dB của FP16).
+- Sai số tích lũy trên pipeline one-step → PSNR so FP32 chỉ khoảng **21–22 dB** (so với FP16: **48.56 dB**, min 34.97 / max 56.73; SSIM ~0.998; LPIPS ~0.0008).
 
 Theo `experimental_data/FP4_DECISION_AND_NEXT_PLAN.md`: **dừng FP4 làm hướng tối ưu chính trên T4**; giữ số liệu như **ablation âm** trên báo cáo. Không lưu checkpoint FP4 trên disk.
 
 #### 6.5.2. Số liệu FP4 / xFormers so với FP32
 
-Mọi cột tốc độ và chất lượng dưới đây lấy **FP32 làm mốc 1.000×**. PSNR là so với ảnh output FP32 cùng job.
+Mọi cột tốc độ dưới đây lấy **FP32 làm mốc 1.000×**. Chất lượng: PSNR so output FP32 cùng job; đa độ đo đầy đủ (PSNR/SSIM/LPIPS min–max) xem §6.3 và `quality_speed_bench_2026-06-17`.
 
-**Cold (`prompt_idx=0`, n=200):**
+**Cold (`prompt_idx=0`, n=200) — tốc độ:**
 
-| Config | mean s/edit | Speedup vs **FP32** | PSNR vs **FP32** (mean) | Nhận xét ngắn |
-|---|---:|---:|---:|---|
-| `baseline_fp32` | 2.4456 | 1.000× | — | Baseline |
-| `fp16_disk` | 1.7592 | 1.390× | 48.47 dB | Gần FP32, nhanh hơn rõ |
-| `fp16_disk_xformers` | **1.6423** | **1.489×** | 48.47 dB | Nhanh hơn FP32 thêm một bậc nhỏ so FP16 thuần |
-| `improved_fp4_cache` | 1.8185 | 1.345× | **21.17 dB** | Nhanh hơn FP32 nhưng **chất lượng tụt mạnh** |
+| Config | mean s/edit | Speedup vs **FP32** | Nhận xét ngắn |
+|---|---:|---:|---|
+| `baseline_fp32` | 2.4456 | 1.000× | Baseline |
+| `fp16_disk` | 1.7592 | 1.390× | Gần FP32, nhanh hơn rõ |
+| `fp16_disk_xformers` | **1.6423** | **1.489×** | Nhanh hơn thêm so FP16 thuần |
+| `improved_fp4_cache` | 1.8185 | 1.345× | Nhanh hơn FP32 nhưng chất lượng tụt |
 
-**Overall 600 jobs (có EditCache ở các config hỗ trợ):**
+**Overall 600 jobs — tốc độ:**
 
-| Config | mean s/edit (overall) | Speedup vs **FP32** | PSNR vs **FP32** (full 600) |
-|---|---:|---:|---:|
-| `baseline_fp32` | khoảng 2.45 | 1.000× | — |
-| `fp16_disk` | 1.5558 | **1.572×** | 48.52 dB |
-| `fp16_disk_xformers` | 1.4504 | **1.687×** | 48.52 dB |
-| `improved_fp4_cache` | 1.6154 | 1.514× | 21.67 dB |
+| Config | mean s/edit | Speedup vs **FP32** |
+|---|---:|---:|
+| `baseline_fp32` | ~2.45 | 1.000× |
+| `fp16_disk` | 1.5558 | **1.572×** |
+| `fp16_disk_xformers` | 1.4504 | **1.687×** |
+| `improved_fp4_cache` | 1.6154 | 1.514× |
+
+**Chất lượng vs FP32** (n=600, `quality_speed_bench_2026-06-17`; FP16 disk/xformers = cùng số `improved_fp16_cache`):
+
+| Config | PSNR mean (min–max) | SSIM mean (min–max) | LPIPS mean (min–max) | MSE mean (min–max) |
+|---|---|---|---|---|
+| `baseline_fp32` | — | — | — | — |
+| FP16 (+ disk / + xFormers) | **48.56 (34.97–56.73)** | **0.9976 (0.9889–0.9994)** | **0.0008 (0.0001–0.0063)** | **0.000020 (0.000002–0.00032)** |
+| `improved_fp4_cache` | 21.67 (16.59–29.41) | 0.7757 (0.4763–0.9630) | 0.1504 (0.0215–0.3057) | 0.0076 (0.0011–0.022) |
 
 **Phân tích FP4 so với FP32:**
 
 - Tốc độ cold chỉ **1.345×** so FP32 — **chậm hơn cold FP16 (1.390×)**.
-- PSNR vs FP32 chỉ khoảng **21.2 dB** (cold) / **21.7 dB** (full), trong khi FP16 đạt khoảng **48.5 dB**.
+- PSNR vs FP32 **21.67 (16.59–29.41)**; SSIM **0.78**; LPIPS **0.15** — kém rõ FP16 trên cả 4 độ đo.
 - Nguyên nhân chính: T4 không có native FP4 Tensor Core; bitsandbytes Linear-only phải dequant về FP16; sai lệch tích lũy mạnh trên pipeline one-step.
 - **Vẫn chạy được** nhờ đường dequant mềm của bitsandbytes (mục 6.5.1) — “chạy được” ≠ “tối ưu được”.
 - Kết luận: **dừng FP4 làm hướng tối ưu**; chỉ giữ như ablation âm so với FP32/FP16.
 
 **Phân tích xFormers (trên nền FP16) so với FP32:**
 
-- Cold **1.489×**, overall **1.687×** so với FP32; PSNR giữ mức FP16 (~48.5 dB).
+- Cold **1.489×**, overall **1.687×** so với FP32; chất lượng giữ mức FP16 (bảng trên).
 - Lợi ích đến từ Memory-Efficient Attention trên một phần self-attention; nhánh ARaM masked cross-attention vẫn chủ yếu dùng einsum nên không hưởng lợi toàn phần.
-- Đây là tinh chỉnh trên FP16: trên **T4 CUDA**, **FP16 disk + xFormers + EditCache** nhanh nhất (overall **1.687×** vs FP32) với PSNR giữ ~48.5 dB.
-- Nhánh ARaM masked attention vẫn chủ yếu einsum nên không hưởng lợi MEA toàn phần — lợi ích có nhưng vừa phải.
+- Đây là tinh chỉnh trên FP16: trên **T4 CUDA**, **FP16 disk + xFormers + EditCache** nhanh nhất (overall **1.687×** vs FP32) với chất lượng gần FP32 theo nhiều độ đo.
 - **Không có xFormers** (vd. Mac MPS): dùng **FP16 disk + EditCache** (~1.57× overall).
 - **FP4** không khuyến nghị trên T4.
 
@@ -513,9 +545,21 @@ Mọi cột tốc độ và chất lượng dưới đây lấy **FP32 làm mố
 
 ## 7. Ứng dụng và cách đánh giá
 
+### 7.0. Paper demo — chỉ prompt (khớp paper)
+
+Tab Gradio **「Paper demo (chỉ prompt)」** trong `scripts/app_gradio.py` và `app_gradio_t4_xformers.py`:
+
+| | |
+|---|---|
+| **Input** | Ảnh · source prompt (tuỳ chọn, có thể trống) · edit prompt |
+| **Output** | 3 candidate full-frame (seed khác nhau) |
+| **Mask** | Self-guided tự sinh — **không** tô cọ |
+
+Đây là demo đúng tinh thần paper (Fig. 8: prompt linh hoạt). Các tab ROI/mask và xóa vật thể bên dưới là **mở rộng** đề tài.
+
 ### 7.1. Ứng dụng bổ sung — Masked ROI & xóa vật thể
 
-Đề tài xây **demo ứng dụng chỉnh sửa tương tác** với trọng tâm **Masked ROI**: người dùng tự khoanh vùng cần sửa; hệ thống không phụ thuộc self-guided mask mặc định.
+Đề tài xây thêm **demo ROI / tô mask**: người dùng tự khoanh vùng cần sửa; mask ghi đè self-guided mask mặc định.
 
 **Kiến trúc FE / BE (Gradio chỉ là khung nối):**
 
@@ -525,10 +569,10 @@ Mọi cột tốc độ và chất lượng dưới đây lấy **FP32 làm mố
 | **Backend** | Python + PyTorch trên máy local (Mac MPS hoặc Colab CUDA) | `hybrid_editing` (session, crop ROI, composite) · `SwiftEdit/infer.py` + `models.py` (inversion + one-step edit, `user_mask`) |
 | **Gradio** (`scripts/app_gradio.py`) | Thư viện Python sinh UI web và nối sự kiện nút → hàm backend | **Không** phải model editing; chỉ giúp dựng demo nhanh. **Có thể thay** lớp Gradio bằng frontend/web server khác; muốn public ra ngoài mạng thì dùng **ngrok** (tunnel cổng local) thay vì phụ thuộc Gradio `--share`. |
 
-**Hai nhóm chức năng chính:**
+**Hai nhóm chức năng chính (cộng Paper demo ở §7.0):**
 
-1. **Chỉnh sửa bằng prompt** — upload ảnh, nhập source/edit prompt, sinh tuần tự 3 candidate, Regen / Pick / Undo (multi-turn).
-2. **Xóa vật thể / Masked ROI** — người dùng tô mask trên FE; backend nhận mask nhị phân, đưa vào `edit_image(..., user_mask=…)` và **ghi đè** self-guided mask trong bước `mask_estimate`.
+1. **ROI / tô mask** — upload ảnh, tô mask, prompt, sinh 3 candidate, Regen / Pick / Undo (multi-turn).
+2. **Xóa vật thể** — tô mask trên FE; backend `edit_image(..., user_mask=…)` ghi đè self-guided mask.
 
 ### Input / Output của ứng dụng
 
@@ -614,7 +658,7 @@ Mục này chỉ đánh giá **đóng góp của đề tài**, không nhắc l�
 - **Cải thiện tốc độ trên Mac M4 (MPS):** từ khoảng **52.1 s/edit** (FP32) xuống khoảng **7.2 s/edit** với FP16 + EditCache (**~7.25×**, n=150, PSNR ~49.8 dB).
 - **Giảm tài nguyên VRAM trên T4:** peak VRAM từ khoảng **14.6 GB** xuống khoảng **8.5 GB** (−42%) với FP16 + EditCache (đo trên benchmark quy mô lớn).
 - **Giảm kích thước weight trên disk:** cây `swiftedit_weights` từ **9.79 GiB** xuống **4.94 GiB** (−49.5%) khi lưu FP16.
-- **Chất lượng gần như không đổi** so với output FP32 cùng job (PSNR khoảng **48.5–49.8 dB** tùy máy).
+- **Fidelity gần như không đổi** so với output FP32 cùng job: PSNR **48.56** (min **34.97** / max **56.73**), SSIM **0.9976**, LPIPS **0.0008**, MSE ~0.000020 (T4, n=600); Mac PSNR mean ~49.8 dB. Đây là **lớp A** (precision), không phải PSNR vs ảnh nguồn.
 - **Tạo được ứng dụng** từ đề tài: demo sửa ảnh cục bộ (frontend web + backend SwiftEdit/Hybrid), minh họa triển khai thực tế trên phần cứng phổ thông.
 
 ### Hạn chế
@@ -625,6 +669,18 @@ Mục này chỉ đánh giá **đóng góp của đề tài**, không nhắc l�
 - **VRAM thực tế đã giảm xuống khoảng ~12GB** (so với khuyến nghị paper ≥24GB và peak FP32 ~14.6GB), nhưng **chưa** xuống được GPU rất yếu / VRAM 4–8GB.
 - **Chưa chạy benchmark** cùng môi trường với các pipeline như TurboEdit.
 - **FP4** chỉ dừng ở mức chạy được (Linear-only, dequant về FP16 khi tính) — **chưa đúng bản chất** quantization end-to-end cho toàn pipeline, và chất lượng tụt mạnh nên không phải hướng tối ưu chính.
+
+### Tại sao cần nén / giảm precision? (trả lời analog “thùng 3L”)
+
+Analog “có card 24GB mà model chỉ cần 10GB thì nén chẳng ích” **đúng một nửa**: nếu luôn có A100 40GB, chỉ chạy 1 job offline và không quan tâm latency, ROI của quantization thấp.
+
+Trong đề tài, nén/FP16 có nghĩa vì:
+
+1. **Fit-to-device:** paper khuyến nghị ~24GB; đề tài chạy **T4 16GB** và Mac consumer. FP32 peak ~14.6GB + overhead dễ chật/OOM — mục tiêu là **chạy được máy phổ thông**, không phải “đổ bớt nước cho vui”.
+2. **Headroom trên cùng card:** VRAM trống hơn → Gradio ổn định hơn, giữ CLIP/VAE/IP cùng lúc, hoặc chạy thêm bước đánh giá — đúng hơn là *để chỗ trên thùng để làm thêm việc*.
+3. **Latency:** FP16 cho speedup đo được (~1.7× T4 overall, ~7× Mac MPS) — lợi ích **tốc độ**, không chỉ dung lượng.
+4. **Disk / deploy:** checkpoint FP16 trên disk ~−50% → tải Drive/Colab nhanh hơn.
+5. **Caveat:** FP4 giảm VRAM thêm nhưng PSNR↔FP32 ~21 dB → **không** khuyến nghị. Chỉ giữ kỹ thuật nào **vừa fit máy vừa giữ fidelity** (FP16).
 
 ### Thách thức nếu muốn nhẹ hơn nữa
 
@@ -638,12 +694,7 @@ Ba hướng chính sau khi kết thúc đề tài môn học:
 
 1. **Nén model đúng cách, có thể sửa pipeline.** FP16/EditCache/xFormers đã giúp chạy tốt trên T4, nhưng muốn xuống GPU yếu hơn (VRAM thấp) mà vẫn nhanh thì không đủ nếu chỉ đổi dtype. Hướng tiếp theo là quantization có calibration trên nhiều module hơn, kết hợp chỉnh pipeline (TinyVAE, offload có kiểm soát, attention tối ưu, có thể cắt nhánh không cần thiết) để đạt mục tiêu: **chạy được trên GPU yếu nhưng vẫn nhanh**.
 
-2. **Training LoRA cho các bài toán ứng dụng cụ thể.** Thay vì chỉ demo prompt chung, fine-tune LoRA (hoặc adapter nhẹ) trên backbone editing để phục vụ use-case rõ ràng, ví dụ:
-   - xóa vật thể;
-   - đổi điều kiện ánh sáng (ngày → đêm);
-   - tạo flare / hào quang ánh sáng phía sau đầu–tóc;
-   - khử mụn / làm đẹp da tự động;
-   - và các domain hẹp tương tự.
+2. **Training LoRA cho các bài toán ứng dụng cụ thể.** Spec + script pilot **day↔night** đã có: [`report/LORA_DAYNIGHT_PILOT.md`](LORA_DAYNIGHT_PILOT.md), `scripts/train_lora_daynight.py`, `scripts/eval_lora_daynight.py`, `data/daynight_lora/`. LoRA trên gen UNet (SBv2), T4 đủ; cần 50–150 cặp Gemini đã lọc. Các domain khác (xóa vật, flare, skin) cùng khung.
 
 3. **Dài hạn nếu làm luận văn.** Không tiếp tục bám SwiftEdit làm backbone chính. Kế thừa **ý tưởng phát triển** của SwiftEdit (inversion một bước, editing gần tức thời, mask tự dẫn hướng, tối ưu inference trên phần cứng phổ thông) rồi chuyển sang **mô hình mới hơn, tối ưu hơn, nhẹ hơn** — phù hợp hơn để nghiên cứu sâu và mở rộng.
 
@@ -654,10 +705,11 @@ Ba hướng chính sau khi kết thúc đề tài môn học:
 Đề tài đi theo ba cấp kết quả:
 
 1. **Hiểu và tái hiện** SwiftEdit: one-step inversion + one-step editing, chạy được trên Mac M4 và Colab T4.
-2. **Tối ưu inference** thành công: giải thích và đo FP16/FP4/xFormers, EditCache, giảm disk weight (−49.5%); trên T4 **FP16 + xFormers + EditCache** ~1.69× overall (không xFormers: FP16 + EditCache ~1.57×), PSNR vs FP32 khoảng 48.5 dB; trên **Mac M4 MPS** FP16 + EditCache đạt **~7.25×** so FP32 (52 s → 7 s, n=150, PSNR ~49.8 dB); FP4 bị loại khỏi hướng tối ưu chính.
-3. **Minh họa ứng dụng:** demo multi-turn, masked ROI và object removal định tính, kèm giới hạn rõ ràng.
+2. **Tối ưu inference** thành công: giải thích và đo FP16/FP4/xFormers, EditCache, giảm disk weight (−49.5%); trên T4 **FP16 + xFormers + EditCache** ~1.69× overall; **fidelity** vs FP32: PSNR **48.56** (min 34.97 / max 56.73) + SSIM **0.9976** + LPIPS **0.0008** (n=600) — lớp A, không nhầm với edit quality; Mac M4 MPS FP16+EditCache **~7.25×**; FP4 bị loại khỏi hướng tối ưu chính.
+3. **Minh họa ứng dụng:** demo paper-style (prompt-only) và demo ROI mask / object removal; kèm giới hạn rõ ràng.
+4. **Edit quality (lớp B):** PieBench subset 20 — CLIP-W ~23.0, CLIP-E ~21.5, PSNR nền ~14.0 (Mac MPS).
 
-**Kết luận chính:** trên Tesla T4 16GB, so với baseline **FP32**, cấu hình **nhanh nhất cùng chất lượng FP16** là **FP16 trên disk + xFormers + EditCache** (overall ~1.69×). Khi môi trường không hỗ trợ xFormers (ví dụ Mac MPS), **FP16 + EditCache** vẫn là lựa chọn thực dụng — trên Mac M4 đạt khoảng **7.25×** so FP32 với PSNR ~50 dB. FP4 nhanh hơn FP32 nhưng chất lượng tụt mạnh nên không phù hợp. Giảm sâu xuống 4GB hoặc 1GB là bài toán kiến trúc và runtime mới, không chỉ là thay đổi precision.
+**Kết luận chính:** trên Tesla T4 16GB, so với baseline **FP32**, cấu hình **nhanh nhất cùng fidelity FP16** là **FP16 trên disk + xFormers + EditCache** (overall ~1.69×). Nén có nghĩa vì **fit T4/Mac + latency + disk**, không vì “card 24GB dư chỗ”. Fidelity FP16 được củng cố bằng **nhiều độ đo** (PSNR min–max + SSIM + LPIPS) và **đối chiếu lớp B** (CLIP / PSNR nền vs source). FP4 không phù hợp làm hướng chính.
 
 ---
 
@@ -666,7 +718,10 @@ Ba hướng chính sau khi kết thúc đề tài môn học:
 | Nội dung | Nguồn |
 |---|---|
 | Lý thuyết, Table 1 paper | `SwiftEdit_Overview.md`, `SwiftEdit_DeTai_CS2309.md` |
+| Pilot LoRA day↔night | `report/LORA_DAYNIGHT_PILOT.md` · `scripts/train_lora_daynight.py` · `eval_lora_daynight.py` |
+| Edit quality PieBench subset 20 | `experimental_data/piebench_subset20_2026-06-14/EDIT_QUALITY_SUMMARY.md` |
 | Bundle so sánh cuối (tốc độ + PSNR) | `test_data/FULL_COMPARE_REPORT.md` |
+| Đa độ đo fidelity vs FP32 (PSNR/SSIM/LPIPS mean–min–max, n=600) | `experimental_data/quality_speed_bench_2026-06-17/report.md` · `quality_raw.csv` |
 | Bundle Mac M4 MPS (FP32 vs FP16+cache, n=150) | `test_data/swiftedit_bundle_macos_mps_baseline_fp32+improved_fp16_cache_20260724-040029.zip` · `experimental_data/precision_run_20260724-040029_baseline_fp32+improved_fp16_cache/report.md` |
 | Disk / memory FP16 | `experimental_data/precision_disk_vram_2026-07-19/report.md` |
 | Benchmark Colab quy mô lớn | `experimental_data/quality_speed_bench_2026-06-17/report.md` |

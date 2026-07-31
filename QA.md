@@ -34,14 +34,14 @@ Tài liệu liên quan: [Overview](./SwiftEdit_Overview.md) · [Đề tài](./Sw
 
 | # | Chủ đề | Số câu hỏi |
 |---|---|---|
-| 1 | [Diffusion & Text-to-Image](#1-diffusion--text-to-image) | 4 |
-| 2 | [SwiftEdit & Pipeline](#2-swiftedit--pipeline) | 6 |
-| 3 | [Inversion & Noise](#3-inversion--noise) | 7 |
-| 4 | [Mask & ARaM](#4-mask--aram) | 3 |
-| 5 | [Đánh giá & PieBench](#5-đánh-giá--piebench) | 5 |
+| 1 | [Diffusion & Text-to-Image](#1-diffusion--text-to-image) | 10 |
+| 2 | [SwiftEdit & Pipeline](#2-swiftedit--pipeline) | 7 |
+| 3 | [Inversion & Noise](#3-inversion--noise) | 15 |
+| 4 | [Mask & ARaM](#4-mask--aram) | 4 |
+| 5 | [Đánh giá & PieBench](#5-đánh-giá--piebench) | 10 |
 | 6 | [Triển khai Mac / Colab](#6-triển-khai-mac--colab) | 13 |
 | 7 | [Chỉnh sửa & Style](#7-chỉnh-sửa--style) | 2 |
-| 8 | [Chưa phân loại](#8-chưa-phân-loại) | 1 |
+| 8 | [Chưa phân loại](#8-chưa-phân-loại) | 2 |
 
 *(Cập nhật cột "Số câu hỏi" khi thêm entry.)*
 
@@ -52,6 +52,78 @@ Tài liệu liên quan: [Overview](./SwiftEdit_Overview.md) · [Đề tài](./Sw
 *Khái niệm nền: diffusion model, one-step vs multi-step, SBv2, CLIP, VAE, …*
 
 <!-- qa:insert -->
+### Q: Vì sao noise ε phải ~ N(0,I) chứ không ngẫu nhiên phân phối khác?
+
+**Ngày:** 2026-07-31  
+**Chủ đề:** #gaussian #noise #diffusion #sbv2 #stage1
+
+**Trả lời (tóm tắt):**
+- SBv2/diffusion train với giả định ε ~ N(0,I); F_theta phải dùng cùng loại nhiễu để khớp generator.
+- Chọn Gaussian vì toán DDPM, CLT, và chuẩn SD/SBv2 — đổi phân phối phải train lại generator.
+- Không phải ngẫu nhiên tùy ý. feedback.md F1.
+
+
+### Q: Có trường hợp đường chéo covariance không bằng 1 không?
+
+**Ngày:** 2026-07-31  
+**Chủ đề:** #identity #covariance #variance #gaussian
+
+**Trả lời (tóm tắt):**
+- Có — nhưng lúc đó không còn là ma trận đơn vị I. I luôn đường chéo = 1 theo định nghĩa.
+- N(0, σ²I): đường chéo = σ² (có thể ≠ 1), vẫn độc lập.
+- N(0, Σ) tổng quát: diag tùy chọn (vd. 2, 0.5, …); ngoài đường chéo ≠ 0 thì có tương quan.
+- Diffusion/SwiftEdit mặc định vẫn ε ~ N(0, I). feedback.md F1.
+
+
+### Q: Ma trận đơn vị I là gì?
+
+**Ngày:** 2026-07-31  
+**Chủ đề:** #identity #matrix #linear-algebra #notation
+
+**Trả lời (tóm tắt):**
+- Ma trận vuông như số 1 trong phép nhân: I·x = x.
+- Đường chéo toàn 1, ngoài đường chéo toàn 0. Ký hiệu I hoặc I_n.
+- Ví dụ 2×2: [[1,0],[0,1]]. Trong N(0,I): dùng I làm covariance (mỗi chiều variance 1, độc lập).
+- feedback.md F1.
+
+
+### Q: N(0, I) ghi I thì phương sai = 1 lấy từ đâu?
+
+**Ngày:** 2026-07-31  
+**Chủ đề:** #identity #covariance #variance #notation
+
+**Trả lời (tóm tắt):**
+- I = ma trận đơn vị: đường chéo toàn 1, ngoài đường chéo = 0.
+- Covariance: Σ_ii = phương sai chiều i → I_ii = 1 ⇒ variance = 1.
+- Σ_ij (i≠j) = 0 ⇒ các chiều không tương quan.
+- Số 1 nằm trong định nghĩa I, không viết cạnh chữ I trên hình. N(0,I) gọn hơn N(0, diag(1,1,…)).
+- feedback.md F1.
+
+
+### Q: Mean và covariance trong N(0, I) là gì?
+
+**Ngày:** 2026-07-31  
+**Chủ đề:** #mean #covariance #gaussian #notation #diffusion
+
+**Trả lời (tóm tắt):**
+- Mean (μ): trung bình / kỳ vọng — “tâm” phân phối. N(0,I): mean=0 → nhiễu không lệch ±.
+- Covariance (Σ): ma trận độ lan + tương quan giữa các chiều. N(0,I): Σ=I → mỗi chiều độc lập, phương sai 1 (nhiễu trắng).
+- 1D gần với N(0,1); latent nhiều chiều = mỗi phần tử ~ N(0,1) độc lập.
+- Chi tiết: feedback.md F1.
+
+
+### Q: Làm sao biết N trong ε ~ N(0, I) là phân phối Gaussian?
+
+**Ngày:** 2026-07-31  
+**Chủ đề:** #notation #gaussian #normal #probability #diffusion
+
+**Trả lời (tóm tắt):**
+- Ký hiệu toán xác suất chuẩn: X ~ N(μ, Σ) = X theo phân phối Normal (= Gaussian).
+- N = Normal; cặp (0, I) = mean 0, covariance đơn vị — đúng khuôn mẫu Normal (Uniform thường viết U(a,b)).
+- Diffusion (DDPM/SD/SBv2) mặc định noise ε ~ N(0, I); Fig. 2 SwiftEdit dùng lại convention đó.
+- Không phải chữ tắt riêng của paper. Xem feedback.md F1.
+
+
 ### Q: SBv2 lấy eps (noise) ở đâu?
 
 **Ngày:** 2026-06-19  
@@ -124,6 +196,21 @@ Tài liệu liên quan: [Overview](./SwiftEdit_Overview.md) · [Đề tài](./Sw
 *SwiftEdit là gì, input/output, so sánh P2P / TurboEdit, tại sao one-step nhanh, …*
 
 <!-- qa:insert -->
+### Q: EditCache cache chỗ nào (thành phần nào)?
+
+**Ngày:** 2026-07-24  
+**Chủ đề:** #editcache #cache #latent #clip #swiftedit-rt
+
+**Trả lời (tóm tắt):**
+- Khóa cache: cùng đường dẫn ảnh + cùng source prompt; đổi ảnh hoặc source → invalidate.
+- Cache được (tính 1 lần, tái dùng khi hit):
+- 1) VAE latent của ảnh nguồn (encode ảnh → latents)
+- 2) Source text embed cho InverseModel (CLIP text của source prompt)
+- 3) CLIP image embed / image_prompt_embeds (IP-Adapter) + source text embed bên gen (gen_embed_cache)
+- Không cache / tính lại mỗi lần: text embed của edit prompt; UNet inversion (phụ thuộc edit); generation one-step với edit; mask ARaM.
+- Mục đích: cùng ảnh + nhiều edit prompt khác nhau thì bỏ VAE encode + CLIP image + encode source text — giảm Miss→Hit latency.
+
+
 ### Q: Ý tưởng cốt lõi SwiftEdit: thay random noise bằng noise từ ảnh gốc?
 
 **Ngày:** 2026-06-19  
@@ -222,6 +309,109 @@ Tài liệu liên quan: [Overview](./SwiftEdit_Overview.md) · [Đề tài](./Sw
 *DDIM inversion, Null-text, one-step inversion `F_theta`, inverted noise `eps_hat`, stage 1/2 training, …*
 
 <!-- qa:insert -->
+### Q: Fig. 2 sau ảnh synthetic: VAE/z, F_theta, IP-Adapter học gì? Vì sao Stage 2 freeze IP?
+
+**Ngày:** 2026-07-31  
+**Chủ đề:** #fig2 #vae #ip-adapter #f-theta #stage2
+
+**Trả lời (tóm tắt):**
+- VAE (freeze): x → z latent. F_θ: (z,c_y)→ε̂ ≈ ε đầu vào SBv2; cùng prompt với G.
+- IP (Stage1 lửa): cổng phụ trong UNet; train projection+W^K_x/W^V_x; h=Attn_text+s_x·Attn_image. Học bám ảnh gốc khi recon — không thay F_θ.
+- Stage1: F_θ+IP cùng lúc. Stage2: chỉ F_θ, IP freeze (giữ prior; tránh overfit; đóng domain gap ảnh thật).
+- feedback.md F1 (ngắn).
+
+
+### Q: Fig. 2 Stage 1 không vẽ prompt: G(.) nhận gì? Công thức ghi ở đâu?
+
+**Ngày:** 2026-07-31  
+**Chủ đề:** #fig2 #sbv2 #prompt #equation5 #stage1
+
+**Trả lời (tóm tắt):**
+- G = SBv2 (one-step T2I). Prompt có: c_y từ caption JourneyDB; Fig. 2 thường省略 mũi tên text.
+- Paper Sec. 4.1 Eq. (5): ε ~ N(0,1), z = G(ε, c_y) — không trên mũi tên hình.
+- G ra latent z; ảnh x trên Fig. 2 là sau VAE decode (~512×512). x̂=D(G(...)) là đường đủ tới pixel; Stage 2 nêu D rõ hơn.
+- feedback.md F1.
+
+
+### Q: Stage 1: ε là 1 tensor latent hay noise ngẫu nhiên?
+
+**Ngày:** 2026-07-31  
+**Chủ đề:** #epsilon #noise #latent #stage1
+
+**Trả lời (tóm tắt):**
+- Cả hai: ε là một tensor trong latent space; giá trị được sample ngẫu nhiên từ N(0,I) mỗi bước train.
+- Không phải tensor cố định dùng mãi; cũng không phải nhiễu trên pixel RGB.
+- Mỗi bước: sample ε → SBv2 + prompt → ảnh → F_theta học đoán lại đúng ε đó.
+- feedback.md F1.
+
+
+### Q: Trên Fig. 2 Stage 1, ε ~ N(0, I) thì ε, N, 0, I là gì?
+
+**Ngày:** 2026-07-31  
+**Chủ đề:** #notation #gaussian #noise #stage1 #fig2
+
+**Trả lời (tóm tắt):**
+- ε (epsilon): tensor noise latent đưa vào SBv2.
+- N: phân phối Gaussian (Normal).
+- 0: mean = vector 0.
+- I: ma trận đơn vị (covariance) — nhiễu độc lập, phương sai 1.
+- Cả cụm: lấy mẫu white noise chuẩn nhiều chiều. Stage 1 dùng ε làm nhãn dạy F_theta đảo ảnh → đúng noise.
+- Chi tiết: feedback.md F1.
+
+
+### Q: Nguyên lý train SwiftEdit trên SBv2 là gì?
+
+**Ngày:** 2026-07-31  
+**Chủ đề:** #training #sbv2 #f-theta #swiftedit #stage2
+
+**Trả lời (tóm tắt):**
+- SBv2 backbone đóng băng (T2I one-step).
+- Stage 1 (~40k JourneyDB, ~100k iter): F_theta + IP-Adapter học đảo/recon trên synthetic.
+- Stage 2 (~5k CommonCanvas, ~180k iter): chỉ tiếp tục train F_theta; paper freeze IP-Adapter; loss DISTS + L_reg.
+- Edit chỉ lúc inference (edit_prompt + mask/ARaM). Đề tài dùng checkpoint pretrained.
+- Chi tiết Fig. 2: QA “Fig. 2 paper…” + slide §3a-fig.
+
+
+### Q: Fig. 2 paper: Stage 1 và Stage 2 chạy song song hay tuần tự? Lửa/tuyết nghĩa là gì? Ai được train?
+
+**Ngày:** 2026-07-31  
+**Chủ đề:** #fig2 #training #stage1 #stage2 #frozen #ip-adapter #sbv2
+
+**Trả lời (tóm tắt):**
+- Tuần tự: Stage 1 (warm-up synthetic) rồi Stage 2 (continue ảnh thật) — không song song. Caption Fig. 2: warm up → shift/continue.
+- Lửa = trainable (nhận gradient); tuyết = frozen — quy ước phổ biến CV/ML (ControlNet, IP-Adapter…), không riêng SwiftEdit.
+- Train: F_theta lửa cả 2 stage. SBv2 G / VAE / CLIP = tuyết. IP-Adapter (W^K_x, W^V_x): train Stage 1; Stage 2 paper freeze IP (“train only the inversion network”). Edit/ARaM/mask: không train — chỉ inference.
+- Minh chứng trước thầy: chiếu Fig. 2 gốc paper + bảng legend; Mermaid slide chỉ tóm tắt đã đối chiếu.
+- Nguồn: arXiv 2412.04301 Sec. 4.1 + Fig. 2.
+
+
+### Q: Các dataset huấn luyện SBv2 và SwiftEdit tên gì?
+
+**Ngày:** 2026-07-24  
+**Chủ đề:** #dataset #journeydb #laion #commoncanvas #piebench #sbv2 #swiftedit
+
+**Trả lời (tóm tắt):**
+- SBv2: JourneyDB (prompts), LAION (prompts mở rộng), tuỳ chọn LAION-Aesthetic-6.25+ (cặp image regularization).
+- SwiftEdit Stage 1: JourneyDB (caption → synthetic qua SBv2).
+- SwiftEdit Stage 2: CommonCanvas (ảnh thật + caption).
+- Eval đề tài (không phải train): PIE-Bench / PIE-Bench-auto200.
+
+
+### Q: Tập dữ liệu huấn luyện SBv2 và SwiftEdit khoảng bao nhiêu?
+
+**Ngày:** 2026-07-24  
+**Chủ đề:** #sbv2 #swiftedit #training #dataset #journeydb #commoncanvas #laion
+
+**Trả lời (tóm tắt):**
+- SBv2 (SwiftBrush v2, T2I one-step — backbone đóng băng):
+- ~1.3M prompts JourneyDB; bản mở rộng thêm ~2M LAION → tổng ~3.3M prompts (image-free distill).
+- Tuỳ chọn thêm ~200K cặp LAION-Aesthetic cho image regularization (~5% data).
+- SwiftEdit (train F_theta + IP-Adapter; không train lại SBv2):
+- Stage 1: ~40k caption JourneyDB → ảnh synthetic từ SBv2; ~100k iter (học đảo noise).
+- Stage 2: ~5k ảnh thật CommonCanvas + caption; ~180k iter (DISTS tái tạo).
+- Đề tài CS2309 dùng checkpoint pretrained (inverse_ckpt-120k, ip_adapter_ckpt-90k, sbv2_0.5) — không train lại.
+
+
 ### Q: Nguyên lý train SwiftEdit trên SBv2 là gì?
 
 **Ngày:** 2026-07-24  
@@ -340,6 +530,19 @@ Tài liệu liên quan: [Overview](./SwiftEdit_Overview.md) · [Đề tài](./Sw
 *Self-guided mask, editing mask, `s_y` / `s_edit` / `s_non-edit`, IP-Adapter, cross-attention, …*
 
 <!-- qa:insert -->
+### Q: IP-Adapter sẽ cho ra cái gì? Một ma trận, một số, hay một chuỗi?
+
+**Ngày:** 2026-07-31  
+**Chủ đề:** #ip-adapter #embedding #c_x #cross-attention
+
+**Trả lời (tóm tắt):**
+- Không phải một số, cũng không phải chuỗi chữ.
+- IP-Adapter đưa ra tensor embedding ảnh (image_prompt_embeds): dạng (batch, seq_len, dim) — nhiều token ảnh (thường seq_len=4; IP-Adapter-Plus ~16), mỗi token là vector chiều dim.
+- Luồng trong code: CLIP image encoder → clip_image_embeds → image_proj_model → image_prompt_embeds; rồi ghép (concat) với text prompt embeds theo chiều sequence, đưa vào cross-attention (to_k_ip / to_v_ip).
+- Trong paper gọi điều kiện ảnh c_x; generator G_IP(ε, c_y, c_x) dùng cả prompt text và embedding ảnh.
+- Tóm lại: một dãy vector / ma trận embedding (tokens), không phải scalar hay string.
+
+
 ### Q: Self-guided mask của SwiftEdit là gì và nằm ở bước nào?
 
 **Ngày:** 2026-06-05
@@ -406,6 +609,73 @@ Tài liệu liên quan: [Overview](./SwiftEdit_Overview.md) · [Đề tài](./Sw
 *PSNR, MSE, CLIP-Whole, CLIP-Edited, IoU/Dice, 10 loại editing, …*
 
 <!-- qa:insert -->
+### Q: cuDNN nói Tensor Core gần nhưng không bit-identical FP32 nghĩa là gì?
+
+**Ngày:** 2026-07-31  
+**Chủ đề:** #fp16 #tensor-core #cudnn #precision #psnr
+
+**Trả lời (tóm tắt):**
+- Bit-identical = từng bit float giống hệt đường FP32 thuần.
+- Tensor Core dùng MMA (nhân ma trận gộp), input thường FP16, tích lũy FP16/FP32 rồi có thể down-convert về FP16; thứ tự cộng số thực không kết hợp → làm tròn khác FP32 tuần tự.
+- Kết quả rất gần (PSNR ~48 trong bench) nhưng không trùng bit → PSNR hữu hạn, không ∞.
+- cuDNN ghi vậy: bật Tensor Core chấp nhận sai số nhỏ đổi tốc độ — không claim output giống hệt FP32 từng bit.
+- Nguồn: NVIDIA cuDNN Core Concepts — Notes on Tensor Core Precision.
+
+
+### Q: PSNR, SSIM, LPIPS, MSE trong Excel so sánh FP16 vs FP32 nghĩa là gì?
+
+**Ngày:** 2026-07-31  
+**Chủ đề:** #psnr #ssim #lpips #mse #fidelity #torchmetrics
+
+**Trả lời (tóm tắt):**
+- Trong bench đề tài, cả 4 độ đo so output config (vd FP16) với output baseline_fp32 cùng job_id + prompt_idx + seed — không so ảnh gốc.
+- MSE↓: trung bình bình phương sai số pixel [0,1]; càng nhỏ càng giống FP32. MSE~2e-5 → lệch rất nhỏ.
+- PSNR↑ (dB): 10·log10(1/MSE); cao = sai số nhỏ. ~48 dB = gần trùng; ~22 dB (FP4) = lệch rõ; edit↔nguồn ~19 dB.
+- SSIM↑ (0–1): giống cấu trúc/độ tương phản cục bộ (gần mắt người hơn MSE). Gần 1 = cấu trúc giữ.
+- LPIPS↓: khoảng cách perceptual qua mạng deep (AlexNet/VGG); thấp = trông gần như nhau. ~0.001 = gần không lệch mắt.
+- Đọc cùng nhau: PSNR cao + SSIM gần 1 + LPIPS gần 0 = fidelity precision tốt; chỉ nhìn PSNR dễ hiểu nhầm là "giống ảnh gốc".
+
+
+### Q: Nén model để làm gì nếu card 24GB vẫn cần dùng card 24GB?
+
+**Ngày:** 2026-07-26  
+**Chủ đề:** #fp16 #vram #compression #t4
+
+**Trả lời (tóm tắt):**
+- Analog thùng 3L đúng một nửa: nếu luôn có A100 và không cần tốc độ thì ROI nén thấp.
+- Đề tài cần FP16 vì fit T4 16GB/Mac (paper ~24GB; FP32 peak ~14.6GB dễ chật), headroom Gradio, latency (~1.7× T4 / ~7× Mac), disk −50%.
+- FP4 giảm VRAM thêm nhưng PSNR↔FP32 ~21 dB → không khuyến nghị.
+
+
+### Q: PSNR 48.6 có phải trick / so ảnh gốc không? Code có sai không?
+
+**Ngày:** 2026-07-26  
+**Chủ đề:** #psnr #fidelity #piebench #metrics #audit
+
+**Trả lời (tóm tắt):**
+- Không sai code: quality_speed_bench so output FP16 ↔ output FP32 cùng job (REFERENCE=baseline_fp32), không vs ảnh nguồn.
+- ~48 dB ≈ MSE ~0.00002 — hai edit gần trùng pixel sau đổi precision; kỳ vọng.
+- Spot-check 12 mẫu: FP16↔FP32 ~47 dB; edit↔source ~19 dB → không phải copy gốc.
+- Hai lớp metric: (A) fidelity PSNR/SSIM/LPIPS vs FP32; (B) edit quality CLIP + PSNR nền vs source (PieBench subset20: CLIP-W 23.0, PSNR nền 14.0).
+- Chi tiết: report/AUDIT_PSNR_FIDELITY.md · EDIT_QUALITY_SUMMARY.md
+
+
+### Q: PSNR ~48.5 dB có phải số phi thực tế (gần như ảnh gốc) không? Tính đúng không?
+
+**Ngày:** 2026-07-24  
+**Chủ đề:** #psnr #ssim #lpips #metrics #fp16 #baseline #precision
+
+**Trả lời (tóm tắt):**
+- Tính đúng nhưng reference là output FP32 cùng job — không phải ảnh gốc. Mean PSNR cao dễ bị hiểu nhầm nên đề tài bổ sung thêm độ đo + min/max.
+- Nguồn: quality_speed_bench_2026-06-17, improved_fp16_cache, n=600 vs baseline_fp32:
+- PSNR↑: mean 48.56 · min 34.97 · max 56.73
+- SSIM↑: mean 0.9976 · min 0.9889 · max 0.9994
+- LPIPS↓: mean 0.0008 · min 0.0001 · max 0.0063
+- MSE↓: mean ~0.000020 · min ~0.000002 · max ~0.00032
+- Đối chứng: edit↔ảnh nguồn trên mẫu ~18–21 dB; FP4 cùng protocol PSNR 21.67 (16.59–29.41), SSIM 0.78, LPIPS 0.15 → bộ đo phân biệt được khi lệch.
+- Slide/báo cáo: tách bảng tốc độ và bảng chất lượng đa độ đo; nêu rõ ‘vs FP32 output’.
+
+
 ### Q: Dùng 3 prompt_idx thì EditCache sao trùng prompt được?
 
 **Ngày:** 2026-07-24  
@@ -433,22 +703,23 @@ Tài liệu liên quan: [Overview](./SwiftEdit_Overview.md) · [Đề tài](./Sw
 - Không nhầm với PSNR vs FP32 trên slide tối ưu: cái đó so output config với output baseline_fp32 cùng job (sai số precision), còn PSNR paper là so edited vs source trên background.
 
 
-### Q: Trong kết quả đề tài SwiftEdit, các độ đo Miss/Hit/Overall/PSNR/Disk/VRAM nghĩa là gì?
+### Q: Trong kết quả đề tài SwiftEdit, các độ đo Miss/Hit/Overall/PSNR/SSIM/LPIPS/Disk/VRAM nghĩa là gì?
 
 **Ngày:** 2026-07-24  
-**Chủ đề:** #metrics #psnr #editcache #precision
+**Chủ đề:** #metrics #psnr #ssim #lpips #editcache #precision
 
 **Trả lời (tóm tắt):**
 - Miss/cold (s): thời gian 1 edit khi chưa có EditCache (thường prompt_idx=0).
 - Hit (s): thời gian 1 edit khi đã cache (cùng ảnh + source; prompt_idx=1–2).
 - Overall × vs FP32: trung bình 600 job; t_fp32 / t_config (1.69× = nhanh hơn FP32 ~1.69 lần).
-- PSNR vs FP32 (dB): so ảnh output config với ảnh cùng job của baseline_fp32; ~48 dB gần như không lệch, ~22 dB hỏng rõ.
+- PSNR / SSIM / LPIPS vs FP32: so **output config ↔ output baseline_fp32** cùng job (không vs ảnh nguồn). Báo mean kèm min–max. FP16 (n=600): PSNR 48.56 (34.97–56.73), SSIM 0.9976 (0.9889–0.9994), LPIPS 0.0008 (0.0001–0.0063).
 - Disk (GiB): dung lượng cây swiftedit_weights; FP32→FP16: 9.79→4.94 GiB.
 - VRAM/peak (MB): bộ nhớ GPU (CUDA) hoặc peak alloc (MPS) lúc load/edit.
-- Slide ưu tiên tốc độ + PSNR vs FP32 + disk/VRAM; CLIP/LPIPS không phải tiêu chí chính.
+- Slide: bảng tốc độ tách khỏi bảng chất lượng đa độ đo; nguồn `quality_speed_bench_2026-06-17`.
 
 **Ghi chú thêm / link:**
-- report/SLIDE_SwiftEdit.md §6a
+- report/SLIDE_SwiftEdit.md §6a–§6b
+- experimental_data/quality_speed_bench_2026-06-17/report.md
 
 
 ### Q: 200 ảnh × 3 prompt: 3 prompt là gì, lấy từ đâu?
@@ -729,6 +1000,18 @@ Tài liệu liên quan: [Overview](./SwiftEdit_Overview.md) · [Đề tài](./Sw
 *Câu hỏi chưa xếp vào mục — sắp xếp lại sau.*
 
 <!-- qa:insert -->
+### Q: Train LoRA day↔night bằng cặp Gemini có khả thi trên T4 không?
+
+**Ngày:** 2026-07-26  
+**Chủ đề:** #lora #daynight #gemini #t4 #contribution
+
+**Trả lời (tóm tắt):**
+- Khả thi ở mức pilot: LoRA rank 4–16 trên gen UNet (SBv2), đóng băng F_theta; T4 16GB đủ với batch 1 + grad checkpoint.
+- Cặp (gốc, Gemini edit) không khớp train F_theta paper; dùng để bias style ngày/đêm trên generator.
+- Cần 50–150 cặp sạch + 15–20 hold-out; 1–2 ảnh sẽ overfit.
+- Script: train_lora_daynight.py · eval_lora_daynight.py · report/LORA_DAYNIGHT_PILOT.md
+
+
 ### Q: Tại sao không dùng LaTeX trong file MD?
 
 **Ngày:** 2026-06-01  

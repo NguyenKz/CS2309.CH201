@@ -209,7 +209,8 @@ def edit_image(
     mask_controller = MaskController(
         mask12, scale_text_hiddenstate=scale_ta, scale_ip_fg=scale_edit, scale_ip_bg=scale_non_edit
     )
-    ip_sb_model.set_controller(mask_controller, where=["mid_blocks", "up_blocks"])
+    # Tên attn processor là mid_block (số ít) — "mid_blocks" không khớp substring → ARaM bỏ sót mid.
+    ip_sb_model.set_controller(mask_controller, where=["mid_block", "up_blocks"])
     gen_result = ip_sb_model.gen_img(
         pil_image=pil_img_cond,
         prompts=[src_p, edit_p],

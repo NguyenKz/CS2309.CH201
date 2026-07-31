@@ -9,6 +9,7 @@
 
 | Ngày       | Giai đoạn           | Công việc                                                                                            | Kết quả / Ghi chú                                                                                                                                                                                                                                                                                                                                      | Môi trường                                |
 | ---------- | ------------------- | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------- |
+| 2026-07-26 | 5                   | Trả lời 4 góp ý thầy: metrics / Paper UI / nén / LoRA pilot                                          | Audit PSNR (lớp A FP16↔FP32); PieBench lớp B summary; Paper demo tab Gradio Mac+T4; luận điểm nén; `LORA_DAYNIGHT_PILOT` + train/eval scripts (chưa train thật)                                                                                                                          | Mac (tài liệu + code)                     |
 | 2026-07-24 | 5                   | Viết báo cáo chuyên đề SwiftEdit-RT (`report/BAO_CAO_SwiftEdit.md`)                                  | Draft đầy đủ §1–10 + 4 flowchart Mermaid; số liệu chính từ FULL_COMPARE_REPORT (fp16 cold 1.39×, PSNR 48.47 dB; EditCache hit −17.3%; FP4 PSNR 21.17 dB); disk FP16 −49.5%; Hybrid multi-turn SSIM 0.959                                                                                                                                                 | Mac (viết tài liệu)                       |
 | 2026-07-22 | 4f                  | Hybrid Multi-turn Editing: 3 candidate, Regen/Pick/Undo và local full-resolution composite          | Inference trả clean latent + mask; latent jitter 0.05 tạo khác biệt pairwise MAE ~0.012; benchmark 5 lượt: PSNR ngoài mask Naive 30.09 dB vs Hybrid vô hạn, SSIM 0.8353 vs 0.9592, LPIPS 0.0575 vs 0.0119; UI Gradio render OK                                                                 | Mac M4 (MPS); fp16; gradio 5.50           |
 | 2026-07-19 | 4e                  | Pause tinh chỉnh RT; note hướng app xóa vật thể                                                      | Dừng FP4/xFormers/ToMe/TensorRT cho đến khi đủ bundle + viết đánh giá precision; app object-removal = phase sau (chưa code); ghi `FP4_DECISION` §0 + PRECISION_CASES                                                                                                                                                                                    | Mac (tài liệu); Colab (user test)         |
@@ -45,6 +46,24 @@
 ## Chi tiết theo phiên làm việc
 
 *(Các entry chi tiết xuất hiện bên dưới, mới nhất ở trên cùng.)*
+
+### 2026-07-26 — [5] Trả lời 4 góp ý thầy (metrics, Paper UI, nén, LoRA)
+
+**Môi trường:** Mac (tài liệu + code)
+
+**Công việc đã làm:**
+
+- Audit PSNR 48.6 (lớp A FP16↔FP32) + PieBench lớp B summary; đổi wording slide/báo cáo/QA.
+- Thêm Gradio tab Paper demo (chỉ prompt → 3 kết quả) Mac + T4; đổi tên tab ROI.
+- Viết luận điểm nén (fit T4/Mac, headroom, latency, disk).
+- Spec + script LoRA day↔night (`train_lora_daynight.py`, `eval_lora_daynight.py`, `data/daynight_lora/`).
+
+**Kết quả:**
+
+- `report/AUDIT_PSNR_FIDELITY.md`, `EDIT_QUALITY_SUMMARY.md`, `LORA_DAYNIGHT_PILOT.md`.
+- LoRA chưa train thật (chờ ảnh Gemini).
+
+**Việc tiếp theo:** Thu thập 50–150 cặp Gemini → train trên T4 → demo Paper tab trước thầy.
 
 ### 2026-07-24 — [5] Viết báo cáo chuyên đề SwiftEdit-RT
 

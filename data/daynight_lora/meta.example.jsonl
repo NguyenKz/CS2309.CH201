@@ -1,0 +1,2 @@
+{"id": "0001", "split": "train", "day": "train/0001_day.jpg", "night": "train/0001_night.jpg", "src_day": "a daytime street photo", "edit_night": "the same street at night, realistic lighting", "src_night": "a nighttime street photo", "edit_day": "the same street in daylight, sunny"}
+{"id": "h01", "split": "holdout", "day": "holdout/h01_day.jpg", "night": "holdout/h01_night.jpg", "src_day": "a daytime outdoor scene", "edit_night": "the same scene at night, realistic lighting", "src_night": "a nighttime outdoor scene", "edit_day": "the same scene in daylight"}

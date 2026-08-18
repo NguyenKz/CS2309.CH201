@@ -34,11 +34,11 @@ Tài liệu liên quan: [Overview](./SwiftEdit_Overview.md) · [Đề tài](./Sw
 
 | # | Chủ đề | Số câu hỏi |
 |---|---|---|
-| 1 | [Diffusion & Text-to-Image](#1-diffusion--text-to-image) | 10 |
-| 2 | [SwiftEdit & Pipeline](#2-swiftedit--pipeline) | 7 |
+| 1 | [Diffusion & Text-to-Image](#1-diffusion--text-to-image) | 11 |
+| 2 | [SwiftEdit & Pipeline](#2-swiftedit--pipeline) | 8 |
 | 3 | [Inversion & Noise](#3-inversion--noise) | 15 |
-| 4 | [Mask & ARaM](#4-mask--aram) | 4 |
-| 5 | [Đánh giá & PieBench](#5-đánh-giá--piebench) | 10 |
+| 4 | [Mask & ARaM](#4-mask--aram) | 5 |
+| 5 | [Đánh giá & PieBench](#5-đánh-giá--piebench) | 16 |
 | 6 | [Triển khai Mac / Colab](#6-triển-khai-mac--colab) | 13 |
 | 7 | [Chỉnh sửa & Style](#7-chỉnh-sửa--style) | 2 |
 | 8 | [Chưa phân loại](#8-chưa-phân-loại) | 2 |
@@ -52,6 +52,19 @@ Tài liệu liên quan: [Overview](./SwiftEdit_Overview.md) · [Đề tài](./Sw
 *Khái niệm nền: diffusion model, one-step vs multi-step, SBv2, CLIP, VAE, …*
 
 <!-- qa:insert -->
+### Q: CLIP là gì?
+
+**Ngày:** 2026-07-31  
+**Chủ đề:** #clip #embedding #encoder #openai
+
+**Trả lời (tóm tắt):**
+- CLIP (Contrastive Language–Image Pre-training, OpenAI 2021): mô hình học chung không gian embedding cho ảnh và chữ.
+- Hai encoder: CLIP image encoder (ảnh → vector) và CLIP text encoder (câu → vector); train contrastive — cặp ảnh–caption khớp gần nhau, không khớp xa nhau.
+- Trong SwiftEdit: text encoder mã hóa source/edit prompt; image encoder (+ IP-Adapter proj) tạo điều kiện ảnh c_x.
+- Đánh giá PieBench: CLIP-Whole / CLIP-Edited đo ảnh edited có khớp edit prompt không.
+- Không phải diffusion; là encoder điều kiện / metric.
+
+
 ### Q: Vì sao noise ε phải ~ N(0,I) chứ không ngẫu nhiên phân phối khác?
 
 **Ngày:** 2026-07-31  
@@ -196,6 +209,18 @@ Tài liệu liên quan: [Overview](./SwiftEdit_Overview.md) · [Đề tài](./Sw
 *SwiftEdit là gì, input/output, so sánh P2P / TurboEdit, tại sao one-step nhanh, …*
 
 <!-- qa:insert -->
+### Q: Giới hạn của input prompt là gì?
+
+**Ngày:** 2026-07-31  
+**Chủ đề:** #prompt #clip #tokenizer #limit #77
+
+**Trả lời (tóm tắt):**
+- Giới hạn cứng ở tokenizer CLIP/SD (SwiftEdit dùng SD 2.1-style): model_max_length thường 77 token (gồm BOS/EOS) — tokenize_captions pad + truncation=True, thừa bị cắt.
+- Không giới hạn ký tự trên Gradio Textbox; prompt dài quá vẫn vào nhưng phần sau token 77 bị truncate im lặng.
+- Source prompt: có thể trống (paper Fig. 8). Edit prompt: bắt buộc trên UI.
+- Thực tế: prompt ngắn–vừa (vài chục từ) ổn; tránh paragraph dài. IP-Adapter không tính vào 77 token text — 4 token ảnh ghép riêng.
+
+
 ### Q: EditCache cache chỗ nào (thành phần nào)?
 
 **Ngày:** 2026-07-24  
@@ -530,6 +555,21 @@ Tài liệu liên quan: [Overview](./SwiftEdit_Overview.md) · [Đề tài](./Sw
 *Self-guided mask, editing mask, `s_y` / `s_edit` / `s_non-edit`, IP-Adapter, cross-attention, …*
 
 <!-- qa:insert -->
+### Q: IP-Adapter + prompt ảnh vào text prompt như thế nào?
+
+**Ngày:** 2026-07-31  
+**Chủ đề:** #ip-adapter #prompt #embedding #cross-attention #c_x
+
+**Trả lời (tóm tắt):**
+- Không ghép chữ vào chuỗi text. Hai nhánh embedding riêng rồi ghép theo chiều sequence.
+- Text: tokenizer + CLIP text encoder → prompt_embeds_ (N token text).
+- Ảnh: CLIP image encoder → proj → image_prompt_embeds (4 token ảnh).
+- Ghép: prompt_embeds = cat([prompt_embeds_, image_prompt_embeds], dim=1) — cuối sequence thêm 4 token ảnh.
+- Trong cross-attention (decoupled): tách lại — phần đầu = text (to_k/to_v gốc); 4 token cuối = IP (to_k_ip/to_v_ip); cộng: out = text_attn + scale * ip_attn.
+- SwiftEdit thêm ARaM: scale_ip_fg / scale_ip_bg theo mask vùng edit vs nền.
+- Paper gọi c_y (text) + c_x (ảnh) vào G_IP — không phải nối string prompt.
+
+
 ### Q: IP-Adapter sẽ cho ra cái gì? Một ma trận, một số, hay một chuỗi?
 
 **Ngày:** 2026-07-31  
@@ -609,6 +649,81 @@ Tài liệu liên quan: [Overview](./SwiftEdit_Overview.md) · [Đề tài](./Sw
 *PSNR, MSE, CLIP-Whole, CLIP-Edited, IoU/Dice, 10 loại editing, …*
 
 <!-- qa:insert -->
+### Q: LPIPS có uy tín và được dùng nhiều không? Vì sao đề tài dùng?
+
+**Ngày:** 2026-07-31  
+**Chủ đề:** #lpips #metrics #credibility #fidelity #cvpr
+
+**Trả lời (tóm tắt):**
+- LPIPS (Zhang et al., CVPR 2018 — The Unreasonable Effectiveness of Deep Features as a Perceptual Metric): metric perceptual chuẩn sau PSNR/SSIM; được cộng đồng CV/generative dùng rất rộng (restoration, GAN, diffusion, editing).
+- Uy tín cao: paper CVPR, implementation phổ biến (repo lpips + torchmetrics); thường báo cạnh PSNR/SSIM.
+- Trong đề tài: torchmetrics LearnedPerceptualImagePatchSimilarity so FP16↔FP32 — bắt lệch nhìn thấy mà PSNR/SSIM có thể bỏ sót; FP16 ~0.0008 (gần không lệch mắt), FP4 ~0.15 (lệch rõ).
+- Hạn chế: phụ thuộc backbone (AlexNet/VGG); không đo khớp prompt (dùng CLIP cho lớp B). Không thay human rating hoàn toàn nhưng là chuẩn thực nghiệm phổ biến.
+
+
+### Q: Tại sao dùng SSIM? Có uy tín và được dùng nhiều không?
+
+**Ngày:** 2026-07-31  
+**Chủ đề:** #ssim #metrics #credibility #fidelity
+
+**Trả lời (tóm tắt):**
+- SSIM (Wang et al., IEEE TIP 2004) là metric chuẩn ngành image quality / compression / restoration — được trích dẫn rất nhiều, có trong paper SwiftEdit / PieBench phụ, OpenCV, scikit-image, torchmetrics.
+- Uy tín: cao cho đo tương đồng cấu trúc; không thay human rating hoàn toàn nhưng là baseline phổ biến cạnh PSNR/MSE/LPIPS.
+- Trong đề tài dùng SSIM (torchmetrics) ở lớp A fidelity: so output FP16↔FP32 cùng job — bổ sung PSNR (pixel) và LPIPS (perceptual), tránh chỉ một số PSNR 48.5.
+- Hạn chế: kém nhạy một số méo; lighting/global edit không nên đòi SSIM quá cao vs source. Đó là lý do vẫn kèm LPIPS + CLIP (lớp B).
+
+
+### Q: SSIM đo như thế nào?
+
+**Ngày:** 2026-07-31  
+**Chủ đề:** #ssim #metrics #torchmetrics #fidelity
+
+**Trả lời (tóm tắt):**
+- SSIM = Structural Similarity Index Measure (Wang et al.): so 2 ảnh theo độ sáng (luminance), tương phản (contrast) và cấu trúc (structure) trên cửa sổ cục bộ, rồi gộp thành 1 số.
+- Thang 0–1 (hoặc −1…1): càng gần 1 càng giống cấu trúc. ↑ tốt.
+- Khác MSE/PSNR (sai số pixel thuần); gần cảm nhận cấu trúc hơn, nhưng không deep như LPIPS.
+- Trong đề tài: torchmetrics StructuralSimilarityIndexMeasure(data_range=1.0) — so output config ↔ FP32 cùng job. FP16 mean ~0.9976 (min ~0.989).
+
+
+### Q: LPIPS là gì, tính sao?
+
+**Ngày:** 2026-07-31  
+**Chủ đề:** #lpips #perceptual #torchmetrics #fidelity
+
+**Trả lời (tóm tắt):**
+- LPIPS = Learned Perceptual Image Patch Similarity (Zhang et al., CVPR 2018).
+- Đo khoảng cách cảm nhận giữa 2 ảnh qua mạng deep (thường AlexNet/VGG pretrained): lấy feature nhiều lớp, so từng patch, gộp thành 1 số khoảng cách.
+- Thang: càng thấp càng giống mắt người (↓ tốt). 0 = gần như trùng cảm nhận; cao = lệch rõ.
+- Khác MSE/PSNR (sai số pixel) và SSIM (cấu trúc cục bộ): LPIPS bám perception hơn.
+- Trong đề tài (torchmetrics LearnedPerceptualImagePatchSimilarity): so output config ↔ FP32 cùng job. FP16 mean ~0.0008; FP4 ~0.15.
+
+
+### Q: CLIP-W và CLIP-E là gì?
+
+**Ngày:** 2026-07-31  
+**Chủ đề:** #clip #piebench #metrics #edit-quality
+
+**Trả lời (tóm tắt):**
+- CLIP-W = CLIP-Whole; CLIP-E = CLIP-Edited — metric PieBench / paper SwiftEdit (lớp B edit quality), không phải fidelity FP16↔FP32.
+- CLIP-Whole: CLIPScore(ảnh edited toàn khung, edit prompt) — edit có khớp prompt trên cả ảnh không. Cao↑.
+- CLIP-Edited: CLIPScore(vùng mask của ảnh edited, edit prompt) — vùng sửa có đúng prompt không. Cao↑.
+- Khác PSNR nền: PSNR/MSE đo giữ nền so source trên (1−mask); CLIP đo khớp ngữ nghĩa với prompt.
+- Subset 20 đề tài: CLIP-W ~23.0, CLIP-E ~21.5 (Mac MPS).
+
+
+### Q: PSNR tính như thế nào? (PSLR)?
+
+**Ngày:** 2026-07-31  
+**Chủ đề:** #psnr #mse #torchmetrics #fidelity
+
+**Trả lời (tóm tắt):**
+- PSNR = Peak Signal-to-Noise Ratio (không phải PSLR).
+- Công thức (ảnh [0,1], data_range=1): PSNR = 10 · log10(1 / MSE), đơn vị dB.
+- MSE = trung bình (pixel_ref − pixel_test)² trên toàn ảnh RGB.
+- Trong đề tài (torchmetrics PeakSignalNoiseRatio): so output config ↔ output FP32 cùng job — không vs ảnh nguồn.
+- Đọc: cao (~48) = gần trùng; thấp (~22) = lệch rõ; hai ảnh giống hệt → PSNR = ∞.
+
+
 ### Q: cuDNN nói Tensor Core gần nhưng không bit-identical FP32 nghĩa là gì?
 
 **Ngày:** 2026-07-31  

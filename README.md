@@ -78,7 +78,7 @@ CS2309.CH201/
 │   ├── CS2309_SwiftEdit_phase3.ipynb
 │   └── CS2309_SwiftEdit_quality_speed_bench.ipynb
 ├── experimental_data/         ← Bằng chứng thực nghiệm (metrics, ảnh mẫu)
-└── report/                 # Báo cáo chuyên đề (BAO_CAO_SwiftEdit.md)
+└── report/                 # Nộp GV: REPORT.md; chi tiết BAO_CAO_SwiftEdit.md; slide SLIDE_SwiftEdit.md
 ```
 
 ---
@@ -235,7 +235,7 @@ Chi tiết: [Mục 4.2 đề tài](./SwiftEdit_DeTai_CS2309.md#42-google-colab--
 
 | Hạng mục | Trạng thái | Mức ưu tiên |
 |---|---|---|
-| Viết báo cáo GĐ5 | Draft xong — [`report/BAO_CAO_SwiftEdit.md`](./report/BAO_CAO_SwiftEdit.md) | Trung bình (chỉnh sửa / slide) |
+| Viết báo cáo GĐ5 | Bản nộp [`report/REPORT.md`](./report/REPORT.md) · chi tiết [`BAO_CAO_SwiftEdit.md`](./report/BAO_CAO_SwiftEdit.md) | Xuất PDF + điền thành viên |
 | Ablation hyperparameter (`s_y`, `s_edit`, `s_non-edit`) | Chưa | **Cao** (checklist nộp) |
 | PIE-Bench 50–100 mẫu metrics Colab | Chỉ 20 mẫu Mac | Trung bình |
 | So sánh baseline (TurboEdit) | Chưa | Trung bình |

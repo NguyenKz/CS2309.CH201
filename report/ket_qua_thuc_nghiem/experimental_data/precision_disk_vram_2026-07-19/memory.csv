@@ -1,0 +1,5 @@
+config,phase,device,load_seconds,peak_alloc_mb,driver_used_mb,note
+baseline_fp32,after_load,mps,25.87,12366.27,13008.45,baseline_fp32 (quality_speed_bench_2026-06-17)
+baseline_fp32,after_warmup_edit,mps,,12378.71,18309.12,steady-ish after 1 edit
+fp16_disk,after_load,mps,15.57,6567.03,7163.12,gần improved_fp16_cache nhưng weights fp16 trên disk + torch_dtype load
+fp16_disk,after_warmup_edit,mps,,6570.93,12333.45,steady-ish after 1 edit

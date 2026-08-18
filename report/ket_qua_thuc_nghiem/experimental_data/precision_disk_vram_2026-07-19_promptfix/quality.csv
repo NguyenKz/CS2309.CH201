@@ -1,0 +1,5 @@
+config,image_idx,edit_idx,image,src_prompt,edit_prompt,seconds,psnr_vs_fp32,mse_vs_fp32,peak_alloc_mb,out_png
+baseline_fp32,0,0,/Users/nguyenkz/Documents/code/CS2309.CH201/data/PIE-Bench-smoke/annotation_images/0_random_140/smoke_dog.jpg,dog,dog with mouth opened,23.802,99.0,0.0,12386.83,edited_images/baseline_fp32/job0_smoke_dog.png
+baseline_fp32,1,0,/Users/nguyenkz/Documents/code/CS2309.CH201/data/PIE-Bench-smoke/annotation_images/0_random_140/smoke_woman.jpg,woman,Taylor Swift,17.971,99.0,0.0,12386.83,edited_images/baseline_fp32/job1_smoke_woman.png
+fp16_disk,0,0,/Users/nguyenkz/Documents/code/CS2309.CH201/data/PIE-Bench-smoke/annotation_images/0_random_140/smoke_dog.jpg,dog,dog with mouth opened,5.542,44.1502,3.845729141010469e-05,6569.6,edited_images/fp16_disk/job0_smoke_dog.png
+fp16_disk,1,0,/Users/nguyenkz/Documents/code/CS2309.CH201/data/PIE-Bench-smoke/annotation_images/0_random_140/smoke_woman.jpg,woman,Taylor Swift,5.387,53.3857,4.585908495981113e-06,6569.67,edited_images/fp16_disk/job1_smoke_woman.png

@@ -9,6 +9,7 @@
 
 | Ngày       | Giai đoạn           | Công việc                                                                                            | Kết quả / Ghi chú                                                                                                                                                                                                                                                                                                                                      | Môi trường                                |
 | ---------- | ------------------- | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------- |
+| 2026-08-18 | 5                   | Viết báo cáo tổng kết nộp GV (`report/REPORT.md`)                                                    | Mẫu GV: thành viên (placeholder), I/O, phương pháp theo nhật ký, bảng T4/Mac + hình Fig.2/teaser/FP16–FP4/PSNR extreme; Paper demo 1 kết quả; LoRA chưa train                                                                                                                          | Mac (viết tài liệu)                       |
 | 2026-07-26 | 5                   | Trả lời 4 góp ý thầy: metrics / Paper UI / nén / LoRA pilot                                          | Audit PSNR (lớp A FP16↔FP32); PieBench lớp B summary; Paper demo tab Gradio Mac+T4; luận điểm nén; `LORA_DAYNIGHT_PILOT` + train/eval scripts (chưa train thật)                                                                                                                          | Mac (tài liệu + code)                     |
 | 2026-07-24 | 5                   | Viết báo cáo chuyên đề SwiftEdit-RT (`report/BAO_CAO_SwiftEdit.md`)                                  | Draft đầy đủ §1–10 + 4 flowchart Mermaid; số liệu chính từ FULL_COMPARE_REPORT (fp16 cold 1.39×, PSNR 48.47 dB; EditCache hit −17.3%; FP4 PSNR 21.17 dB); disk FP16 −49.5%; Hybrid multi-turn SSIM 0.959                                                                                                                                                 | Mac (viết tài liệu)                       |
 | 2026-07-22 | 4f                  | Hybrid Multi-turn Editing: 3 candidate, Regen/Pick/Undo và local full-resolution composite          | Inference trả clean latent + mask; latent jitter 0.05 tạo khác biệt pairwise MAE ~0.012; benchmark 5 lượt: PSNR ngoài mask Naive 30.09 dB vs Hybrid vô hạn, SSIM 0.8353 vs 0.9592, LPIPS 0.0575 vs 0.0119; UI Gradio render OK                                                                 | Mac M4 (MPS); fp16; gradio 5.50           |
@@ -46,6 +47,26 @@
 ## Chi tiết theo phiên làm việc
 
 *(Các entry chi tiết xuất hiện bên dưới, mới nhất ở trên cùng.)*
+
+### 2026-08-18 — [5] Viết báo cáo tổng kết nộp GV (REPORT.md)
+
+**Môi trường:** Mac (viết tài liệu)
+
+**Công việc đã làm:**
+
+- Viết `report/REPORT.md` theo mẫu nộp của GV (thành viên, tầm quan trọng, I/O, phương pháp, kết quả, ưu/nhược, tài liệu).
+- Phần phương pháp bám chuỗi nhật ký: tái hiện → profile → FP16/cache/disk/xFormers/FP4 → eval 600 job → demo Hybrid.
+- Copy hình: Fig. 2, teaser, so sánh FP32/FP16/FP4, cặp PSNR thấp/cao vào `report/assets/`.
+
+**Kết quả:**
+
+- File nộp: [`report/REPORT.md`](./report/REPORT.md). Xuất PDF/DOCX khi nộp; điền bảng thành viên.
+
+**Bước tiếp theo:**
+
+- Điền họ tên / MSSV; pandoc hoặc Word xuất PDF; nộp kèm slide + GitHub viewer.
+
+---
 
 ### 2026-07-26 — [5] Trả lời 4 góp ý thầy (metrics, Paper UI, nén, LoRA)
 

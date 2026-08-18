@@ -1,0 +1,10 @@
+stage,label,mean_ms,std_ms,min_ms,max_ms,p50_ms,p95_ms,n
+total,Tổng edit_image,69017.99,15809.17,15785.97,82914.44,74913.58,82914.44,20
+vae_encode,VAE encode (ảnh → latent),992.73,428.99,548.76,2254.22,874.86,2254.22,20
+inv_text_encode,"Text encoder (inverse, src+edit)",5162.37,2274.16,305.07,8032.44,5689.91,8032.44,20
+unet_inverse,UNet inverse (ước lượng noise),14849.11,3541.99,5754.43,22973.05,15099.53,22973.05,20
+mask_estimate,Ước lượng mask chỉnh sửa,12.15,9.99,3.31,38.08,8.02,38.08,20
+gen_image_embeds,IP-Adapter image embeds,16221.78,4885.38,1670.11,22586.85,16971.88,22586.85,20
+gen_text_encode,Text encoder (generation),754.74,762.36,81.88,3206.81,429.69,3206.81,20
+gen_unet,UNet 1-step (sinh ảnh),14958.36,3680.76,1311.09,19875.71,15492.78,19875.71,20
+gen_vae_decode,VAE decode (latent → ảnh),15989.97,4317.28,4077.4,21463.72,16479.78,21463.72,20
